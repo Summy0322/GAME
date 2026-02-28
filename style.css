@@ -379,23 +379,22 @@ h2 {
     }
     
     #dialog-box {
-        bottom: 10px;
-        min-height: 70px;
-        max-height: 100px;
-        padding: 25px 15px 10px 15px;  /* 手機加大上內距 */
+        bottom: 15px;      /* 稍微往上一點點，遠離螢幕邊緣 */
+        min-height: 80px;  /* 稍微增加最小高度 */
+        max-height: 120px; /* 從 100px 增加到 120px */
+        padding: 28px 20px 12px 20px; /* 微調內距 */
         border-width: 2px;
     }
-    
+
     #npc-name {
-        top: -14px;
-        left: 15px;
-        padding: 5px 18px;
-        font-size: 13px;
+        top: -16px;        /* 確保名稱標籤有足夠空間 */
+        font-size: 14px;   
+        padding: 5px 20px;
     }
-    
+
     #dialogue-text {
-        font-size: 12px;
-        line-height: 1.3;
+        font-size: 14px;   /* 12px 有點太小，建議 14px 較易閱讀 */
+        line-height: 1.4;
     }
     
     #options-container {
@@ -414,6 +413,7 @@ h2 {
     #character-container {
         bottom: 90px;  /* 120→110 (往下移一點) */
         height: min(300px, 50vh);  /* 240→280 (+17%)，30→35 (+17%) */
+        z-index: 15;
     }
     
     #character-image {
