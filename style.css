@@ -251,13 +251,13 @@ h2 {
     text-overflow: ellipsis;
 }
 
-/* 角色圖片容器 */
+/* 角色圖片容器 - 桌機預設 */
 #character-container {
     position: absolute;
-    bottom: 180px;
+    bottom: 130px;  /* 保持不變或調到 160px 讓角色往下 */    
     left: 0;
     width: 100%;
-    height: min(400px, 40vh);
+    height: min(550px, 50vh);  /* 400→450 (+12.5%)，35→40 (+14%) */
     z-index: 15;
     pointer-events: none;
     display: flex;
@@ -268,7 +268,7 @@ h2 {
 
 /* 角色圖片本身 */
 #character-image {
-    max-width: 90%;
+    max-width: 90%;  /* 85→90 (+6%) */
     max-height: 100%;
     width: auto;
     height: auto;
@@ -339,8 +339,12 @@ h2 {
     }
     
     #character-container {
-        bottom: 150px;
-        height: 350px;
+        bottom: 110px;
+        height: min(400px, 50vh);  /* 300→350 (+17%)，30→35 (+17%) */
+    }
+    
+    #character-image {
+        max-width: 95%;  /* 80→85 (+6%) */
     }
     
     #dialog-box {
@@ -408,8 +412,12 @@ h2 {
     }
     
     #character-container {
-        bottom: 100px;
-        height: 250px;
+        bottom: 90px;  /* 120→110 (往下移一點) */
+        height: min(300px, 50vh);  /* 240→280 (+17%)，30→35 (+17%) */
+    }
+    
+    #character-image {
+        max-width: 100%;  /* 70→75 (+7%) */
     }
     
     .back-btn {
@@ -468,8 +476,12 @@ h2 {
     }
     
     #character-container {
-        bottom: 80px;
-        height: 200px;
+        bottom: 90px;  /* 100→90 (往下移) */
+        height: min(180px, 24vh);  /* 150→180 (+20%)，20→24 (+20%) */
+    }
+    
+    #character-image {
+        max-width: 65%;  /* 60→65 (+8%) */
     }
     
     button {

@@ -64,6 +64,9 @@ function playIntroVideo() {
 
 // 顯示開場介紹
 function showIntro() {
+    const backBtn = document.querySelector('#game-container .back-btn');
+    backBtn.style.display = 'none';
+    
     console.log('🎬 播放開場介紹');
     
     if (typeof IntroChapter === 'undefined') {
@@ -143,6 +146,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 載入章節
 function loadChapter(chapterId) {
+    const backBtn = document.querySelector('#game-container .back-btn');
+    backBtn.style.display = 'block';
+
     console.log('📖 載入章節:', chapterId);
     
     if (typeof AudioManager !== 'undefined') {

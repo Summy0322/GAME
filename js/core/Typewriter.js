@@ -17,6 +17,24 @@ const Typewriter = {
         // 預設隱藏
         if (this.dialogueBox) this.dialogueBox.style.display = 'none';
         if (this.optionsContainer) this.optionsContainer.style.display = 'none';
+        
+        // 加入動畫樣式（只加一次）
+        if (!document.getElementById('typing-indicator-style')) {
+            const style = document.createElement('style');
+            style.id = 'typing-indicator-style';
+            style.textContent = `
+                @keyframes pulse {
+                    0% { opacity: 0.5; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.5; }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     },
     
     // 顯示對話（打字機效果）
@@ -24,14 +42,18 @@ const Typewriter = {
         return new Promise((resolve) => {
             console.log('📢 Typewriter 顯示對話:', { name, namePosition });
             
+            // 清除舊的完成指示器
+            const oldIndicator = document.getElementById('typing-complete-indicator');
+            if (oldIndicator) oldIndicator.remove();
+            
             // 顯示對話框
             this.dialogueBox.style.display = 'block';
             
-            // ==== 設定角色名稱和位置 ====
+            // 設定角色名稱和位置
             if (this.npcName) {
                 this.npcName.innerText = name || '';
-                this.npcName.style.display = 'block';  // 確保顯示
-                this.npcName.style.opacity = '1';      // 確保不透明
+                this.npcName.style.display = 'block';
+                this.npcName.style.opacity = '1';
                 
                 // 移除所有位置 class
                 this.npcName.classList.remove('position-left', 'position-center', 'position-right');
@@ -49,17 +71,9 @@ const Typewriter = {
                         this.npcName.classList.add('position-left');
                         break;
                 }
-                
-                console.log('✅ 角色名稱已設定:', {
-                    name: this.npcName.innerText,
-                    position: namePosition,
-                    classList: this.npcName.className
-                });
-            } else {
-                console.error('❌ this.npcName 為 null');
             }
             
-            // ==== 角色圖片顯示 ====
+            // 角色圖片顯示
             const charImg = document.getElementById('character-image');
             const charContainer = document.getElementById('character-container');
             
@@ -92,7 +106,10 @@ const Typewriter = {
         // 清空原有文字
         this.dialogueText.innerText = '';
         
-        let currentText = '';
+        // 清除舊的完成指示器
+        const oldIndicator = document.getElementById('typing-complete-indicator');
+        if (oldIndicator) oldIndicator.remove();
+        
         let charIndex = 0;
         
         // 處理換行
@@ -102,8 +119,8 @@ const Typewriter = {
         // 創建打字間隔
         const typingInterval = setInterval(() => {
             if (charIndex < totalChars) {
-                // 逐字添加
-                currentText = fullText.substring(0, charIndex + 1);
+                // 顯示目前進度的文字
+                const currentText = fullText.substring(0, charIndex + 1);
                 
                 // 根據換行符號調整顯示
                 let displayText = '';
@@ -125,12 +142,10 @@ const Typewriter = {
                 
                 this.dialogueText.innerText = displayText;
                 
-                // 播放打字音效（每兩個字元播放一次）
+                // 播放打字音效
                 if (charIndex % 3 === 0) {
                     if (typeof AudioManager !== 'undefined') {
                         AudioManager.playSFX('assets/sounds/sfx-blipmale.wav', 0.1);
-                    } else {
-                        console.log('打字音效（AudioManager 未定義）');
                     }
                 }
                 
@@ -139,7 +154,7 @@ const Typewriter = {
                 // 打字完成
                 clearInterval(typingInterval);
                 
-                // 顯示完成標誌（三角形）
+                // 顯示完成標誌
                 this.showCompletionIndicator();
                 
                 // 回呼完成
@@ -150,6 +165,10 @@ const Typewriter = {
     
     // 顯示完成標誌
     showCompletionIndicator: function() {
+        // 先移除舊的指示器
+        const oldIndicator = document.getElementById('typing-complete-indicator');
+        if (oldIndicator) oldIndicator.remove();
+        
         // 在對話框右下角顯示三角形
         const indicator = document.createElement('div');
         indicator.id = 'typing-complete-indicator';
@@ -164,22 +183,8 @@ const Typewriter = {
             border-bottom: 15px solid #ffd700;
             transform: rotate(180deg);
             animation: pulse 1s infinite;
+            z-index: 1000;
         `;
-        
-        // 加入動畫
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes pulse {
-                0% { opacity: 0.5; }
-                50% { opacity: 1; }
-                100% { opacity: 0.5; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // 移除舊的指示器
-        const oldIndicator = document.getElementById('typing-complete-indicator');
-        if (oldIndicator) oldIndicator.remove();
         
         this.dialogueBox.appendChild(indicator);
     },
@@ -202,7 +207,9 @@ const Typewriter = {
                     e.stopPropagation();
                     
                     // 播放點擊音效
-                    AudioManager.playSFX('assets/sounds/click.mp3');
+                    if (typeof AudioManager !== 'undefined') {
+                        AudioManager.playSFX('assets/sounds/click.mp3');
+                    }
                     
                     // 清除選項
                     this.optionsContainer.innerHTML = '';
@@ -218,16 +225,6 @@ const Typewriter = {
                 
                 this.optionsContainer.appendChild(btn);
             });
-            
-            // 加入動畫樣式
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `;
-            document.head.appendChild(style);
         });
     },
     
@@ -239,6 +236,7 @@ const Typewriter = {
         this.optionsContainer.innerHTML = '';
         this.optionsContainer.style.display = 'none';
         
+        // 清除完成指示器
         const indicator = document.getElementById('typing-complete-indicator');
         if (indicator) indicator.remove();
         
@@ -246,3 +244,6 @@ const Typewriter = {
         if (charImg) charImg.style.display = 'none';
     }
 };
+
+// 確保全域可用
+window.Typewriter = Typewriter;
