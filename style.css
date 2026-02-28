@@ -402,7 +402,7 @@ h2 {
     }
 
     /* 當手機高度大於 200px 時，調整 top 值 */
-    @media (min-height: 201px) {
+    @media (min-height: 401px) {
         #options-container {
             top: 30%;  /* 大於200px時改為 10% */
         }
