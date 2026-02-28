@@ -346,7 +346,7 @@ h2 {
 }
 
 /* ========== 針對手機橫向 (max-width: 767px) 的優化 ========== */
-@media (max-width: 767px) and (orientation: landscape) {
+@media (max-width: 920px) and (orientation: landscape) {
     
     h1 { 
         font-size: 22px; 
@@ -394,27 +394,46 @@ h2 {
         margin-top: 0;
     }
 
-    /* 2. 縮小選項大小 */
+    /* ===== 選項容器：讓整個群組的中間固定在 1/3 處 ===== */
     #options-container {
-        top: 30%;  /* 預設值：小於200px時用這個 */
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
         width: 40%;
-        gap: 5px;            /* 稍微縮小間距 */
+        gap: 8px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        
+        /* 關鍵：使用 translateY 搭配 calc 讓群組中間對齊 1/3 處 */
+        top: 33.33%;
+        transform: translateX(-50%) translateY(-50%);
+        
+        /* 確保選項容器不會太大 */
+        max-height: 50vh;
+        overflow-y: auto;
     }
 
-    /* 當手機高度大於 200px 時，調整 top 值*/
-    @media (min-height: 10000px) {
-        #options-container {
-            top: 30%;  /* 大於200px時改為 10% */
-        }
-    } 
-
+    /* 選項按鈕樣式 - 根據空間自動調整 */
     #options-container button {
-        padding: 3px 8px;    /* 減少垂直內距，保持水平內距 */
-        font-size: 11px;     /* 縮小字體 */
-        min-width: 85px;     /* 調整最小寬度 */
-        max-width: 160px;    /* 調整最大寬度 */
-        border-radius: 4px;  /* 稍微縮小圓角 */
+        padding: 6px 12px;
+        font-size: clamp(10px, 2.2vw, 12px);
+        min-width: 100px;
+        max-width: 180px;
+        width: 100%;
+        border-radius: 4px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
+        max-height: 40px;
     }
+
+    /* 計算選項群組的總高度，但無法直接用 CSS 計算，所以我們固定按鈕高度 */
+    /* 按鈕高度約 40px，加上 gap 8px，可以估算群組高度 */
+    /* 1個選項：約 40px，2個選項：約 88px，3個選項：約 136px */
+    /* 由於已經使用 translateY(-50%)，群組中心自然會在 33.33% 處 */
 
     #character-container {
         height: 50%;
@@ -452,23 +471,20 @@ h2 {
         font-size: 11px;
     }
     
+    /* 小手機選項容器 - 同樣讓群組中間固定在 1/3 處 */
     #options-container {
-        width: 38%;
-        top: 5%;  /* 小手機預設值 */
-        gap: 4px;
-    }
-    
-    /* 當小手機高度大於 200px 時，調整 top 值 */
-    @media (min-height: 201px) {
-        #options-container {
-            top: 10%;
-        }
+        top: 33.33%;
+        transform: translateX(-50%) translateY(-50%);
+        width: 45%;
+        gap: 6px;
     }
     
     #options-container button {
-        font-size: 10px;
-        padding: 2px 6px;
-        min-width: 70px;
+        font-size: clamp(9px, 2vw, 11px);
+        padding: 4px 8px;
+        min-width: 80px;
+        max-width: 150px;
+        max-height: 35px;
     }
     
     #character-container {
