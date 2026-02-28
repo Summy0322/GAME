@@ -249,9 +249,10 @@ h2 {
 /* 選項容器居中優化 */
 #options-container {
     position: absolute;
-    bottom: 20%;
+    top: 30%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
+    width: min(42%, 320px);
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -395,9 +396,9 @@ h2 {
 
     /* 2. 縮小選項大小 */
     #options-container {
-        top: 40%;
+        top: 10%;
+        width: 40%;
         gap: 5px;            /* 稍微縮小間距 */
-        width: 42%;          /* 縮小容器寬度 */
     }
 
     #options-container button {
