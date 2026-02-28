@@ -393,18 +393,19 @@ h2 {
         margin-top: 0;
     }
 
+    /* 2. 縮小選項大小 */
     #options-container {
         top: 40%;
-        gap: 6px;
-        width: 50%;
+        gap: 5px;            /* 稍微縮小間距 */
+        width: 42%;          /* 縮小容器寬度 */
     }
 
     #options-container button {
-        padding: 4px 10px;
-        font-size: 12px;
-        min-width: 100px;
-        width: auto;
-        max-width: 200px;
+        padding: 3px 8px;    /* 減少垂直內距，保持水平內距 */
+        font-size: 11px;     /* 縮小字體 */
+        min-width: 85px;     /* 調整最小寬度 */
+        max-width: 160px;    /* 調整最大寬度 */
+        border-radius: 4px;  /* 稍微縮小圓角 */
     }
 
     #character-container {
@@ -444,14 +445,15 @@ h2 {
     }
     
     #options-container {
-        width: 45%;
-        top: 38%;
+        width: 38%;
+        top: 37%;
+        gap: 4px;
     }
     
     #options-container button {
-        font-size: 11px;
-        padding: 3px 8px;
-        min-width: 80px;
+        font-size: 10px;
+        padding: 2px 6px;
+        min-width: 70px;
     }
     
     #character-container {
