@@ -20,60 +20,64 @@ const Typewriter = {
     },
     
     // 顯示對話（打字機效果）
-    showDialogue: function(name, text, characterImage = null, voice = null) {
+    showDialogue: function(name, text, characterImage = null, voice = null, namePosition = 'left') {
         return new Promise((resolve) => {
+            console.log('📢 Typewriter 顯示對話:', { name, namePosition });
+            
             // 顯示對話框
             this.dialogueBox.style.display = 'block';
             
-            // 設定角色名稱
+            // ==== 設定角色名稱和位置 ====
             if (this.npcName) {
                 this.npcName.innerText = name || '';
+                this.npcName.style.display = 'block';  // 確保顯示
+                this.npcName.style.opacity = '1';      // 確保不透明
+                
+                // 移除所有位置 class
+                this.npcName.classList.remove('position-left', 'position-center', 'position-right');
+                
+                // 根據參數加入對應的位置 class
+                switch(namePosition) {
+                    case 'center':
+                        this.npcName.classList.add('position-center');
+                        break;
+                    case 'right':
+                        this.npcName.classList.add('position-right');
+                        break;
+                    case 'left':
+                    default:
+                        this.npcName.classList.add('position-left');
+                        break;
+                }
+                
+                console.log('✅ 角色名稱已設定:', {
+                    name: this.npcName.innerText,
+                    position: namePosition,
+                    classList: this.npcName.className
+                });
+            } else {
+                console.error('❌ this.npcName 為 null');
             }
             
-            // ==== 修改角色圖片顯示 ====
+            // ==== 角色圖片顯示 ====
             const charImg = document.getElementById('character-image');
             const charContainer = document.getElementById('character-container');
             
             if (charImg && charContainer) {
                 if (characterImage) {
-                    // 設定圖片來源
                     charImg.src = characterImage;
-                    
-                    // 確保圖片載入後再調整位置
                     charImg.onload = () => {
-                        // 計算置中位置
-                        const containerWidth = charContainer.offsetWidth;
-                        const imgWidth = charImg.offsetWidth;
-                        
-                        // 水平置中
-                        const leftPosition = (containerWidth - imgWidth) / 2;
-                        charImg.style.left = leftPosition + 'px';
-                        
-                        // 垂直置中（可選，讓圖片在容器中垂直置中）
-                        const containerHeight = charContainer.offsetHeight;
-                        const imgHeight = charImg.offsetHeight;
-                        const topPosition = (containerHeight - imgHeight) / 2;
-                        charImg.style.top = topPosition + 'px';
-                        
-                        console.log('角色圖片位置調整:', {
-                            left: leftPosition,
-                            top: topPosition,
-                            containerWidth,
-                            imgWidth
-                        });
+                        console.log('角色圖片載入完成');
                     };
-                    
-                    // 顯示圖片
                     charImg.style.display = 'block';
-                    charContainer.style.display = 'block';
+                    charContainer.style.display = 'flex';
                 } else {
-                    // 沒有圖片時隱藏
                     charImg.style.display = 'none';
                     charContainer.style.display = 'none';
                 }
             }
             
-            // 播放語音（如果有）
+            // 播放語音
             if (voice && typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX(voice, 0.5);
             }

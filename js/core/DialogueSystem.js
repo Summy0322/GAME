@@ -123,12 +123,13 @@ const DialogueSystem = {
             this.optionsContainer.style.display = 'none';
         }
         
-        // 顯示對話（打字機效果）
+        // ==== 關鍵修改：傳入 namePosition 參數 ====
         await this.typewriter.showDialogue(
             line.name || '未知',
             line.text || '...',
             line.characterImage,
-            line.voice
+            line.voice,
+            line.namePosition || 'left'  // 從對話資料讀取位置，預設 left
         );
         
         // 對話顯示完成後的處理
