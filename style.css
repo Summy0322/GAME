@@ -396,17 +396,17 @@ h2 {
 
     /* 2. 縮小選項大小 */
     #options-container {
-        top: 1%;  /* 預設值：小於200px時用這個 */
+        top: 30%;  /* 預設值：小於200px時用這個 */
         width: 40%;
         gap: 5px;            /* 稍微縮小間距 */
     }
 
-    /* 當手機高度大於 200px 時，調整 top 值 */
-    @media (min-height: 401px) {
+    /* 當手機高度大於 200px 時，調整 top 值*/
+    @media (min-height: 10000px) {
         #options-container {
             top: 30%;  /* 大於200px時改為 10% */
         }
-    }
+    } 
 
     #options-container button {
         padding: 3px 8px;    /* 減少垂直內距，保持水平內距 */
