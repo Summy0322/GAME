@@ -1,7 +1,7 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #333;
+    background-color: #000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -10,22 +10,21 @@ body {
     font-family: '標楷體', '微軟正黑體', sans-serif;
 }
 
-/* 遊戲主容器 - 使用 aspect-ratio 確保 16:9 比例 */
+/* 遊戲主容器 - 這是核心修正點 */
 #game-wrapper {
     position: relative;
-    width: min(1280px, 100vw);
-    height: min(720px, 56.25vw);
-    max-width: 100vw;
-    max-height: 100vh;
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    
     background-color: #000;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    aspect-ratio: 16 / 9;
     margin: auto;
+    z-index: 1;
 }
 
-/* 場景基本設定 */
-.scene {
+/* ========== 統一背景設定，確保內容始終在容器內 ========== */
+.scene, #game-background {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -33,9 +32,10 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-size: cover;
+    background-size: cover; 
     background-position: center;
     background-repeat: no-repeat;
+    background-color: #000;
 }
 
 /* 標題畫面背景 */
@@ -43,6 +43,8 @@ body {
     background-image: url('assets/images/title2.png');
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+    background-color: #000;
     color: white;
 }
 
@@ -51,76 +53,29 @@ body {
     background-image: url('assets/images/market.jpg');
     background-size: cover;
     background-position: center;
-    color: white; 
-}
-
-/* 按鈕基本樣式 */
-button {
-    margin: 15px;
-    padding: 12px 24px;
-    font-size: clamp(16px, 2.5vw, 22px);
-    cursor: pointer;
-    background-color: #e67e22;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-
-button:hover {
-    background-color: #f39c12;
-    transform: scale(1.05);
-}
-
-/* 標題文字 */
-h1 {
-    font-size: clamp(32px, 6vw, 48px);
-    margin: 20px 0;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    text-align: center;
-}
-
-h2 {
-    font-size: clamp(24px, 5vw, 36px);
-    margin: 20px 0;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    text-align: center;
-}
-
-/* 遊戲容器 */
-#game-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    background-color: #333;
-}
-
-/* 背景圖層 */
-#game-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
     background-repeat: no-repeat;
-    z-index: 1;
+    background-color: #000;
+    color: white; 
 }
 
 /* 影片場景 */
 #video-scene {
     background-color: #000;
-    position: relative;
+    position: absolute;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+/* 影片修正：使用 object-fit 確保不被裁切 */
 #intro-video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; 
+    background-color: #000;
 }
 
 /* 跳過按鈕 */
@@ -153,49 +108,110 @@ h2 {
     z-index: 100;
 }
 
-/* 關卡按鈕容器 */
+/* ========== 按鈕與文字調整 ========== */
+button {
+    padding: 12px 24px;
+    font-size: clamp(14px, 2vw, 20px);
+    cursor: pointer;
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    margin: 10px auto;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+button:hover {
+    background-color: #f39c12;
+    transform: scale(1.05);
+}
+
+/* ========== 修正 1：縮小標題文字 (h1, h2) ========== */
+h1 {
+    font-size: clamp(24px, 5vw, 40px); /* 降低最大與最小值 */
+    margin: 15px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    text-align: center;
+    max-width: 90%;
+    word-wrap: break-word;
+    color: white;
+}
+
+h2 {
+    font-size: clamp(20px, 4vw, 30px); /* 降低最大與最小值 */
+    margin: 10px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    text-align: center;
+    max-width: 90%;
+    word-wrap: break-word;
+    color: white;
+}
+
+/* 遊戲容器 */
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    background-color: #333;
+}
+
+/* ========== 修正 2：防止標題按鈕文字被切掉 ========== */
+/* 針對標題畫面特定的按鈕設定 */
+#start-menu button {
+    width: 200px;           /* 給予固定寬度更穩定 */
+    white-space: normal;    /* 允許文字換行防止切斷 */
+    line-height: 1.2;
+    padding: 10px 15px;
+    font-size: clamp(16px, 2vw, 20px);
+}
+
+/* ========== 修正 3：縮小關卡選單按鈕 ========== */
 .level-buttons {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin: 30px 0;
-    width: min(90%, 400px);
+    gap: 15px;              /* 稍微縮小間距 */
+    margin: 20px auto;
+    width: 60%;             /* 從 80% 縮小到 60% */
+    max-width: 300px;       /* 限制最大寬度 */
+    align-items: center;
 }
 
 .level-buttons button {
-    min-width: unset;
     width: 100%;
-    font-size: clamp(18px, 3vw, 24px);
+    font-size: clamp(16px, 2.5vw, 20px); /* 縮小關卡字體 */
+    padding: 10px 20px;
+    margin: 0;
 }
 
-/* ========== 對話系統樣式 ========== */
-
-/* 對話框 - 加大上內距為角色名稱留空間 */
+/* ========== 對話系統優化：改用相對百分比寬度 ========== */
 #dialog-box {
     position: absolute;
-    bottom: 20px;
-    left: 5%;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
     width: 90%;
     min-height: 100px;
-    max-height: 200px;
+    max-height: 25%;
     background: rgba(0, 0, 0, 0.85);
     border: 3px solid #b38b3d;
     border-radius: 15px;
-    padding: 30px 30px 20px 30px;  /* 上內距加大到 30px */
+    padding: 30px 30px 20px 30px;
     box-sizing: border-box;
     z-index: 20;
     color: #fff;
     box-shadow: 0 5px 15px rgba(0,0,0,0.7);
     overflow: visible;
-    
-    /* 確保對話框有足夠的空間顯示名稱 */
-    margin-top: 15px;
 }
 
-/* 角色名稱標籤 - 附著在對話框上緣 */
 #npc-name {
     position: absolute;
-    top: -25px; /* 稍微再往上一點，確保離邊界有距離 */
+    top: -25px;
     left: 20px;
     background: #4a2c1a;
     color: #ffd700;
@@ -204,60 +220,58 @@ h2 {
     font-size: clamp(16px, 2.2vw, 18px);
     font-weight: bold;
     border: 2px solid #b38b3d;
-    z-index: 100; /* 確保它在最頂層 */
-    line-height: 1.2;
+    z-index: 100;
     white-space: nowrap;
+    max-width: calc(100% - 40px);
+    overflow: hidden;
+    text-overflow: ellipsis;
     box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     border-bottom: 3px solid #e67e22;
-    
-    /* 確保不被裁切 */
-    overflow: visible;
-    pointer-events: none;
 }
 
-/* 對話文字 */
 #dialogue-text {
     font-size: clamp(16px, 2.2vw, 20px);
     line-height: 1.5;
     margin: 5px 0 0 0;
     white-space: pre-wrap;
     word-wrap: break-word;
+    overflow-y: auto;
+    max-height: 120px;
 }
 
-/* 選項容器 */
+/* 選項容器居中優化 */
 #options-container {
     position: absolute;
-    top: 180px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
     gap: 15px;
     z-index: 30;
-    width: auto;
-    min-width: min(300px, 70vw);
-    max-width: min(600px, 80vw);
+    width: 60%;
+    max-width: 500px;
+    align-items: center;
     text-align: center;
-    pointer-events: auto;
 }
 
 #options-container button {
-    margin: 0;
-    padding: 15px 30px;
-    font-size: clamp(18px, 2.5vw, 22px);
     width: 100%;
+    padding: 12px 24px;
+    font-size: clamp(16px, 2.2vw, 20px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin: 0;
 }
 
-/* 角色圖片容器 - 桌機預設 */
+/* 角色圖片容器：讓角色站得更穩 */
 #character-container {
     position: absolute;
-    bottom: 130px;  /* 保持不變或調到 160px 讓角色往下 */    
+    bottom: 15%;
     left: 0;
     width: 100%;
-    height: min(550px, 50vh);  /* 400→450 (+12.5%)，35→40 (+14%) */
+    height: 60%;
     z-index: 15;
     pointer-events: none;
     display: flex;
@@ -266,12 +280,9 @@ h2 {
     overflow: visible;
 }
 
-/* 角色圖片本身 */
 #character-image {
-    max-width: 90%;  /* 85→90 (+6%) */
+    max-width: 80%;
     max-height: 100%;
-    width: auto;
-    height: auto;
     object-fit: contain;
     border-radius: 10px;
     animation: characterAppear 0.3s ease-out;
@@ -326,183 +337,131 @@ h2 {
     100% { opacity: 0.5; }
 }
 
-/* ========== 平板橫向 (768px - 1024px) ========== */
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-    #options-container {
-        top: 150px;
-        gap: 12px;
-    }
-    
-    #options-container button {
-        padding: 12px 25px;
-        font-size: 18px;
-    }
-    
-    #character-container {
-        bottom: 110px;
-        height: min(400px, 50vh);  /* 300→350 (+17%)，30→35 (+17%) */
-    }
-    
-    #character-image {
-        max-width: 95%;  /* 80→85 (+6%) */
-    }
-    
-    #dialog-box {
-        min-height: 90px;
-        padding: 28px 25px 18px 25px;  /* 平板調整 */
-    }
-    
-    #npc-name {
-        top: -16px;
-        left: 18px;
-        padding: 6px 22px;
-        font-size: 16px;
-    }
-}
-
-/* ========== 手機橫向優化 (max-width: 767px) ========== */
+/* ========== 針對手機橫向 (max-width: 767px) 的優化 ========== */
 @media (max-width: 767px) and (orientation: landscape) {
-    /* 讓遊戲容器填滿整個螢幕 */
-    #game-wrapper {
-        width: 100vw;
-        height: 100vh;
-        max-width: 100vw;
-        max-height: 100vh;
-        aspect-ratio: auto;
+    
+    /* 手機橫向時標題文字再縮小 */
+    h1 { 
+        font-size: 22px; 
+        margin: 5px 0; 
     }
     
-    /* 背景圖片確保完整顯示 */
-    #start-menu,
-    #level-select,
-    #game-background {
-        background-size: contain;
-        background-color: #000;
-        background-position: center;
+    h2 { 
+        font-size: 18px; 
+        margin: 5px 0; 
     }
     
-    /* 對話框避開邊緣 */
-    #dialog-box {
-        bottom: 15px;
-        left: 3%;
-        width: 94%;
-        min-height: 80px;
-        max-height: 130px;
-        padding: 28px 18px 12px 18px;
-    }
-    
-    /* 角色名稱調整 */
-    #npc-name {
-        top: -16px;
-        left: 15px;
-        padding: 5px 20px;
+    /* 標題畫面按鈕 */
+    #start-menu button {
+        width: 150px;
         font-size: 14px;
+        padding: 5px 10px;
     }
     
-    /* 對話文字 */
-    #dialogue-text {
-        font-size: 14px;
-        line-height: 1.4;
-    }
-    
-    /* 角色圖片容器 */
-    #character-container {
-        bottom: 100px;
-        height: min(280px, 40vh);
-    }
-    
-    #character-image {
-        max-width: 90%;
-    }
-    
-    /* 選項容器 */
-    #options-container {
-        top: 70px;
+    /* 關卡選單 */
+    .level-buttons {
         gap: 8px;
-        min-width: 200px;
+        width: 50%;
+        margin: 10px auto;
     }
     
-    #options-container button {
-        padding: 8px 16px;
+    .level-buttons button {
+        padding: 6px 12px;
         font-size: 14px;
     }
     
-    /* 返回/跳過按鈕 */
-    .back-btn, .skip-btn {
-        padding: 6px 12px;
-        font-size: 13px;
-    }
-    
-    /* 確保重要內容在安全區域 */
-    h1, h2, .level-buttons {
-        max-width: 90%;
-        margin-left: auto;
-        margin-right: auto;
-    }
-}
-
-/* ========== 支援安全區域的手機 (iPhone X 以上) ========== */
-@supports (padding: max(0px)) {
-    @media (max-width: 767px) and (orientation: landscape) {
-        #dialog-box {
-            bottom: max(15px, env(safe-area-inset-bottom));
-            left: max(3%, env(safe-area-inset-left));
-            width: calc(100% - max(6%, env(safe-area-inset-left) + env(safe-area-inset-right)));
-        }
-        
-        .back-btn {
-            top: max(15px, env(safe-area-inset-top));
-            left: max(15px, env(safe-area-inset-left));
-        }
-        
-        .skip-btn {
-            bottom: max(15px, env(safe-area-inset-bottom));
-            right: max(15px, env(safe-area-inset-right));
-        }
-    }
-}
-
-/* ========== 小手機橫向 (max-width: 480px) ========== */
-@media (max-width: 480px) and (orientation: landscape) {
+    /* 1. 調整對話框：縮減上內距讓文字提高 */
     #dialog-box {
-        min-height: 60px;
-        max-height: 85px;
-        padding: 22px 12px 8px 12px;  /* 小手機調整 */
+        bottom: 5px;
+        padding: 15px 15px 8px 15px;
+        min-height: 55px;
+        max-height: 100px;
     }
-    
+
     #npc-name {
         top: -12px;
-        left: 12px;
-        padding: 4px 15px;
+        padding: 2px 12px;
+        font-size: 12px;
+    }
+
+    #dialogue-text {
+        font-size: 13px;
+        line-height: 1.2;
+        margin-top: 0;
+    }
+
+    /* 2. 縮小選項大小 */
+    #options-container {
+        top: 40%;
+        gap: 6px;
+        width: 50%;
+    }
+
+    #options-container button {
+        padding: 4px 10px;
+        font-size: 12px;
+        min-width: 100px;
+        width: auto;
+        max-width: 200px;
+    }
+
+    /* 角色圖片微調 */
+    #character-container {
+        height: 50%;
+        bottom: 60px;
+    }
+    
+    /* 返回和跳過按鈕 */
+    .back-btn {
+        top: 5px;
+        left: 5px;
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .skip-btn {
+        bottom: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+/* ========== 小手機橫向 (更極致的縮放) ========== */
+@media (max-width: 480px) and (orientation: landscape) {
+    #dialog-box {
+        padding: 12px 10px 5px 10px;
+    }
+    
+    #npc-name {
+        top: -10px;
+        padding: 2px 10px;
         font-size: 11px;
     }
     
     #dialogue-text {
-        font-size: 10px;
+        font-size: 11px;
     }
     
     #options-container {
-        top: 60px;
-        gap: 5px;
+        width: 45%;
+        top: 38%;
     }
     
     #options-container button {
-        padding: 5px 10px;
         font-size: 11px;
-        min-width: 120px;
+        padding: 3px 8px;
+        min-width: 80px;
     }
     
     #character-container {
-        bottom: 90px;  /* 100→90 (往下移) */
-        height: min(180px, 24vh);  /* 150→180 (+20%)，20→24 (+20%) */
+        bottom: 50px;
+        height: 45%;
     }
     
-    #character-image {
-        max-width: 65%;  /* 60→65 (+8%) */
-    }
-    
-    button {
-        padding: 5px 10px;
-        font-size: 12px;
+    .back-btn, .skip-btn {
+        padding: 3px 6px;
+        font-size: 10px;
     }
 }
 
@@ -529,11 +488,4 @@ h2 {
         opacity: 0.3;
         pointer-events: none;
     }
-}
-
-/* ========== 安全區域 ========== */
-.safe-area {
-    max-width: 90%;
-    max-height: 90%;
-    margin: auto;
 }
