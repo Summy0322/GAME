@@ -242,7 +242,7 @@ h2 {
 /* 選項容器居中優化 */
 #options-container {
     position: absolute;
-    top: 50%;
+    bottom: 20%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
