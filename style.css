@@ -396,7 +396,7 @@ h2 {
 
     /* 2. 縮小選項大小 */
     #options-container {
-        top: 5%;  /* 預設值：小於200px時用這個 */
+        top: 1%;  /* 預設值：小於200px時用這個 */
         width: 40%;
         gap: 5px;            /* 稍微縮小間距 */
     }
@@ -404,7 +404,7 @@ h2 {
     /* 當手機高度大於 200px 時，調整 top 值 */
     @media (min-height: 201px) {
         #options-container {
-            top: 10%;  /* 大於200px時改為 10% */
+            top: 30%;  /* 大於200px時改為 10% */
         }
     }
 
