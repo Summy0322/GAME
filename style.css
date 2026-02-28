@@ -6,26 +6,27 @@ body {
     justify-content: center;
     align-items: center;
     
-    /* === 核心修正 1：使用固定的 CSS 變數計算高度 === */
-    min-height: 100vh;
-    /* 現代瀏覽器支援 */
-    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    /* 對舊版瀏覽器或特定 Android 的備援 */
-    min-height: -webkit-fill-available;
+    /* === 核心修正 1：移除 vh，改用填充與安全區域計算 === */
+    height: 100vh;
+    height: -webkit-fill-available; /* 關鍵：現代手機瀏覽器補丁 */
     
     overflow: hidden;
     font-family: '標楷體', '微軟正黑體', sans-serif;
-    
     position: fixed;
     width: 100%;
+}
+
+html {
+    height: 100vh;
+    height: -webkit-fill-available;
 }
 
 /* 遊戲主容器 - 這是核心修正點 */
 #game-wrapper {
     position: relative;
-    /* === 核心修正 2：強制扣除安全區域來計算遊戲的實際寬高 === */
-    width: min(100vw, calc((100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 16 / 9));
-    height: min(calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc(100vw * 9 / 16));
+    /* === 核心修正 2：直接使用 vh 對應手機旋轉後的實際高寬 === */
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
     
     background-color: #000;
     overflow: hidden;
