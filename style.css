@@ -5,16 +5,24 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    /* 修正點：使用安全區域高度代替 100vh */
     min-height: 100vh;
+    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    
     overflow: hidden;
     font-family: '標楷體', '微軟正黑體', sans-serif;
+    
+    /* 修正點：防止 iOS/Android 橡皮筋效應導致畫面晃動 */
+    position: fixed;
+    width: 100%;
 }
 
 /* 遊戲主容器 - 這是核心修正點 */
 #game-wrapper {
     position: relative;
-    width: min(100vw, calc(100vh * 16 / 9));
-    height: min(100vh, calc(100vw * 9 / 16));
+    /* 修正點：使用安全區域計算寬高 */
+    width: min(100vw, calc((100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 16 / 9));
+    height: min(calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc(100vw * 9 / 16));
     
     background-color: #000;
     overflow: hidden;
@@ -133,7 +141,7 @@ button:hover {
 
 /* ========== 修正 1：縮小標題文字 (h1, h2) ========== */
 h1 {
-    font-size: clamp(24px, 5vw, 40px); /* 降低最大與最小值 */
+    font-size: clamp(24px, 5vw, 40px);
     margin: 15px 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     text-align: center;
@@ -143,7 +151,7 @@ h1 {
 }
 
 h2 {
-    font-size: clamp(20px, 4vw, 30px); /* 降低最大與最小值 */
+    font-size: clamp(20px, 4vw, 30px);
     margin: 10px 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     text-align: center;
@@ -162,10 +170,9 @@ h2 {
 }
 
 /* ========== 修正 2：防止標題按鈕文字被切掉 ========== */
-/* 針對標題畫面特定的按鈕設定 */
 #start-menu button {
-    width: 200px;           /* 給予固定寬度更穩定 */
-    white-space: normal;    /* 允許文字換行防止切斷 */
+    width: 200px;
+    white-space: normal;
     line-height: 1.2;
     padding: 10px 15px;
     font-size: clamp(16px, 2vw, 20px);
@@ -175,16 +182,16 @@ h2 {
 .level-buttons {
     display: flex;
     flex-direction: column;
-    gap: 15px;              /* 稍微縮小間距 */
+    gap: 15px;
     margin: 20px auto;
-    width: 60%;             /* 從 80% 縮小到 60% */
-    max-width: 300px;       /* 限制最大寬度 */
+    width: 60%;
+    max-width: 300px;
     align-items: center;
 }
 
 .level-buttons button {
     width: 100%;
-    font-size: clamp(16px, 2.5vw, 20px); /* 縮小關卡字體 */
+    font-size: clamp(16px, 2.5vw, 20px);
     padding: 10px 20px;
     margin: 0;
 }
@@ -340,7 +347,6 @@ h2 {
 /* ========== 針對手機橫向 (max-width: 767px) 的優化 ========== */
 @media (max-width: 767px) and (orientation: landscape) {
     
-    /* 手機橫向時標題文字再縮小 */
     h1 { 
         font-size: 22px; 
         margin: 5px 0; 
@@ -351,14 +357,12 @@ h2 {
         margin: 5px 0; 
     }
     
-    /* 標題畫面按鈕 */
     #start-menu button {
         width: 150px;
         font-size: 14px;
         padding: 5px 10px;
     }
     
-    /* 關卡選單 */
     .level-buttons {
         gap: 8px;
         width: 50%;
@@ -370,7 +374,6 @@ h2 {
         font-size: 14px;
     }
     
-    /* 1. 調整對話框：縮減上內距讓文字提高 */
     #dialog-box {
         bottom: 5px;
         padding: 15px 15px 8px 15px;
@@ -390,7 +393,6 @@ h2 {
         margin-top: 0;
     }
 
-    /* 2. 縮小選項大小 */
     #options-container {
         top: 40%;
         gap: 6px;
@@ -405,13 +407,11 @@ h2 {
         max-width: 200px;
     }
 
-    /* 角色圖片微調 */
     #character-container {
         height: 50%;
         bottom: 60px;
     }
     
-    /* 返回和跳過按鈕 */
     .back-btn {
         top: 5px;
         left: 5px;
