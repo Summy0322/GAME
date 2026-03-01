@@ -390,7 +390,7 @@ h2 {
     100% { opacity: 0.5; }
 }
 
-/* ========== 針對手機橫向 (max-width: 767px) 的優化 ========== */
+/* ========== 針對手機橫向 (max-width: 920px) 的優化 ========== */
 @media (max-width: 920px) and (orientation: landscape) {
     
     h1 { 
@@ -453,7 +453,7 @@ h2 {
         text-align: center;
         
         /* 關鍵：使用 translateY 搭配 calc 讓群組中間對齊 1/3 處 */
-        top: 33.33%;
+        top: 40%;
         transform: translateX(-50%) translateY(-50%);
         
         /* 確保選項容器不會太大 */
@@ -461,24 +461,43 @@ h2 {
         overflow-y: auto;
     }
 
-    /* 選項按鈕樣式 - 根據空間自動調整 */
+    /* 選項按鈕樣式 - 增加高度，調整字體 */
     #options-container button {
-        padding: 6px 12px;
-        font-size: clamp(10px, 2.2vw, 12px);
+        padding: 10px 12px;        /* 增加上下內距到 10px (原本 6px)，讓按鈕更高 */
+        font-size: clamp(12px, 2.5vw, 16px);  /* 字體稍微調大 (原本 10-12px) */
         min-width: 100px;
-        max-width: 180px;
+        max-width: 300px;
         width: 100%;
-        border-radius: 4px;
+        border-radius: 6px;        /* 稍微增加圓角 */
         white-space: normal;
         word-break: break-word;
-        line-height: 1.3;
-        max-height: 40px;
+        line-height: 1.4;           /* 稍微增加行高 */
+        max-height: 50px;           /* 放寬最大高度限制 (原本 40px) */
+        
+        /* 確保文字垂直置中 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 根據選項數量微調位置 (可選) */
+    #options-container:has(button:only-child) {
+        gap: 0;
+    }
+
+    #options-container:has(button:nth-child(2)) {
+        top: 42%;  /* 兩個選項時稍微下移 */
+    }
+
+    #options-container:has(button:nth-child(3)) {
+        top: 38%;  /* 三個選項時稍微上移 */
+        gap: 6px;
     }
 
     /* 計算選項群組的總高度，但無法直接用 CSS 計算，所以我們固定按鈕高度 */
     /* 按鈕高度約 40px，加上 gap 8px，可以估算群組高度 */
     /* 1個選項：約 40px，2個選項：約 88px，3個選項：約 136px */
-    /* 由於已經使用 translateY(-50%)，群組中心自然會在 33.33% 處 */
+    /* 由於已經使用 translateY(-50%)，群組中心自然會在 40% 處 */
 
     #character-container {
         height: 50%;
@@ -516,20 +535,37 @@ h2 {
         font-size: 11px;
     }
     
-    /* 小手機選項容器 - 同樣讓群組中間固定在 1/3 處 */
+    /* 小手機選項容器 */
     #options-container {
-        top: 33.33%;
+        top: 40%;
         transform: translateX(-50%) translateY(-50%);
         width: 45%;
         gap: 6px;
     }
     
+    /* 小手機選項按鈕 - 同樣增加高度 */
     #options-container button {
-        font-size: clamp(9px, 2vw, 11px);
-        padding: 4px 8px;
+        font-size: clamp(10px, 2.2vw, 12px);  /* 稍微調大 */
+        padding: 8px 10px;        /* 增加上下內距 (原本 4px 8px) */
         min-width: 80px;
         max-width: 150px;
-        max-height: 35px;
+        max-height: 40px;          /* 放寬高度限制 */
+        border-radius: 5px;
+        
+        /* 確保文字垂直置中 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* 小手機根據選項數量調整 */
+    #options-container:has(button:nth-child(2)) {
+        top: 42%;
+    }
+    
+    #options-container:has(button:nth-child(3)) {
+        top: 38%;
+        gap: 5px;
     }
     
     #character-container {
