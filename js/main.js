@@ -179,6 +179,10 @@ function loadChapter(chapterId) {
     
     if (chapterData) {
         console.log('✅ 找到章節資料');
+        
+        // 收集該章節需要的所有資源
+        const assets = collectChapterAssets(chapterData);
+        
         LoadingManager.showAndLoad(assets, () => {
             showScene('game-container');
             
@@ -191,4 +195,26 @@ function loadChapter(chapterId) {
         console.error('❌ 找不到章節資料:', chapterId);
         alert('章節資料載入失敗，請檢查 console');
     }
+}
+
+// 收集章節需要的所有圖片資源
+function collectChapterAssets(chapterData) {
+    const assets = [];
+    
+    // 加入背景圖
+    if (chapterData.background) {
+        assets.push(chapterData.background);
+    }
+    
+    // 遍歷所有對話，收集角色圖片
+    if (chapterData.dialogue) {
+        chapterData.dialogue.forEach(line => {
+            if (line.characterImage) {
+                assets.push(line.characterImage);
+            }
+        });
+    }
+    
+    // 去重
+    return [...new Set(assets)];
 }
