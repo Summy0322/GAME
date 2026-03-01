@@ -70,6 +70,18 @@
         <!-- 音效控制（隱藏） -->
         <audio id="bg-music" loop></audio>
         <audio id="sfx-player"></audio>
+
+        <!-- 退出確認彈窗 -->
+        <div id="exit-confirm-dialog" class="confirm-dialog" style="display: none;">
+            <div class="confirm-dialog-content">
+                <p>你確定要退出嗎？</p>
+                <p class="warning-text">任何未儲存的進度都會遺失</p>
+                <div class="confirm-dialog-buttons">
+                    <button id="exit-confirm-yes" class="confirm-btn confirm-yes">確認退出</button>
+                    <button id="exit-confirm-no" class="confirm-btn confirm-no">繼續遊戲</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ===== 核心引擎 - 注意載入順序 ===== -->

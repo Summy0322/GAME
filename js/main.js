@@ -156,6 +156,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // 設定返回按鈕
+    setupBackButton();
 });
 
 // 載入章節
@@ -179,7 +182,7 @@ function loadChapter(chapterId) {
     
     if (chapterData) {
         console.log('✅ 找到章節資料');
-        
+
         // 收集該章節需要的所有資源
         const assets = collectChapterAssets(chapterData);
         
@@ -217,4 +220,96 @@ function collectChapterAssets(chapterData) {
     
     // 去重
     return [...new Set(assets)];
+}
+
+// 顯示退出確認彈窗
+function showExitConfirm(callback) {
+    const dialog = document.getElementById('exit-confirm-dialog');
+    const yesBtn = document.getElementById('exit-confirm-yes');
+    const noBtn = document.getElementById('exit-confirm-no');
+    
+    // 顯示彈窗
+    dialog.style.display = 'flex';
+    
+    // 暫停遊戲背景互動（可選）
+    document.getElementById('game-container').style.pointerEvents = 'none';
+    
+    // 清除舊的事件監聽器（避免重複綁定）
+    yesBtn.replaceWith(yesBtn.cloneNode(true));
+    noBtn.replaceWith(noBtn.cloneNode(true));
+    
+    // 重新獲取按鈕
+    const newYesBtn = document.getElementById('exit-confirm-yes');
+    const newNoBtn = document.getElementById('exit-confirm-no');
+    
+    // 確認按鈕
+    newYesBtn.onclick = () => {
+        // 播放點擊音效
+        if (typeof AudioManager !== 'undefined') {
+            AudioManager.playSFX('assets/sounds/click.mp3');
+        }
+        
+        // 隱藏彈窗
+        dialog.style.display = 'none';
+        document.getElementById('game-container').style.pointerEvents = 'auto';
+        
+        // 執行回調（退出邏輯）
+        if (callback) callback(true);
+    };
+    
+    // 取消按鈕
+    newNoBtn.onclick = () => {
+        // 播放點擊音效
+        if (typeof AudioManager !== 'undefined') {
+            AudioManager.playSFX('assets/sounds/click.mp3');
+        }
+        
+        // 隱藏彈窗
+        dialog.style.display = 'none';
+        document.getElementById('game-container').style.pointerEvents = 'auto';
+        
+        // 執行回調（不退出）
+        if (callback) callback(false);
+    };
+}
+
+// 修改返回按鈕的事件
+function setupBackButton() {
+    const backBtn = document.querySelector('#game-container .back-btn');
+    if (backBtn) {
+        // 移除原有 onclick
+        backBtn.removeAttribute('onclick');
+        
+        // 綁定新事件
+        backBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // 播放點擊音效
+            if (typeof AudioManager !== 'undefined') {
+                AudioManager.playSFX('assets/sounds/click.mp3');
+            }
+            
+            // 顯示確認彈窗
+            showExitConfirm((confirmed) => {
+                if (confirmed) {
+                    console.log('確認退出，返回關卡選擇');
+                    
+                    // 停止背景音樂
+                    if (typeof AudioManager !== 'undefined') {
+                        AudioManager.stopBGM();
+                    }
+                    
+                    // 清除對話系統
+                    if (typeof DialogueSystem !== 'undefined') {
+                        DialogueSystem.endDialogue();
+                    }
+                    
+                    // 返回關卡選擇
+                    showScene('level-select');
+                } else {
+                    console.log('取消退出，繼續遊戲');
+                }
+            });
+        });
+    }
 }

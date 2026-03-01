@@ -390,6 +390,81 @@ h2 {
     100% { opacity: 0.5; }
 }
 
+/* ========== 確認彈窗樣式 ========== */
+.confirm-dialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+}
+
+.confirm-dialog-content {
+    background: #2c3e50;
+    border: 3px solid #e67e22;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 400px;
+    width: 80%;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+}
+
+.confirm-dialog-content p {
+    color: white;
+    font-size: clamp(18px, 3vw, 24px);
+    margin: 10px 0;
+}
+
+.confirm-dialog-content .warning-text {
+    color: #ffd700;
+    font-size: clamp(14px, 2.5vw, 18px);
+    margin-bottom: 20px;
+}
+
+.confirm-dialog-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.confirm-btn {
+    padding: 12px 24px;
+    font-size: clamp(14px, 2.5vw, 18px);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.confirm-yes {
+    background-color: #e67e22;
+    color: white;
+}
+
+.confirm-yes:hover {
+    background-color: #f39c12;
+    transform: scale(1.05);
+}
+
+.confirm-no {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.confirm-no:hover {
+    background-color: #7f8c8d;
+    transform: scale(1.05);
+}
+
 /* ========== 針對手機橫向 (max-width: 920px) 的優化 ========== */
 @media (max-width: 920px) and (orientation: landscape) {
     
@@ -517,6 +592,16 @@ h2 {
         padding: 4px 8px;
         font-size: 11px;
     }
+
+    .confirm-dialog-content {
+        padding: 20px;
+        width: 70%;
+    }
+    
+    .confirm-btn {
+        padding: 8px 16px;
+        min-width: 100px;
+    }
 }
 
 /* ========== 小手機橫向 (更極致的縮放) ========== */
@@ -576,6 +661,16 @@ h2 {
     .back-btn, .skip-btn {
         padding: 3px 6px;
         font-size: 10px;
+    }
+
+    .confirm-dialog-content {
+        padding: 15px;
+    }
+    
+    .confirm-btn {
+        padding: 6px 12px;
+        min-width: 80px;
+        font-size: 12px;
     }
 }
 
