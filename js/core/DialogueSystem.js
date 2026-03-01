@@ -232,8 +232,8 @@ const DialogueSystem = {
         // 根據遊戲名稱啟動對應的小遊戲
         const minigameMap = {
             'memory': window.MemoryGame,
-            'puzzle': window.PuzzleGame,
-            'finding': window.FindingGame
+            'finding': window.FindingGame,
+            'puzzle': window.PuzzleGame
         };
         
         const Minigame = minigameMap[minigameName];
@@ -245,10 +245,11 @@ const DialogueSystem = {
             });
         } else {
             console.error('❌ 找不到小遊戲:', minigameName);
-            setTimeout(() => this.onMinigameComplete(true), 2000);
+            // 如果沒有小遊戲，直接返回
+            setTimeout(() => this.onMinigameComplete(true), 500);
         }
     },
-    
+
     onMinigameComplete: function(success) {
         console.log('🏁 小遊戲完成，結果:', success ? '成功' : '失敗');
         

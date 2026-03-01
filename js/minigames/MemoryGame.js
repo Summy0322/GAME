@@ -3,24 +3,23 @@ const MemoryGame = {
     canvas: document.getElementById('gameCanvas'),
     ctx: null,
     gameActive: false,
-    onCompleteCallback: null,  // 儲存回調函數
+    onCompleteCallback: null,
     
     start: function(options) {
-        console.log('記憶遊戲開始');
+        console.log('🎮 記憶遊戲開始');
         
         this.ctx = this.canvas.getContext('2d');
         this.gameActive = true;
-        this.onCompleteCallback = options.onComplete;  // 儲存回調
+        this.onCompleteCallback = options.onComplete;
         
         this.init();
         this.gameLoop();
     },
     
     init: function() {
-        // 初始化遊戲邏輯
         console.log('初始化記憶遊戲');
         
-        // 範例：3秒後自動完成
+        // 模擬遊戲過程，3秒後自動完成
         setTimeout(() => {
             this.gameComplete(true);
         }, 3000);
@@ -35,7 +34,7 @@ const MemoryGame = {
     },
     
     update: function() {
-        // 更新遊戲狀態
+        // 更新遊戲邏輯
     },
     
     draw: function() {
@@ -44,7 +43,6 @@ const MemoryGame = {
         this.ctx.fillStyle = '#333';
         this.ctx.fillRect(0, 0, 1280, 720);
         
-        // 繪製遊戲元素
         this.ctx.fillStyle = 'white';
         this.ctx.font = '30px Arial';
         this.ctx.fillText('記憶小遊戲', 500, 360);
@@ -55,9 +53,10 @@ const MemoryGame = {
     gameComplete: function(success) {
         this.gameActive = false;
         
-        // 呼叫回調函數
         if (this.onCompleteCallback) {
             this.onCompleteCallback(success);
         }
     }
 };
+
+window.MemoryGame = MemoryGame;
