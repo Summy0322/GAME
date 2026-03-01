@@ -66,7 +66,7 @@ function playIntroVideo() {
 function showIntro() {
     const backBtn = document.querySelector('#game-container .back-btn');
     backBtn.style.display = 'none';
-    
+
     console.log('🎬 播放開場介紹');
     
     if (typeof IntroChapter === 'undefined') {
@@ -89,6 +89,11 @@ function showIntro() {
 // DOM 載入完成後初始化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📌 DOM 載入完成');
+
+    // 初始化 LoadingManager
+    if (typeof LoadingManager !== 'undefined' && LoadingManager.init) {
+        LoadingManager.init();
+    }
     
     // 檢查 AudioManager 是否已初始化
     console.log('🎵 AudioManager 狀態:', {
@@ -129,7 +134,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
             
-            playIntroVideo();  // 修改這裡！
+            // 預載開場影片和介紹圖片
+            const assets = [
+                'assets/videos/intro.mp4',
+                'assets/images/characters/阿斗仔.png',  // 開場介紹角色
+                'assets/images/封面.jpg'          // 開場介紹背景
+            ];
+            
+            LoadingManager.showAndLoad(assets, () => {
+                playIntroVideo();
+            });
         });
     }
     
@@ -165,12 +179,14 @@ function loadChapter(chapterId) {
     
     if (chapterData) {
         console.log('✅ 找到章節資料');
-        showScene('game-container');
-        
-        if (typeof DialogueSystem !== 'undefined') {
-            DialogueSystem.isIntro = false;
-            DialogueSystem.loadChapter(chapterData);
-        }
+        LoadingManager.showAndLoad(assets, () => {
+            showScene('game-container');
+            
+            if (typeof DialogueSystem !== 'undefined') {
+                DialogueSystem.isIntro = false;
+                DialogueSystem.loadChapter(chapterData);
+            }
+        });
     } else {
         console.error('❌ 找不到章節資料:', chapterId);
         alert('章節資料載入失敗，請檢查 console');

@@ -8,6 +8,13 @@
 </head>
 <body>
     <div id="game-wrapper">
+        <!-- 新增 Loading 畫面 -->
+        <div id="loading-screen" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>資源加載中... <span id="loading-progress">0</span>%</p>
+            </div>
+        </div>
         <!-- 起始頁面 -->
         <div id="start-menu" class="scene">
             <h1>北斗紅磚市場的微光記憶</h1>
@@ -56,7 +63,7 @@
             <!-- 選項容器 -->
             <div id="options-container"></div>
 
-            <button class="back-btn" onclick="showScene('level-select')">返回選單</button>
+            <button class="back-btn" onclick="showScene('level-select')" style="display:none;">返回選單</button>
         </div>
         
         <!-- 音效控制（隱藏） -->
