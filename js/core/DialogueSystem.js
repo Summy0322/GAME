@@ -214,7 +214,7 @@ const DialogueSystem = {
     },
     
     startMinigame: function(minigameName, returnToNodeId) {
-        console.log('🎮 啟動小遊戲:', minigameName, '返回節點:', returnToNodeId);
+        console.log('🎮 DialogueSystem 請求啟動小遊戲:', minigameName);
         
         this.returnToNode = returnToNodeId;
         
@@ -223,30 +223,24 @@ const DialogueSystem = {
             this.typewriter.clear();
         }
         
-        // 顯示畫布
-        if (this.gameCanvas) {
-            this.gameCanvas.style.display = 'block';
-            this.gameCanvas.classList.add('minigame-active');
-        }
-        
-        // 根據遊戲名稱啟動對應的小遊戲
-        const minigameMap = {
-            'memory': window.MemoryGame,
-            'finding': window.FindingGame,
-            'puzzle': window.PuzzleGame
-        };
-        
-        const Minigame = minigameMap[minigameName];
-        if (Minigame && Minigame.start) {
-            Minigame.start({
+        // 交給 GameEngine 處理
+        if (typeof GameEngine !== 'undefined') {
+            GameEngine.startMinigame(minigameName, {
                 onComplete: (success) => {
                     this.onMinigameComplete(success);
                 }
             });
         } else {
-            console.error('❌ 找不到小遊戲:', minigameName);
-            // 如果沒有小遊戲，直接返回
-            setTimeout(() => this.onMinigameComplete(true), 500);
+            console.error('❌ GameEngine 未定義');
+            // 備用方案
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas) {
+                canvas.style.display = 'block';
+                setTimeout(() => {
+                    canvas.style.display = 'none';
+                    this.onMinigameComplete(true);
+                }, 2000);
+            }
         }
     },
 

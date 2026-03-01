@@ -12,6 +12,9 @@ const MemoryGame = {
         this.gameActive = true;
         this.onCompleteCallback = options.onComplete;
         
+        // 確保畫布顯示
+        this.canvas.style.display = 'block';
+        
         this.init();
         this.gameLoop();
     },

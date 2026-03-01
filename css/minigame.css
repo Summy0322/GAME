@@ -1,0 +1,57 @@
+/* css/minigame.css */
+/* 專門給小遊戲用的樣式 */
+
+/* 小遊戲畫布 */
+#gameCanvas.minigame-active {
+    display: block !important;
+    background-color: #333;
+    z-index: 10;
+}
+
+/* 小遊戲通用按鈕 */
+.minigame-btn {
+    padding: 10px 20px;
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.minigame-btn:hover {
+    background-color: #f39c12;
+}
+
+/* 小遊戲分數顯示 */
+.minigame-score {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #ffd700;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 2px 2px 2px #000;
+}
+
+/* 小遊戲倒數計時 */
+.minigame-timer {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #e67e22;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* 手機版調整 */
+@media (max-width: 920px) and (orientation: landscape) {
+    .minigame-score, .minigame-timer {
+        font-size: 18px;
+    }
+    
+    .minigame-btn {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}
