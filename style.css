@@ -1,3 +1,12 @@
+/* 注音字型定義 - 必須寫在最外層 */
+@font-face {
+    font-family: 'BpmfZihiKai';
+    src: url('/assets/fonts/BpmfZihiKaiStd-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -74,6 +83,126 @@ html {
 #loading-progress {
     font-weight: bold;
     color: #ffd700;
+}
+
+/* ========== 年齡選擇視窗 ========== */
+.age-dialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 5000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.age-dialog-content {
+    background: linear-gradient(145deg, #2c3e50, #1a2632);
+    border: 4px solid #e67e22;
+    border-radius: 30px;
+    padding: 40px;
+    max-width: 600px;
+    width: 80%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    animation: ageDialogAppear 0.5s ease-out;
+}
+
+@keyframes ageDialogAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.age-dialog h2 {
+    color: #ffd700;
+    font-size: clamp(28px, 5vw, 40px);
+    margin: 0 0 10px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.age-subtitle {
+    color: #e67e22;
+    font-size: clamp(16px, 2.5vw, 20px);
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.age-buttons {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.age-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 30px 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.age-btn:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 30px rgba(0,0,0,0.4);
+}
+
+.age-btn:active {
+    transform: translateY(-5px);
+}
+
+.age-icon {
+    font-size: 60px;
+    line-height: 1;
+}
+
+.age-text {
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: bold;
+}
+
+.age-desc {
+    font-size: clamp(14px, 2vw, 18px);
+    opacity: 0.9;
+}
+
+/* 小朋友版按鈕樣式 */
+.child-btn {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+    color: white;
+    border: 3px solid #f1c40f;
+}
+
+.child-btn:hover {
+    background: linear-gradient(145deg, #5dade2, #3498db);
+}
+
+/* 一般版按鈕樣式 */
+.adult-btn {
+    background: linear-gradient(145deg, #e67e22, #d35400);
+    color: white;
+    border: 3px solid #f39c12;
+}
+
+.adult-btn:hover {
+    background: linear-gradient(145deg, #f39c12, #e67e22);
 }
 
 /* ========== 統一背景設定，確保內容始終在容器內 ========== */
@@ -182,6 +311,21 @@ button {
 button:hover {
     background-color: #f39c12;
     transform: scale(1.05);
+}
+
+/* ========== 小朋友版專用樣式 ========== */
+.child-mode-text {
+    font-family: 'BpmfZihiKai', '標楷體', '微軟正黑體', sans-serif;
+}
+
+/* 對話框小朋友版樣式 */
+#dialog-box.child-mode {
+    line-height: 1.8;
+}
+
+#dialogue-text.child-mode {
+    line-height: 1.8;
+    font-family: 'BpmfZihiKai', '標楷體', '微軟正黑體', sans-serif;
 }
 
 /* ========== 修正 1：縮小標題文字 (h1, h2) ========== */
@@ -467,6 +611,27 @@ h2 {
 
 /* ========== 針對手機橫向 (max-width: 920px) 的優化 ========== */
 @media (max-width: 920px) and (orientation: landscape) {
+    .age-dialog-content {
+        padding: 25px;
+        width: 90%;
+    }
+    
+    .age-buttons {
+        gap: 15px;
+    }
+    
+    .age-btn {
+        min-width: 150px;
+        padding: 20px 15px;
+    }
+    
+    .age-icon {
+        font-size: 40px;
+    }
+    
+    .age-text {
+        font-size: 20px;
+    }
     
     h1 { 
         font-size: 22px; 
@@ -538,16 +703,16 @@ h2 {
 
     /* 選項按鈕樣式 - 增加高度，調整字體 */
     #options-container button {
-        padding: 10px 12px;        /* 增加上下內距到 10px (原本 6px)，讓按鈕更高 */
-        font-size: clamp(12px, 2.5vw, 16px);  /* 字體稍微調大 (原本 10-12px) */
+        padding: 10px 12px;
+        font-size: clamp(12px, 2.5vw, 16px);
         min-width: 100px;
         max-width: 300px;
         width: 100%;
-        border-radius: 6px;        /* 稍微增加圓角 */
+        border-radius: 6px;
         white-space: normal;
         word-break: break-word;
-        line-height: 1.4;           /* 稍微增加行高 */
-        max-height: 50px;           /* 放寬最大高度限制 (原本 40px) */
+        line-height: 1.4;
+        max-height: 50px;
         
         /* 確保文字垂直置中 */
         display: flex;
@@ -561,18 +726,13 @@ h2 {
     }
 
     #options-container:has(button:nth-child(2)) {
-        top: 42%;  /* 兩個選項時稍微下移 */
+        top: 42%;
     }
 
     #options-container:has(button:nth-child(3)) {
-        top: 38%;  /* 三個選項時稍微上移 */
+        top: 38%;
         gap: 6px;
     }
-
-    /* 計算選項群組的總高度，但無法直接用 CSS 計算，所以我們固定按鈕高度 */
-    /* 按鈕高度約 40px，加上 gap 8px，可以估算群組高度 */
-    /* 1個選項：約 40px，2個選項：約 88px，3個選項：約 136px */
-    /* 由於已經使用 translateY(-50%)，群組中心自然會在 40% 處 */
 
     #character-container {
         height: 50%;
@@ -606,6 +766,19 @@ h2 {
 
 /* ========== 小手機橫向 (更極致的縮放) ========== */
 @media (max-width: 480px) and (orientation: landscape) {
+    .age-btn {
+        min-width: 120px;
+        padding: 15px 10px;
+    }
+    
+    .age-icon {
+        font-size: 30px;
+    }
+    
+    .age-text {
+        font-size: 16px;
+    }
+
     #dialog-box {
         padding: 12px 10px 5px 10px;
     }
@@ -630,11 +803,11 @@ h2 {
     
     /* 小手機選項按鈕 - 同樣增加高度 */
     #options-container button {
-        font-size: clamp(10px, 2.2vw, 12px);  /* 稍微調大 */
-        padding: 8px 10px;        /* 增加上下內距 (原本 4px 8px) */
+        font-size: clamp(10px, 2.2vw, 12px);
+        padding: 8px 10px;
         min-width: 80px;
         max-width: 150px;
-        max-height: 40px;          /* 放寬高度限制 */
+        max-height: 40px;
         border-radius: 5px;
         
         /* 確保文字垂直置中 */

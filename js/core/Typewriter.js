@@ -38,9 +38,9 @@ const Typewriter = {
     },
     
     // 顯示對話（打字機效果）
-    showDialogue: function(name, text, characterImage = null, voice = null, namePosition = 'left') {
+    showDialogue: function(name, text, characterImage = null, voice = null, namePosition = 'left', textClass = '') {
         return new Promise((resolve) => {
-            console.log('📢 Typewriter 顯示對話:', { name, namePosition });
+            console.log('📢 Typewriter 顯示對話:', { name, namePosition, textClass });
             
             // 清除舊的完成指示器
             const oldIndicator = document.getElementById('typing-complete-indicator');
@@ -70,6 +70,20 @@ const Typewriter = {
                     default:
                         this.npcName.classList.add('position-left');
                         break;
+                }
+            }
+
+            // ==== 修改這裡：加入除錯 ====
+            if (this.dialogueText) {
+                // 先移除所有可能的樣式類別
+                this.dialogueText.classList.remove('child-mode-text');
+                
+                if (textClass) {
+                    this.dialogueText.classList.add(textClass);
+                    console.log('✅ Typewriter 已加入 class:', textClass);
+                    console.log('目前的 classList:', this.dialogueText.classList);
+                } else {
+                    console.log('ℹ️ Typewriter 沒有收到 textClass');
                 }
             }
             

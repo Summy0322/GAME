@@ -1,5 +1,59 @@
 // js/main.js
 
+// 全域變數記錄選擇的年齡模式
+let gameMode = null; // 'child' 或 'adult'
+
+// 顯示年齡選擇視窗
+function showAgeSelect() {
+    return new Promise((resolve) => {
+        const ageDialog = document.getElementById('age-select-dialog');
+        const childBtn = document.getElementById('age-child');
+        const adultBtn = document.getElementById('age-adult');
+        
+        // 如果找不到元素，直接 resolve（預防錯誤）
+        if (!ageDialog || !childBtn || !adultBtn) {
+            resolve('adult');
+            return;
+        }
+        
+        // 顯示視窗
+        ageDialog.style.display = 'flex';
+        
+        // 小朋友版選擇
+        childBtn.onclick = () => {
+            if (typeof AudioManager !== 'undefined') {
+                AudioManager.playSFX('assets/sounds/click.mp3');
+            }
+            window.gameMode = 'child';  // 明確指定給 window
+            gameMode = 'child';         // 同時也設定區域變數
+            ageDialog.style.display = 'none';
+            
+            // 為 body 加上標記
+            document.body.classList.add('child-mode');
+            
+            console.log('✅ 已設定 gameMode = child');
+            resolve('child');
+        };
+
+        
+        // 一般版選擇
+        adultBtn.onclick = () => {
+            if (typeof AudioManager !== 'undefined') {
+                AudioManager.playSFX('assets/sounds/click.mp3');
+            }
+            window.gameMode = 'adult';  // 明確指定給 window
+            gameMode = 'adult';          // 同時也設定區域變數
+            ageDialog.style.display = 'none';
+            
+            // 移除小朋友版標記
+            document.body.classList.remove('child-mode');
+            
+            console.log('✅ 已設定 gameMode = adult');
+            resolve('adult');
+        };
+    });
+}
+
 // ===== 場景切換函數（全域）=====
 function showScene(sceneId) {
     console.log('切換場景到:', sceneId);
@@ -87,63 +141,33 @@ function showIntro() {
 }
 
 // DOM 載入完成後初始化
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('📌 DOM 載入完成');
 
-    // 初始化 LoadingManager
-    if (typeof LoadingManager !== 'undefined' && LoadingManager.init) {
+    // 先初始化 LoadingManager
+    if (typeof LoadingManager !== 'undefined') {
         LoadingManager.init();
     }
     
-    // 檢查 AudioManager 是否已初始化
-    console.log('🎵 AudioManager 狀態:', {
-        exists: !!window.AudioManager,
-        bgMusic: AudioManager?.bgMusic,
-        sfxPlayer: AudioManager?.sfxPlayer
-    });
+    // 初始化系統
+    if (typeof AudioManager !== 'undefined') AudioManager.init();
+    if (typeof SceneManager !== 'undefined') SceneManager.init();
+    if (typeof Typewriter !== 'undefined') Typewriter.init();
+    if (typeof DialogueSystem !== 'undefined') DialogueSystem.init();
     
-    // 如果 AudioManager 還沒初始化，手動初始化
-    if (typeof AudioManager !== 'undefined' && !AudioManager.bgMusic) {
-        console.log('🎵 手動初始化 AudioManager');
-        AudioManager.init();
-    }
-    
-    // 初始化 SceneManager
-    if (typeof SceneManager !== 'undefined' && SceneManager.init) {
-        SceneManager.init();
-    }
-    
-    // 初始化 Typewriter
-    if (typeof Typewriter !== 'undefined' && Typewriter.init) {
-        Typewriter.init();
-    }
-    
-    // 初始化 DialogueSystem
-    if (typeof DialogueSystem !== 'undefined' && DialogueSystem.init) {
-        DialogueSystem.init();
-    }
+    // 顯示年齡選擇視窗（等待使用者選擇）
+    const selectedMode = await showAgeSelect();
+    console.log('選擇的模式:', selectedMode);
     
     // 開始遊戲按鈕
     const startBtn = document.getElementById('startBtn');
     if (startBtn) {
         startBtn.addEventListener('click', () => {
             console.log('👉 點擊開始遊戲');
-            
-            // 播放點擊音效
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
-            
-            // 預載開場影片和介紹圖片
-            const assets = [
-                'assets/videos/intro.mp4',
-                'assets/images/characters/阿斗仔.png',  // 開場介紹角色
-                'assets/images/封面.jpg'          // 開場介紹背景
-            ];
-            
-            LoadingManager.showAndLoad(assets, () => {
-                playIntroVideo();
-            });
+            playIntroVideo();
         });
     }
     
@@ -151,14 +175,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const exitBtn = document.getElementById('exitBtn');
     if (exitBtn) {
         exitBtn.addEventListener('click', () => {
-            if (confirm('確定要離開遊戲嗎？')) {
-                window.close();
+            // 這裡可以呼叫您之前做的退出確認
+            if (typeof showExitConfirm !== 'undefined') {
+                showExitConfirm((confirmed) => {
+                    if (confirmed) window.close();
+                });
+            } else {
+                if (confirm('確定要離開遊戲嗎？')) window.close();
             }
         });
     }
-
+    
     // 設定返回按鈕
-    setupBackButton();
+    if (typeof setupBackButton !== 'undefined') {
+        setupBackButton();
+    }
 });
 
 // 載入章節

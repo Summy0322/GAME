@@ -123,20 +123,69 @@ const DialogueSystem = {
             this.optionsContainer.style.display = 'none';
         }
         
-        // ==== 關鍵修改：傳入 namePosition 參數 ====
+        // ===== 修正：直接檢查全域變數，並提供備用方案 =====
+        // 直接檢查 window.gameMode
+        let currentMode = window.gameMode;
+        console.log('當前 window.gameMode:', currentMode);
+        
+        // 如果還是 undefined，試試看從 localStorage 或 document.body class 判斷
+        if (currentMode === undefined || currentMode === null) {
+            if (document.body.classList.contains('child-mode')) {
+                currentMode = 'child';
+                console.log('從 body class 判斷為 child');
+            } else {
+                currentMode = 'adult';
+                console.log('預設為 adult');
+            }
+        }
+        
+        let displayText = line.text || '...';
+        
+        // 直接設定字型
+        if (currentMode === 'child') {
+            console.log('👶 小朋友模式，直接強制設定字型');
+            
+            // 如果有 childText 就用
+            if (line.childText) {
+                displayText = line.childText;
+            }
+            
+            // ===== 暴力設定所有相關元素的字型 =====
+            const elements = [
+                this.dialogueText,
+                this.dialogBox,
+                this.npcName,
+                document.getElementById('dialogue-text'),
+                document.getElementById('npc-name'),
+                document.getElementById('dialog-box')
+            ];
+            
+            elements.forEach(el => {
+                if (el) {
+                    el.style.fontFamily = 'BpmfZihiKai, 標楷體, 微軟正黑體, sans-serif';
+                    if (el === this.dialogueText || el === document.getElementById('dialogue-text')) {
+                        el.style.lineHeight = '1.8';
+                    }
+                }
+            });
+            
+            console.log('✅ 已設定字型');
+        }
+        
+        // 顯示對話
         await this.typewriter.showDialogue(
             line.name || '未知',
-            line.text || '...',
+            displayText,
             line.characterImage,
             line.voice,
-            line.namePosition || 'left'  // 從對話資料讀取位置，預設 left
+            line.namePosition || 'left',
+            currentMode === 'child' ? 'child-mode-text' : ''  // 傳入 class
         );
         
         // 對話顯示完成後的處理
         if (line.options && line.options.length > 0) {
             console.log('🔘 顯示選項:', line.options);
             
-            // 確保選項容器存在
             if (!this.optionsContainer) {
                 console.error('❌ optionsContainer 不存在，無法顯示選項');
                 return;
