@@ -10,11 +10,6 @@
     font-display: swap;
 }
 
-/* 強制設定全域字型 - 使用 !important 確保不被覆蓋 */
-* {
-    font-family: 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif !important;
-}
-
 body {
     margin: 0;
     padding: 0;
