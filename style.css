@@ -10,7 +10,7 @@
 /* 標楷體字型定義 - 使用您上傳的標楷體.ttf */
 @font-face {
     font-family: 'CustomKai';
-    src: url('./assets/fonts/標楷體.ttf') format('truetype');
+    src: url('./assets/fonts/PLKai.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
