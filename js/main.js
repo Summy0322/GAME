@@ -76,6 +76,72 @@ function showScene(sceneId) {
     }
 }
 
+// 預載入開場所需的所有資源（影片 + 字型 + 開場介紹圖片）
+function preloadIntroAssets(onComplete) {
+    console.log('📦 開始預載入開場資源...');
+    
+    // 收集需要預載入的資源
+    const assetsToPreload = [];
+    
+    // 1. 加入開場影片
+    const introVideo = document.getElementById('intro-video');
+    if (introVideo && introVideo.src) {
+        assetsToPreload.push(introVideo.src);
+    } else {
+        // 如果 video 元素沒有 src，嘗試從 data-src 或其他屬性取得
+        const videoSrc = introVideo ? introVideo.getAttribute('src') || introVideo.getAttribute('data-src') : null;
+        if (videoSrc) assetsToPreload.push(videoSrc);
+    }
+    
+    // 2. 加入注音字型檔案（小朋友模式會用到）
+    // 注意：字型檔案無法透過 Image 載入，但可以透過建立 link 預先載入
+    const fontUrl = './assets/fonts/BpmfZihiKaiStd-Regular.ttf';
+    assetsToPreload.push(fontUrl);
+    
+    // 3. 收集 IntroChapter 中的所有圖片資源
+    if (typeof IntroChapter !== 'undefined' && IntroChapter) {
+        // 加入背景圖
+        if (IntroChapter.background) {
+            assetsToPreload.push(IntroChapter.background);
+        }
+        
+        // 遍歷對話，收集角色圖片
+        if (IntroChapter.dialogue && Array.isArray(IntroChapter.dialogue)) {
+            IntroChapter.dialogue.forEach(line => {
+                if (line.characterImage) {
+                    assetsToPreload.push(line.characterImage);
+                }
+            });
+        }
+    }
+    
+    // 4. 加入常見的 UI 圖片（確保介面圖片也預載）
+    const commonImages = [
+        'assets/images/title2.png',
+        'assets/images/intro/封面.jpg'
+    ];
+    commonImages.forEach(img => {
+        if (!assetsToPreload.includes(img)) {
+            assetsToPreload.push(img);
+        }
+    });
+    
+    // 去重
+    const uniqueAssets = [...new Set(assetsToPreload)];
+    console.log(`📦 需要預載入 ${uniqueAssets.length} 個資源:`, uniqueAssets);
+    
+    // 使用 LoadingManager 載入資源
+    if (typeof LoadingManager !== 'undefined' && LoadingManager.showAndLoad) {
+        LoadingManager.showAndLoad(uniqueAssets, () => {
+            console.log('✅ 開場資源預載入完成');
+            if (onComplete) onComplete();
+        });
+    } else {
+        console.warn('⚠️ LoadingManager 未定義，跳過預載入');
+        if (onComplete) onComplete();
+    }
+}
+
 // 播放開場影片
 function playIntroVideo() {
     console.log('🎬 播放開場影片');
@@ -159,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const selectedMode = await showAgeSelect();
     console.log('選擇的模式:', selectedMode);
     
-    // 開始遊戲按鈕
+    // 開始遊戲按鈕 - 加入預載入流程
     const startBtn = document.getElementById('startBtn');
     if (startBtn) {
         startBtn.addEventListener('click', () => {
@@ -167,7 +233,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
-            playIntroVideo();
+            
+            // 先預載入資源，完成後再播放影片
+            preloadIntroAssets(() => {
+                playIntroVideo();
+            });
         });
     }
     
