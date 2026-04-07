@@ -1,7 +1,7 @@
-/* 載入 Google Fonts 的 LXGW WenKai TC (霞鶩文楷) - 必須在最頂部 */
+/* 載入 Google Fonts 的 LXGW WenKai TC (霞鶩文楷) - 成人模式使用 */
 @import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap');
 
-/* 注音字型定義 - 使用相對路徑 */
+/* 注音字型定義 - 小朋友模式使用 */
 @font-face {
     font-family: 'BpmfZihiKai';
     src: url('./assets/fonts/BpmfZihiKaiStd-Regular.ttf') format('truetype');
@@ -10,36 +10,75 @@
     font-display: swap;
 }
 
+/* 基礎樣式：預設成人模式字型 */
 body {
     margin: 0;
     padding: 0;
     background: #000;
-    /* 一般模式：使用 LXGW WenKai TC */
     font-family: 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif;
-
-    /* 關鍵：用 dvh 取代 vh */
     height: 100dvh;
     width: 100%;
-
-    /* ❗不要 fixed */
     position: relative;
-
-    /* 保留安全區 */
     padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* 所有文字預設繼承 body 的字型，不強制覆蓋 */
+* {
+    font-family: inherit;
+}
+
+/* ========== 小朋友模式：僅特定元素套用注音字型 ========== */
+body.child-mode #npc-name,
+body.child-mode #dialogue-text,
+body.child-mode #options-container button,
+body.child-mode .defense-msg,
+body.child-mode .defense-combo,
+body.child-mode .defense-hint {
+    font-family: 'BpmfZihiKai', 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif !important;
+}
+
+/* 確保對話框內所有文字（包含動態內容）都套用注音 */
+body.child-mode #dialog-box,
+body.child-mode #dialog-box * {
+    font-family: inherit; /* 繼承上面指定的特定元素字型 */
+}
+
+/* 小朋友模式下，選項按鈕文字專用字型（已在上方定義，此為加強） */
+body.child-mode #options-container button {
+    font-family: 'BpmfZihiKai', 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif !important;
+}
+
+/* 防禦小遊戲相關文字（若有需要可保留） */
+body.child-mode .defense-msg,
+body.child-mode .defense-combo,
+body.child-mode .defense-hint {
+    font-family: 'BpmfZihiKai', 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif !important;
+}
+
+/* 其餘所有元件（按鈕、標題、一般文字）維持成人模式字型，不套用注音 */
+body.child-mode button:not(#options-container button),
+body.child-mode h1,
+body.child-mode h2,
+body.child-mode .back-btn,
+body.child-mode .skip-btn,
+body.child-mode .level-buttons button,
+body.child-mode .age-btn,
+body.child-mode .confirm-dialog-content,
+body.child-mode #loading-screen {
+    font-family: 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif !important;
+}
+
+/* ========== 其餘原始樣式保持不變 ========== */
 html {
     height: 100vh;
     height: -webkit-fill-available;
 }
 
-/* 遊戲主容器 - 這是核心修正點 */
+/* 遊戲主容器 */
 #game-wrapper {
     position: relative;
-
     width: min(100vw, calc(100dvh * 16 / 9));
     height: min(100dvh, calc(100vw * 9 / 16));
-
     margin: auto;
     overflow: hidden;
 }
@@ -209,7 +248,7 @@ html {
     background: linear-gradient(145deg, #f39c12, #e67e22);
 }
 
-/* ========== 統一背景設定，確保內容始終在容器內 ========== */
+/* ========== 統一背景設定 ========== */
 .scene, #game-background {
     position: absolute;
     width: 100%;
@@ -256,7 +295,7 @@ html {
     align-items: center;
 }
 
-/* 影片修正：使用 object-fit 確保不被裁切 */
+/* 影片修正 */
 #intro-video {
     width: 100%;
     height: 100%;
@@ -317,22 +356,16 @@ button:hover {
     transform: scale(1.05);
 }
 
-/* ========== 小朋友版專用樣式 ========== */
-.child-mode-text {
-    font-family: 'BpmfZihiKai', 'LXGW WenKai TC', 'DFKai-SB', '標楷體', '微軟正黑體', sans-serif;
-}
-
-/* 對話框小朋友版樣式 */
+/* 對話框小朋友版樣式（僅調整行高，不影響字型） */
 #dialog-box.child-mode {
     line-height: 1.8;
 }
 
 #dialogue-text.child-mode {
     line-height: 1.8;
-    font-family: 'BpmfZihiKai', 'LXGW WenKai TC', 'DFKai-SB', '標楷體', '微軟正黑體', sans-serif;
 }
 
-/* ========== 修正 1：縮小標題文字 (h1, h2) ========== */
+/* ========== 修正 1：縮小標題文字 ========== */
 h1 {
     font-size: clamp(24px, 5vw, 40px);
     margin: 15px 0;
@@ -389,7 +422,7 @@ h2 {
     margin: 0;
 }
 
-/* ========== 對話系統優化：改用相對百分比寬度 ========== */
+/* ========== 對話系統優化 ========== */
 #dialog-box {
     position: absolute;
     bottom: 5%;
@@ -466,7 +499,7 @@ h2 {
     margin: 0;
 }
 
-/* 角色圖片容器：讓角色站得更穩 */
+/* 角色圖片容器 */
 #character-container {
     position: absolute;
     bottom: 15%;
@@ -613,7 +646,7 @@ h2 {
     transform: scale(1.05);
 }
 
-/* ========== 針對手機橫向 (max-width: 920px) 的優化 ========== */
+/* ========== 響應式調整 ========== */
 @media (max-width: 920px) and (orientation: landscape) {
     .age-dialog-content {
         padding: 25px;
@@ -683,59 +716,18 @@ h2 {
         margin-top: 0;
     }
 
-    /* ===== 選項容器：讓整個群組的中間固定在 1/3 處 ===== */
     #options-container {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40%;
-        gap: 8px;
-        z-index: 30;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        
-        /* 關鍵：使用 translateY 搭配 calc 讓群組中間對齊 1/3 處 */
         top: 40%;
         transform: translateX(-50%) translateY(-50%);
-        
-        /* 確保選項容器不會太大 */
+        width: 40%;
+        gap: 8px;
         max-height: 50vh;
-        overflow-y: auto;
     }
 
-    /* 選項按鈕樣式 - 增加高度，調整字體 */
     #options-container button {
         padding: 10px 12px;
         font-size: clamp(12px, 2.5vw, 16px);
         min-width: 100px;
-        max-width: 300px;
-        width: 100%;
-        border-radius: 6px;
-        white-space: normal;
-        word-break: break-word;
-        line-height: 1.4;
-        max-height: 50px;
-        
-        /* 確保文字垂直置中 */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* 根據選項數量微調位置 (可選) */
-    #options-container:has(button:only-child) {
-        gap: 0;
-    }
-
-    #options-container:has(button:nth-child(2)) {
-        top: 42%;
-    }
-
-    #options-container:has(button:nth-child(3)) {
-        top: 38%;
-        gap: 6px;
     }
 
     #character-container {
@@ -768,7 +760,6 @@ h2 {
     }
 }
 
-/* ========== 小手機橫向 (更極致的縮放) ========== */
 @media (max-width: 480px) and (orientation: landscape) {
     .age-btn {
         min-width: 120px;
@@ -797,37 +788,15 @@ h2 {
         font-size: 11px;
     }
     
-    /* 小手機選項容器 */
     #options-container {
-        top: 40%;
-        transform: translateX(-50%) translateY(-50%);
         width: 45%;
         gap: 6px;
     }
     
-    /* 小手機選項按鈕 - 同樣增加高度 */
     #options-container button {
         font-size: clamp(10px, 2.2vw, 12px);
         padding: 8px 10px;
         min-width: 80px;
-        max-width: 150px;
-        max-height: 40px;
-        border-radius: 5px;
-        
-        /* 確保文字垂直置中 */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* 小手機根據選項數量調整 */
-    #options-container:has(button:nth-child(2)) {
-        top: 42%;
-    }
-    
-    #options-container:has(button:nth-child(3)) {
-        top: 38%;
-        gap: 5px;
     }
     
     #character-container {
