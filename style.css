@@ -1,3 +1,6 @@
+/* 載入 Google Fonts 的 LXGW WenKai TC (霞鶩文楷) - 必須在最頂部 */
+@import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap');
+
 /* 注音字型定義 - 使用相對路徑 */
 @font-face {
     font-family: 'BpmfZihiKai';
@@ -7,8 +10,10 @@
     font-display: swap;
 }
 
-/* 載入 Google Fonts 的 LXGW WenKai TC (霞鶩文楷) */
-@import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap');
+/* 強制設定全域字型 - 使用 !important 確保不被覆蓋 */
+* {
+    font-family: 'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif !important;
+}
 
 body {
     margin: 0;
