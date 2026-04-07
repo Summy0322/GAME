@@ -1,7 +1,7 @@
-/* 注音字型定義 - 必須寫在最外層 */
+/* 注音字型定義 - 使用相對路徑 */
 @font-face {
     font-family: 'BpmfZihiKai';
-    src: url('/assets/fonts/BpmfZihiKaiStd-Regular.ttf') format('truetype');
+    src: url('./assets/fonts/BpmfZihiKaiStd-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
