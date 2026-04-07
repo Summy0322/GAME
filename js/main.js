@@ -196,7 +196,7 @@ function playIntroVideo() {
 // 顯示開場介紹
 function showIntro() {
     const backBtn = document.querySelector('#game-container .back-btn');
-    backBtn.style.display = 'none';
+    if (backBtn) backBtn.style.display = 'none';
 
     console.log('🎬 播放開場介紹');
     
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 // 載入章節
 function loadChapter(chapterId) {
     const backBtn = document.querySelector('#game-container .back-btn');
-    backBtn.style.display = 'block';
+    if (backBtn) backBtn.style.display = 'block';
 
     console.log('📖 載入章節:', chapterId);
     
@@ -341,9 +341,13 @@ function showExitConfirm(callback) {
     const noBtn = document.getElementById('exit-confirm-no');
     
     // 顯示彈窗
-    dialog.style.display = 'flex';
+    if (!dialog || !yesBtn || !noBtn) {
+        if (callback) callback(confirm('確定要離開嗎？'));
+        return;
+    }
     
     // 暫停遊戲背景互動（可選）
+    dialog.style.display = 'flex';
     document.getElementById('game-container').style.pointerEvents = 'none';
     
     // 清除舊的事件監聽器（避免重複綁定）
