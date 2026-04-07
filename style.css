@@ -7,11 +7,21 @@
     font-display: swap;
 }
 
+/* 標楷體字型定義 - 使用您上傳的標楷體.ttf */
+@font-face {
+    font-family: 'CustomKai';
+    src: url('./assets/fonts/標楷體.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 body {
     margin: 0;
     padding: 0;
     background: #000;
-    font-family: '標楷體', '微軟正黑體', sans-serif;
+    /* 一般模式：優先使用自架的標楷體 */
+    font-family: 'CustomKai', 'DFKai-SB', 'Kaiti TC', '標楷體', '微軟正黑體', sans-serif;
 
     /* 關鍵：用 dvh 取代 vh */
     height: 100dvh;
@@ -315,7 +325,7 @@ button:hover {
 
 /* ========== 小朋友版專用樣式 ========== */
 .child-mode-text {
-    font-family: 'BpmfZihiKai', '標楷體', '微軟正黑體', sans-serif;
+    font-family: 'BpmfZihiKai', 'CustomKai', '標楷體', '微軟正黑體', sans-serif;
 }
 
 /* 對話框小朋友版樣式 */
@@ -325,7 +335,7 @@ button:hover {
 
 #dialogue-text.child-mode {
     line-height: 1.8;
-    font-family: 'BpmfZihiKai', '標楷體', '微軟正黑體', sans-serif;
+    font-family: 'BpmfZihiKai', 'CustomKai', '標楷體', '微軟正黑體', sans-serif;
 }
 
 /* ========== 修正 1：縮小標題文字 (h1, h2) ========== */
