@@ -38,8 +38,7 @@ window.IntroChapter = {
             id: 'intro_6',
             name: '阿斗仔',
             text: '準備好跟我一起穿越時空了嗎？\n那就出發吧！',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            next: 'level_select'  // 結束後前往關卡選擇
+            characterImage: 'assets/images/characters/阿斗仔.png'
         }
     ]
 };
