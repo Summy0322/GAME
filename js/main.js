@@ -14,8 +14,7 @@ function showAgeSelect() {
         if (!ageDialog || !childBtn || !adultBtn) {
             resolve('adult');
             return;
-        }
-        
+        }        
         // 顯示視窗
         ageDialog.style.display = 'flex';
         
@@ -24,8 +23,8 @@ function showAgeSelect() {
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
-            window.gameMode = 'child';  // 明確指定給 window
-            gameMode = 'child';         // 同時也設定區域變數
+            window.gameMode = 'child';
+            gameMode = 'child';
             ageDialog.style.display = 'none';
             
             // 為 body 加上標記
@@ -41,8 +40,8 @@ function showAgeSelect() {
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
-            window.gameMode = 'adult';  // 明確指定給 window
-            gameMode = 'adult';          // 同時也設定區域變數
+            window.gameMode = 'adult';
+            gameMode = 'adult';
             ageDialog.style.display = 'none';
             
             // 移除小朋友版標記
@@ -88,24 +87,24 @@ function preloadIntroAssets(onComplete) {
     if (introVideo && introVideo.src) {
         assetsToPreload.push(introVideo.src);
     } else {
-        // 如果 video 元素沒有 src，嘗試從 data-src 或其他屬性取得
         const videoSrc = introVideo ? introVideo.getAttribute('src') || introVideo.getAttribute('data-src') : null;
         if (videoSrc) assetsToPreload.push(videoSrc);
     }
     
-    // 2. 加入注音字型檔案（小朋友模式會用到）
-    // 注意：字型檔案無法透過 Image 載入，但可以透過建立 link 預先載入
-    const fontUrl = './assets/fonts/BpmfZihiKaiStd-Regular.ttf';
-    assetsToPreload.push(fontUrl);
+    // 2. 只有當選擇小朋友模式時，才預載入注音字型
+    // 這樣可以節省一般模式的載入時間
+    if (gameMode === 'child') {
+        const fontUrl = './assets/fonts/BpmfZihiKaiStd-Regular.ttf';
+        assetsToPreload.push(fontUrl);
+        console.log('📦 小朋友模式，加入注音字型預載入');
+    }
     
     // 3. 收集 IntroChapter 中的所有圖片資源
     if (typeof IntroChapter !== 'undefined' && IntroChapter) {
-        // 加入背景圖
         if (IntroChapter.background) {
             assetsToPreload.push(IntroChapter.background);
         }
         
-        // 遍歷對話，收集角色圖片
         if (IntroChapter.dialogue && Array.isArray(IntroChapter.dialogue)) {
             IntroChapter.dialogue.forEach(line => {
                 if (line.characterImage) {
@@ -115,7 +114,7 @@ function preloadIntroAssets(onComplete) {
         }
     }
     
-    // 4. 加入常見的 UI 圖片（確保介面圖片也預載）
+    // 4. 加入常見的 UI 圖片
     const commonImages = [
         'assets/images/title2.png',
         'assets/images/intro/封面.jpg'
@@ -134,6 +133,18 @@ function preloadIntroAssets(onComplete) {
     if (typeof LoadingManager !== 'undefined' && LoadingManager.showAndLoad) {
         LoadingManager.showAndLoad(uniqueAssets, () => {
             console.log('✅ 開場資源預載入完成');
+            
+            // 額外確保字型已經生效（小朋友模式）
+            if (gameMode === 'child') {
+                // 強制瀏覽器重新計算樣式，確保字型生效
+                setTimeout(() => {
+                    document.body.style.opacity = '0.999';
+                    setTimeout(() => {
+                        document.body.style.opacity = '';
+                    }, 50);
+                }, 100);
+            }
+            
             if (onComplete) onComplete();
         });
     } else {

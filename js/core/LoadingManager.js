@@ -134,6 +134,36 @@ const LoadingManager = {
         video.src = src;
         video.load();
     },
+
+    // 在 LoadingManager 中加入字型載入方法
+    loadFont: function(family, url, callback) {
+        // 使用 CSS Font Loading API
+        if (document.fonts && document.fonts.load) {
+            const font = new FontFace(family, `url(${url})`);
+            font.load().then(() => {
+                document.fonts.add(font);
+                console.log(`✅ 字型載入完成: ${family}`);
+                callback();
+            }).catch(err => {
+                console.warn(`⚠️ 字型載入失敗: ${family}`, err);
+                callback(); // 失敗也繼續
+            });
+        } else {
+            // 降級方案：使用預先定義的 link 或 style
+            const style = document.createElement('style');
+            style.textContent = `
+                @font-face {
+                    font-family: '${family}';
+                    src: url('${url}') format('truetype');
+                    font-display: swap;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 等待一段時間假裝載入完成
+            setTimeout(callback, 500);
+        }
+    },
     
     updateProgress: function(percent) {
         if (this.progressText) {
