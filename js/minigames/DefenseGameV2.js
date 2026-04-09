@@ -1071,10 +1071,12 @@ const DefenseGameV2 = {
                     
                     // ✅ 檢查滑動方向是否正確
                     if (this.currentAttack.dir === dir) {
+                        // ✅ 立即加分
+                        this.addScore(this.currentAttack.points || this.scoreWeights.NORMAL, dir);
+                        console.log('✅ 正確方向，+100分');
+                        
                         // 正確方向：標記為等待擊中，不立即結束
                         console.log('✅ 正確方向，等待子彈擊中敵人');
-                        // 不設 resolved = true，讓子彈擊中後才結束
-                        // 儲存正確方向標記，避免重複處理
                         this.currentAttack.correctHit = true;
                     } else {
                         // 錯誤方向：不扣分，只顯示提示，不結束攻擊
