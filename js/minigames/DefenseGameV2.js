@@ -358,9 +358,9 @@ const DefenseGameV2 = {
                 
                 <div id="shield-up" style="position:absolute; left:50%; top:calc(50% - ${-posUp.y}px); width:${shieldHor.width}px; height:${shieldHor.height}px; transform:translate(-50%,-50%); background:url('${cfg.shieldImage}') center/cover; opacity:0; transition:opacity 0.2s;"></div>
                 <div id="shield-down" style="position:absolute; left:50%; bottom:calc(50% - ${posDown.y}px); width:${shieldHor.width}px; height:${shieldHor.height}px; transform:translate(-50%,-50%); background:url('${cfg.shieldImage}') center/cover; opacity:0; transition:opacity 0.2s;"></div>
-                <div id="shield-left" style="position:absolute; left:calc(50% - 150px); top:50%; width:${shieldHor.width}px; height:${shieldHor.height}px; transform: translate(-50%,-50%) rotate(90deg); background:url('${cfg.shieldImage}') center/cover; opacity:0; transition:opacity 0.2s;"></div>
-                <div id="shield-right" style="position:absolute; left:calc(50% + 150px); top:50%; width:${shieldHor.width}px; height:${shieldHor.height}px; transform: translate(-50%,-50%) rotate(-90deg); background:url('${cfg.shieldImage}') center/cover; opacity:0; transition:opacity 0.2s;"></div>
-                
+                <div id="shield-left" style="position:absolute; left:10%; top:50%; width:${shieldHor.width}px; height:${shieldHor.height}px; transform: translateY(-50%) rotate(90deg); background:url('${cfg.shieldImage}') center/cover; opacity:0; transition:opacity 0.2s;"></div>
+                <div id="shield-right" style="position:absolute; left:57.5%; top:50%; width:${shieldHor.width}px; height:${shieldHor.height}px; transform: translateY(-50%) rotate(-90deg); background:url('${cfg.shieldImage}') center/cover; opacity:0; transition:opacity 0.2s;"></div>
+
                 <div id="aoe-up" style="position:absolute; top:0; left:0; width:100%; height:${aoeHeight}px; background:url('${cfg.aoeLineImage}') center/cover; opacity:0; transform:translateY(0);"></div>
                 <div id="aoe-down" style="position:absolute; bottom:0; left:0; width:100%; height:${aoeHeight}px; background:url('${cfg.aoeLineImage}') center/cover; opacity:0; transform:translateY(0);"></div>
                 <div id="aoe-left" style="position:absolute; top:50%; left:0; width:100%; height:${aoeWidth}px; transform:translateY(-50%) rotate(90deg); transform-origin:center; background:url('${cfg.aoeLineImage}') center/cover no-repeat; opacity:0;"></div>
