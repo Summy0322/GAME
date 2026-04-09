@@ -244,6 +244,22 @@
     100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
 }
 
+/* ✅ 新增：分數飄浮動畫（加分文字用） */
+@keyframes scoreFloat {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -70%) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -100%) scale(0.8);
+    }
+}
+
 /* 閃光效果 */
 .defense-flash {
     position: absolute;

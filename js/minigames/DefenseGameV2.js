@@ -8,9 +8,11 @@ const DefenseGameV2 = {
         PREPARING: 'PREPARING',
         NORMAL: 'NORMAL',
         MULTI: 'MULTI',
+        MULTI_MIXED: 'MULTI_MIXED',  // ✅ 新增：混合多重攻擊
         HEAVY_CHARGING: 'HEAVY_CHARGING',
         HEAVY_FLYING: 'HEAVY_FLYING',
         AOE_ACTIVE: 'AOE_ACTIVE',
+        DECOY: 'DECOY',               // ✅ 新增：陷阱
         RESULT: 'RESULT'
     },
     
@@ -87,10 +89,23 @@ const DefenseGameV2 = {
     
     // 分數權重
     scoreWeights: {
-        NORMAL: 100,
-        MULTI: 50,
-        HEAVY: 150,
-        AOE: 200
+        NORMAL: 100,        // 一般攻擊成功 +100
+        MULTI: 50,          // 多重攻擊每個正確方向 +50
+        HEAVY: 150,         // 重擊成功 +150
+        AOE: 200,           // AOE 成功 +200
+        DECOY_SUCCESS: 50,  // DECOY 成功閃避（沒滑） +50
+        DECOY_FAIL: -50,    // DECOY 滑到石頭 -50
+        DECOY_MISS: -20,    // DECOY 滑到空白處 -20
+        MIXED_CORRECT: 50,  // MULTI_MIXED 正確方向 +50
+        MIXED_WRONG: -30,   // MULTI_MIXED 錯誤方向（滑到石頭） -30
+        MIXED_AVOID: 50 ,    // MULTI_MIXED 成功閃避石頭（沒滑） +50
+        TIME_OUT_PENALTY: -10,  // ✅ 新增：超時未處理敵人，每個 -10
+
+        // ✅ 速度控制
+        BASE_GAP: 800,           // 基礎間隔（毫秒）
+        MIN_GAP: 300,            // 最小間隔（毫秒）
+        SPEED_SCALE: 0.95,       // 每 100 分減少 5% 間隔
+        SPEED_CHECK_SCORE: 100,  // 每多少分檢查一次速度
     },
     
     // ========== 軌跡特效屬性 ==========
@@ -155,6 +170,20 @@ const DefenseGameV2 = {
             x: basePos.x * this.scale,
             y: basePos.y * this.scale
         };
+    },
+
+    // 計算當前攻擊間隔（根據分數動態調整）
+    getCurrentGap: function() {
+        let gap = this.scoreWeights.BASE_GAP;
+        
+        // 根據分數減少間隔（分數越高越快）
+        const speedLevel = Math.floor(this.score / this.scoreWeights.SPEED_CHECK_SCORE);
+        if (speedLevel > 0) {
+            const multiplier = Math.pow(this.scoreWeights.SPEED_SCALE, speedLevel);
+            gap = Math.max(this.scoreWeights.MIN_GAP, gap * multiplier);
+        }
+        
+        return Math.floor(gap);
     },
     
     // ========== 初始化 ==========
@@ -230,14 +259,33 @@ const DefenseGameV2 = {
         const patterns = this.levelConfig.attackPatterns;
         let max = 0;
         for (const attack of patterns) {
-            if (attack.type === 'NORMAL') {
-                max += this.scoreWeights.NORMAL;
-            } else if (attack.type === 'MULTI') {
-                max += this.scoreWeights.MULTI * attack.dirs.length;
-            } else if (attack.type === 'HEAVY') {
-                max += this.scoreWeights.HEAVY;
-            } else if (attack.type === 'AOE') {
-                max += this.scoreWeights.AOE;
+            switch (attack.type) {
+                case 'NORMAL':
+                    max += this.scoreWeights.NORMAL;
+                    break;
+                case 'MULTI':
+                    max += this.scoreWeights.MULTI * attack.dirs.length;
+                    break;
+                case 'HEAVY':
+                    max += this.scoreWeights.HEAVY;
+                    break;
+                case 'AOE':
+                    max += this.scoreWeights.AOE;
+                    break;
+                case 'DECOY':
+                    // 成功閃避得 DECOY_SUCCESS 分
+                    max += this.scoreWeights.DECOY_SUCCESS;
+                    break;
+                case 'MULTI_MIXED':
+                    // 正確方向每個 +MIXED_CORRECT，錯誤方向每個成功閃避 +MIXED_AVOID
+                    const correctCount = attack.correctDirs?.length || 0;
+                    const wrongCount = attack.wrongDirs?.length || 0;
+                    max += (correctCount * this.scoreWeights.MIXED_CORRECT) + 
+                        (wrongCount * this.scoreWeights.MIXED_AVOID);
+                    break;
+                default:
+                    console.warn('未知攻擊類型:', attack.type);
+                    break;
             }
         }
         return max;
@@ -582,9 +630,12 @@ const DefenseGameV2 = {
         this.setState(this.states.PREPARING);
         this.msg.innerText = attack.text;
         
+        // ✅ 準備時間也可以動態調整
+        const prepareTime = Math.max(300, Math.min(800, this.getCurrentGap() / 2));
+        
         setTimeout(() => {
             this.executeAttack(attack);
-        }, 500);
+        }, prepareTime);
     },
     
     executeAttack: function(attack) {
@@ -611,40 +662,49 @@ const DefenseGameV2 = {
             case 'NORMAL':
                 this.setState(this.states.NORMAL);
                 this.spawnEnemy(attack.dir);
-                this.setAttackTimer(attack.wait, attack);
+                
+                const normalTimer = setTimeout(() => {
+                    if (this.state === this.states.NORMAL && this.currentAttack && !this.currentAttack.resolved) {
+                        console.log(`⏰ NORMAL 攻擊超時！方向: ${attack.dir}`);
+                        
+                        // ✅ 使用權重
+                        this.addScore(this.scoreWeights.TIME_OUT_PENALTY);
+                        console.log(`❌ 未接住敵人，扣 ${Math.abs(this.scoreWeights.TIME_OUT_PENALTY)} 分`);
+                        
+                        this.missAttack('時間到！未接住敵人');
+                        this.finishAttack();
+                    }
+                }, attack.wait);
+                this.timers.push(normalTimer);
+                this.currentAttack.timer = normalTimer;
                 break;
                 
             case 'MULTI':
                 this.setState(this.states.MULTI);
-                this.currentAttack.hitDirs = [];
                 this.currentAttack.hits = 0;
                 this.currentAttack.swipedDirs = [];
-                this.currentAttack.launchedDirs = [];
-                this.currentAttack.pendingProjectiles = [];
-                this.currentAttack.wrongDirs = [];
+                this.currentAttack.totalDirs = attack.dirs.length;
                 attack.dirs.forEach(dir => this.spawnEnemy(dir));
-                this.setAttackTimer(attack.wait, attack);
                 
-                // ✅ 新增：設定多重攻擊超時計時器（2秒）
                 this.currentAttack.multiTimeout = setTimeout(() => {
                     if (this.state === this.states.MULTI && this.currentAttack && !this.currentAttack.resolved) {
-                        console.log('⏰ 多重攻擊超時，清除未發射的投射物');
-                        // 清除所有待發射的投射物
-                        if (this.currentAttack.pendingProjectiles) {
-                            this.currentAttack.pendingProjectiles.forEach(item => {
-                                if (item.element && item.element.parentNode) {
-                                    item.element.remove();
-                                }
-                            });
-                            this.currentAttack.pendingProjectiles = [];
+                        const notSwiped = this.currentAttack.dirs.filter(d => 
+                            !this.currentAttack.swipedDirs.includes(d)
+                        );
+                        console.log(`⏰ 超時！未滑動方向: ${notSwiped.join(', ')}`);
+                        
+                        const remainingCount = notSwiped.length;
+                        if (remainingCount > 0) {
+                            // ✅ 使用權重
+                            const penalty = remainingCount * Math.abs(this.scoreWeights.TIME_OUT_PENALTY);
+                            this.addScore(-penalty);
+                            console.log(`❌ 剩餘 ${remainingCount} 個敵人未處理，扣 ${penalty} 分`);
                         }
-                        // 清除已滑動但未發射的紀錄
-                        this.currentAttack.swipedDirs = [];
-                        // 觸發失敗
-                        this.missAttack('未完成所有方向！');
+                        
+                        this.missAttack(`未完成所有方向！遺漏: ${notSwiped.join(', ')}`);
                         this.finishAttack();
                     }
-                }, 2000); // 2秒超時
+                }, attack.wait);
                 this.timers.push(this.currentAttack.multiTimeout);
                 break;
                 
@@ -657,6 +717,76 @@ const DefenseGameV2 = {
             case 'AOE':
                 this.setState(this.states.AOE_ACTIVE);
                 this.startAOE(attack.wait);
+                break;
+
+            // ✅ 新增：陷阱（純誤導）
+            case 'DECOY':
+                this.setState(this.states.DECOY);
+                this.spawnEnemy(attack.dir, true, false);  // isDecoy=true, isWrong=false
+                
+                // DECOY 超時成功（沒滑動）
+                this.currentAttack.decoyTimeout = setTimeout(() => {
+                    if (this.state === this.states.DECOY && this.currentAttack && !this.currentAttack.resolved) {
+                        console.log('✅ DECOY 成功！沒有滑動石頭');
+                        this.currentAttack.resolved = true;
+                        // ✅ 使用權重：成功閃避加分
+                        this.addScore(this.scoreWeights.DECOY_SUCCESS);
+                        this.finishAttack();
+                    }
+                }, attack.wait);
+                this.timers.push(this.currentAttack.decoyTimeout);
+                break;
+            
+            // ✅ 新增：混合多重攻擊
+            case 'MULTI_MIXED':
+                this.setState(this.states.MULTI_MIXED);
+                this.currentAttack.hits = 0;
+                this.currentAttack.swipedDirs = [];
+                this.currentAttack.correctDirs = attack.correctDirs || [];
+                this.currentAttack.wrongDirsList = attack.wrongDirs || [];
+                this.currentAttack.totalDirs = attack.dirs.length;
+                
+                this.currentAttack.wrongHandled = [];
+                
+                attack.dirs.forEach(dir => {
+                    const isWrong = this.currentAttack.wrongDirsList.includes(dir);
+                    this.spawnEnemy(dir, false, isWrong);  // isDecoy=false, isWrong=是否為錯誤方向
+                });
+                
+                this.currentAttack.multiTimeout = setTimeout(() => {
+                    if (this.state === this.states.MULTI_MIXED && this.currentAttack && !this.currentAttack.resolved) {
+                        const notSwipedCorrect = this.currentAttack.correctDirs.filter(d => 
+                            !this.currentAttack.swipedDirs.includes(d)
+                        );
+                        
+                        const notSwipedWrong = this.currentAttack.wrongDirsList.filter(d => 
+                            !this.currentAttack.swipedDirs.includes(d)
+                        );
+                        
+                        console.log(`⏰ 超時！未滑到的正確方向: ${notSwipedCorrect.join(', ')}`);
+                        console.log(`✅ 成功閃避的錯誤方向: ${notSwipedWrong.join(', ')}`);
+                        
+                        if (notSwipedWrong.length > 0) {
+                            const bonusScore = notSwipedWrong.length * this.scoreWeights.MIXED_AVOID;
+                            this.addScore(bonusScore);
+                            console.log(`✨ 成功閃避 ${notSwipedWrong.length} 個石頭，獲得 ${bonusScore} 分！`);
+                        }
+                        
+                        if (notSwipedCorrect.length > 0) {
+                            const penalty = notSwipedCorrect.length * Math.abs(this.scoreWeights.TIME_OUT_PENALTY);
+                            this.addScore(-penalty);
+                            console.log(`❌ 剩餘 ${notSwipedCorrect.length} 個敵人未處理，扣 ${penalty} 分`);
+                            this.missAttack(`未完成所有正確方向！遺漏: ${notSwipedCorrect.join(', ')}`);
+                        }
+                        
+                        // ✅ 清除所有殘留的敵人（包括石頭）
+                        this.clearEnemies();
+                        
+                        this.currentAttack.resolved = true;
+                        this.finishAttack();
+                    }
+                }, attack.wait);
+                this.timers.push(this.currentAttack.multiTimeout);
                 break;
                 
             default:
@@ -740,36 +870,50 @@ const DefenseGameV2 = {
         
         this.setState(this.states.IDLE);
         
+        // ✅ 使用動態計算的間隔
+        const gap = this.getCurrentGap();
+        console.log(`⏱️ 下一攻擊將在 ${gap}ms 後開始`);
+        
         setTimeout(() => {
             this.processNextAttack();
-        }, 500);
+        }, gap);
     },
     
-    // ========== 普通/多重攻擊 ==========
-    spawnEnemy: function(dir) {
+    // ========== 普通/多重/誤導攻擊 ==========
+    spawnEnemy: function(dir, isDecoy = false, isWrong = false) {
         const cfg = this.levelConfig;
         const pos = this.scaledPositions[dir];
         const size = this.scaledSizes.enemy;
         const enemy = document.createElement('div');
+        
+        // ✅ 根據類型選擇圖片
+        let imageUrl = cfg.enemyImage;
+        if (isDecoy) {
+            // DECOY 陷阱（石頭）
+            imageUrl = cfg.decoyImage || cfg.enemyImage;
+        } else if (isWrong) {
+            // MULTI_MIXED 錯誤方向（石頭）
+            imageUrl = cfg.wrongEnemyImage || cfg.enemyImage;
+        }
+        
         enemy.style.cssText = `
             position: absolute; width: ${size}px; height: ${size}px; transform: translate(-50%, -50%);
-            background: url('${cfg.enemyImage}') center/contain no-repeat;
+            background: url('${imageUrl}') center/contain no-repeat;
             left: calc(50% + ${pos.x}px); top: calc(50% + ${pos.y}px);
             z-index: 100;
         `;
         this.stage.appendChild(enemy);
         
-        // ✅ 儲存敵人資訊，加入動畫控制
         const enemyObj = { 
             element: enemy, 
             dir: dir,
             animationId: null,
-            isAnimating: true
+            isAnimating: true,
+            isDecoy: isDecoy,
+            isWrong: isWrong
         };
         
-        // ✅ 啟動跳動動畫
         this.startEnemyBounce(enemyObj);
-        
         this.enemies.push(enemyObj);
     },
 
@@ -832,6 +976,30 @@ const DefenseGameV2 = {
                 enemyObj.element.style.transform = `translate(-50%, -50%)`;
             }
         }
+    },
+
+    // ✅ 將敵人變成紅色（被射中時的視覺效果）
+    turnEnemyRed: function(enemyObj) {
+        if (!enemyObj || !enemyObj.element) return;
+        
+        // 儲存原始圖片 URL
+        if (!enemyObj.originalImage) {
+            const bgImage = enemyObj.element.style.backgroundImage;
+            const match = bgImage.match(/url\(["']?([^"']*)["']?\)/);
+            if (match) {
+                enemyObj.originalImage = match[1];
+            }
+        }
+        
+        // 使用 filter 添加紅色效果（不改變原圖）
+        enemyObj.element.style.filter = 'drop-shadow(0 0 10px red) brightness(1.2)';
+        enemyObj.element.style.opacity = '0.8';
+        
+        // 也可以直接替換成紅色版本圖片（如果有的話）
+        // const cfg = this.levelConfig;
+        // if (enemyObj.isDecoy || enemyObj.isWrong) {
+        //     enemyObj.element.style.backgroundImage = `url('${cfg.stoneHitImage || cfg.projectileHitImage}')`;
+        // }
     },
 
     // ✅ 重擊方塊跳動動畫（修改為有限次數）
@@ -897,119 +1065,82 @@ const DefenseGameV2 = {
         
         switch (this.state) {
             case this.states.NORMAL:
-                // 檢查是否已經處理過這個攻擊
                 if (this.currentAttack && !this.currentAttack.resolved) {
-                    // 標記為已處理，防止二次滑動
-                    this.currentAttack.resolved = true;
+                    // ✅ 無論滑對還是滑錯，都射出子彈
+                    this.launchProjectile(dir, () => {});
                     
+                    // ✅ 檢查滑動方向是否正確
                     if (this.currentAttack.dir === dir) {
-                        this.addScore(this.currentAttack.points || this.scoreWeights.NORMAL);
-                        this.launchProjectile(dir, () => {
-                            this.finishAttack();
-                        });
+                        // 正確方向：標記為等待擊中，不立即結束
+                        console.log('✅ 正確方向，等待子彈擊中敵人');
+                        // 不設 resolved = true，讓子彈擊中後才結束
+                        // 儲存正確方向標記，避免重複處理
+                        this.currentAttack.correctHit = true;
                     } else {
-                        this.wrongDirection();
-                        this.launchProjectile(dir, () => {
-                            this.finishAttack();
-                        });
+                        // 錯誤方向：不扣分，只顯示提示，不結束攻擊
+                        console.log('⚠️ 滑錯方向，不扣分，可以再試');
+                        this.showWarning('方向錯誤，再試一次！');
+                        
+                        // 視覺回饋
+                        const wrongEnemy = this.enemies.find(e => e.dir === dir);
+                        if (wrongEnemy && wrongEnemy.element) {
+                            wrongEnemy.element.style.filter = 'drop-shadow(0 0 5px #ff6666)';
+                            setTimeout(() => {
+                                if (wrongEnemy.element) wrongEnemy.element.style.filter = '';
+                            }, 200);
+                        }
                     }
-                } else {
-                    console.log('NORMAL 攻擊已處理過，忽略滑動');
-                    this.showWarning('已經射擊過了！');
                 }
                 break;
                 
             case this.states.MULTI:
-                // 檢查是否已經處理過這個攻擊
                 if (this.currentAttack && !this.currentAttack.resolved) {
-                    // 檢查這個方向是否已經滑動過
-                    if (!this.currentAttack.swipedDirs) this.currentAttack.swipedDirs = [];
-                    
+                    // ✅ 檢查是否已經滑過這個方向
                     if (!this.currentAttack.swipedDirs.includes(dir)) {
-                        // 記錄已滑動的方向
-                        this.currentAttack.swipedDirs.push(dir);
-                        
-                        // 判斷方向是否正確
                         const isCorrect = this.currentAttack.dirs.includes(dir);
                         
-                        // 無論正確與否，都創建投射物
-                        const projectile = this.createProjectileAtPlayer(dir);
-                        
-                        if (!this.currentAttack.pendingProjectiles) this.currentAttack.pendingProjectiles = [];
-                        this.currentAttack.pendingProjectiles.push({
-                            dir: dir,
-                            element: projectile,
-                            isCorrect: isCorrect
-                        });
-                        
                         if (isCorrect) {
+                            // 正確方向：記錄並加分
+                            this.currentAttack.swipedDirs.push(dir);
                             this.currentAttack.hits++;
-                            console.log(`多重攻擊：${dir} 方向正確，已準備投射物 (${this.currentAttack.hits}/${this.currentAttack.dirs.length})`);
+                            this.addScore(this.currentAttack.points || this.scoreWeights.MULTI, dir);
+                            
+                            // 創建投射物並發射
+                            const projectile = this.createProjectileAtPlayer(dir);
+                            setTimeout(() => {
+                                if (projectile && projectile.parentNode) {
+                                    this.launchProjectileFromPosition(dir, projectile, () => {});
+                                }
+                            }, 500);
+                            
+                            console.log(`✅ 正確方向: ${dir}`);
+                            
+                            // 檢查是否所有方向都完成了
+                            if (this.currentAttack.swipedDirs.length >= this.currentAttack.totalDirs) {
+                                this.currentAttack.resolved = true;
+                                if (this.currentAttack.multiTimeout) {
+                                    clearTimeout(this.currentAttack.multiTimeout);
+                                    this.currentAttack.multiTimeout = null;
+                                }
+                                setTimeout(() => this.finishAttack(), 600);
+                            }
                         } else {
-                            console.log(`多重攻擊：${dir} 方向錯誤，但仍會產生投射物`);
+                            // ✅ 錯誤方向：不扣分，不記錄，只顯示提示
+                            console.log(`⚠️ 滑錯方向: ${dir}，不扣分，可以再試`);
+                            this.showWarning(`❌ 方向 ${dir} 沒有敵人，再試一次！`);
+                            
+                            // 視覺回饋
+                            const wrongEnemy = this.enemies.find(e => e.dir === dir);
+                            if (wrongEnemy && wrongEnemy.element) {
+                                wrongEnemy.element.style.filter = 'drop-shadow(0 0 5px #ff6666)';
+                                setTimeout(() => {
+                                    if (wrongEnemy.element) wrongEnemy.element.style.filter = '';
+                                }, 200);
+                            }
                         }
                     } else {
-                        console.log('該方向已滑動過');
-                        this.showWarning('該方向已滑動過');
-                        return;  // 重要：防止重複滑動
+                        this.showWarning('該方向已經滑過了！');
                     }
-                    
-                    // 檢查是否已經滑完所有需要滑動的方向
-                    const totalRequired = this.currentAttack.dirs.length;
-                    const swipedCount = this.currentAttack.swipedDirs.length;
-                    
-                    if (swipedCount >= totalRequired) {
-                        // 標記為已處理，防止二次滑動
-                        this.currentAttack.resolved = true;
-
-                        // ✅ 清除超時計時器
-                        if (this.currentAttack.multiTimeout) {
-                            clearTimeout(this.currentAttack.multiTimeout);
-                            this.currentAttack.multiTimeout = null;
-                        }
-
-                        // ✅ 停止所有敵人的跳動動畫（因為馬上要發射了）
-                        this.stopAllEnemiesBounce();
-                        
-                        console.log('所有方向已滑動完畢，立即發射所有投射物！');
-                        
-                        // 計算分數：只計算正確方向的分數
-                        const scoreGain = this.currentAttack.hits * (this.currentAttack.points || this.scoreWeights.MULTI);
-                        if (scoreGain > 0) {
-                            this.addScore(scoreGain);
-                            console.log(`獲得 ${scoreGain} 分（正確方向: ${this.currentAttack.hits} 個）`);
-                        }
-                        
-                        // 發射所有已創建的投射物
-                        if (this.currentAttack.pendingProjectiles && this.currentAttack.pendingProjectiles.length > 0) {
-                            let completedCount = 0;
-                            const total = this.currentAttack.pendingProjectiles.length;
-                            
-                            this.currentAttack.pendingProjectiles.forEach(item => {
-                                this.launchProjectileFromPosition(item.dir, item.element, () => {
-                                    completedCount++;
-                                    if (completedCount === total) {
-                                        if (this.currentAttack.timer) {
-                                            clearTimeout(this.currentAttack.timer);
-                                            this.currentAttack.timer = null;
-                                        }
-                                        this.finishAttack();
-                                    }
-                                });
-                            });
-                        } else {
-                            if (this.currentAttack.timer) {
-                                clearTimeout(this.currentAttack.timer);
-                                this.currentAttack.timer = null;
-                            }
-                            this.finishAttack();
-                        }
-                        
-                        this.currentAttack.pendingProjectiles = [];
-                    }
-                } else {
-                    console.log('MULTI 攻擊已處理過，忽略滑動');
-                    this.showWarning('已經射擊過了！');
                 }
                 break;
                 
@@ -1038,7 +1169,121 @@ const DefenseGameV2 = {
                     console.log('❌ 方向錯誤');
                 }
                 break;
-                
+
+                case this.states.DECOY:
+                    if (this.currentAttack && !this.currentAttack.resolved) {
+                        this.currentAttack.resolved = true;
+                        
+                        // 清除成功計時器
+                        if (this.currentAttack.decoyTimeout) {
+                            clearTimeout(this.currentAttack.decoyTimeout);
+                            this.currentAttack.decoyTimeout = null;
+                        }
+                        
+                        // ✅ 檢查滑動方向是否就是石頭的方向
+                        if (dir === this.currentAttack.dir) {
+                            // 滑到石頭：扣分
+                            this.mistakes++;
+                            this.updateScoreDisplay();
+                            this.showWarning('💥 那是石頭！不能滑！');
+                            // ✅ 使用權重
+                            this.addScore(this.scoreWeights.DECOY_FAIL, dir);
+                            
+                            // 像一般攻擊一樣立即射出子彈
+                            this.launchProjectile(dir, () => {
+                                this.finishAttack();
+                            });
+                            
+                            // 視覺回饋：石頭變紅
+                            const targetEnemy = this.enemies.find(e => e.dir === this.currentAttack.dir);
+                            if (targetEnemy && targetEnemy.element) {
+                                targetEnemy.element.style.filter = 'drop-shadow(0 0 10px red)';
+                                targetEnemy.element.style.opacity = '0.5';
+                            }
+                        } else {
+                            // 滑到其他地方：輕微懲罰
+                            console.log('⚠️ 滑到空白處，但石頭還在');
+                            this.showWarning('⚠️ 滑空了！石頭還在！');
+                            this.mistakes++;
+                            this.updateScoreDisplay();
+                            // ✅ 使用權重
+                            this.addScore(this.scoreWeights.DECOY_MISS, dir);
+                            
+                            // 像一般攻擊一樣立即射出子彈
+                            this.launchProjectile(dir, () => {
+                                this.finishAttack();
+                            });
+                        }
+                    }
+                    break;
+
+                case this.states.MULTI_MIXED:
+                    if (this.currentAttack && !this.currentAttack.resolved) {
+                        if (!this.currentAttack.swipedDirs.includes(dir)) {
+                            this.currentAttack.swipedDirs.push(dir);
+                            
+                            const isCorrect = this.currentAttack.correctDirs.includes(dir);
+                            const isWrong = this.currentAttack.wrongDirsList.includes(dir);
+                            
+                            // ✅ 創建投射物並立即設定 0.5 秒後發射
+                            const projectile = this.createProjectileAtPlayer(dir);
+                            setTimeout(() => {
+                                if (projectile && projectile.parentNode) {
+                                    this.launchProjectileFromPosition(dir, projectile, () => {});
+                                }
+                            }, 500);
+                            
+                            if (isCorrect) {
+                                this.currentAttack.hits++;
+                                // ✅ 使用權重：正確方向加分
+                                this.addScore(this.scoreWeights.MIXED_CORRECT, dir);
+                                console.log(`✅ 正確！滑動 ${dir}，+${this.scoreWeights.MIXED_CORRECT}分`);
+                            } else if (isWrong) {
+                                // ❌ 錯誤方向：滑到石頭扣分
+                                this.mistakes++;
+                                this.updateScoreDisplay();
+                                this.showWarning(`❌ 那是石頭！不能滑 ${dir} 方向！`);
+                                // ✅ 使用權重：錯誤方向扣分
+                                this.addScore(this.scoreWeights.MIXED_WRONG, dir);
+                                console.log(`❌ 錯誤！滑了 ${dir}，這是石頭！${this.scoreWeights.MIXED_WRONG}分`);
+                                
+                                // 視覺回饋：石頭變紅
+                                const targetEnemy = this.enemies.find(e => e.dir === dir);
+                                if (targetEnemy && targetEnemy.element) {
+                                    targetEnemy.element.style.filter = 'drop-shadow(0 0 10px red)';
+                                    targetEnemy.element.style.opacity = '0.5';
+                                }
+                            }
+                            
+                            // ✅ 檢查是否所有方向都滑完了
+                            if (this.currentAttack.swipedDirs.length >= this.currentAttack.totalDirs) {
+                                this.currentAttack.resolved = true;
+                                if (this.currentAttack.multiTimeout) {
+                                    clearTimeout(this.currentAttack.multiTimeout);
+                                    this.currentAttack.multiTimeout = null;
+                                }
+                                
+                                // ✅ 時間還沒到就全部滑完，也要計算未滑到的錯誤方向獎勵
+                                const notSwipedWrong = this.currentAttack.wrongDirsList.filter(d => 
+                                    !this.currentAttack.swipedDirs.includes(d)
+                                );
+                                if (notSwipedWrong.length > 0) {
+                                    // ✅ 使用權重：成功閃避石頭加分
+                                    const bonusScore = notSwipedWrong.length * this.scoreWeights.MIXED_AVOID;
+                                    this.addScore(bonusScore);  // 沒有特定方向，用隨機位置
+                                    console.log(`✨ 提前完成！成功閃避 ${notSwipedWrong.length} 個石頭，獲得 ${bonusScore} 分！`);
+                                }
+                                
+                                // 等待最後一個投射物飛完
+                                setTimeout(() => this.finishAttack(), 600);
+                            }
+                        } else {
+                            console.log('該方向已滑動過');
+                            this.showWarning('該方向已滑動過');
+                        }
+                    }
+                    break;
+
             default:
                 console.log('當前狀態無法處理滑動:', this.state);
         }
@@ -1063,14 +1308,76 @@ const DefenseGameV2 = {
         this.showWarning(reason);
     },
     
-    addScore: function(points) {
+    addScore: function(points, dir = null) {
         this.score += points;
         this.updateScoreDisplay();
+        
         const scorePop = document.createElement('div');
-        scorePop.textContent = `+${points}`;
-        scorePop.style.cssText = 'position:absolute; top:30%; left:50%; transform:translate(-50%,-50%); color:#00ffaa; font-size:28px; font-weight:bold; z-index:150; text-shadow:0 0 5px #000;';
+        
+        // ✅ 修正顯示邏輯
+        if (points > 0) {
+            scorePop.textContent = `+${points}`;
+        } else if (points < 0) {
+            scorePop.textContent = `${points}`;
+        } else {
+            scorePop.textContent = `+0`;
+        }
+        
+        // ✅ 根據方向決定顯示位置
+        let leftPos = '50%';
+        let topPos = '30%';
+        
+        if (dir) {
+            // 根據方向偏移位置
+            switch(dir) {
+                case 'up':
+                    leftPos = '50%';
+                    topPos = '20%';
+                    break;
+                case 'down':
+                    leftPos = '50%';
+                    topPos = '80%';
+                    break;
+                case 'left':
+                    leftPos = '25%';
+                    topPos = '35%';
+                    break;
+                case 'right':
+                    leftPos = '75%';
+                    topPos = '35%';
+                    break;
+                default:
+                    // 隨機偏移，避免重疊
+                    leftPos = (40 + Math.random() * 20) + '%';
+                    topPos = (25 + Math.random() * 20) + '%';
+            }
+        } else {
+            // 沒有方向時，隨機偏移
+            leftPos = (40 + Math.random() * 20) + '%';
+            topPos = (25 + Math.random() * 20) + '%';
+        }
+        
+        scorePop.style.cssText = `
+            position: absolute;
+            top: ${topPos};
+            left: ${leftPos};
+            transform: translate(-50%, -50%);
+            color: ${points > 0 ? '#00ffaa' : '#ff6666'};
+            font-size: 28px;
+            font-weight: bold;
+            z-index: 150;
+            text-shadow: 0 0 5px #000;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: scoreFloat 0.8s ease-out forwards;
+        `;
+        
         this.stage.appendChild(scorePop);
-        setTimeout(() => scorePop.remove(), 500);
+        
+        // 動畫結束後移除
+        setTimeout(() => {
+            if (scorePop.parentNode) scorePop.remove();
+        }, 800);
     },
     
     updateScoreDisplay: function() {
@@ -1173,10 +1480,21 @@ const DefenseGameV2 = {
                     // ✅ 停止敵人的跳動動畫
                     this.stopEnemyBounce(targetEnemy);
 
-                    targetEnemy.element.style.backgroundImage = `url('${cfg.projectileHitImage}')`;
-                    targetEnemy.element.style.backgroundSize = 'contain';
-                    targetEnemy.element.style.backgroundRepeat = 'no-repeat';
-                    targetEnemy.element.style.backgroundPosition = 'center';
+                    // ✅ 判斷是否為石頭（DECOY 或 MULTI_MIXED 錯誤方向）
+                    if (targetEnemy.isDecoy || targetEnemy.isWrong) {
+                        // ✅ 擊中錯誤敵人：觸發紅光 + 震動特效
+                        this.hitWrongEnemyEffect();
+                        
+                        // 石頭被射中：變成紅色效果
+                        this.turnEnemyRed(targetEnemy);
+                    } else {
+                        // 正常敵人：變成 hit 圖片
+                        targetEnemy.element.style.backgroundImage = `url('${cfg.projectileHitImage}')`;
+                        targetEnemy.element.style.backgroundSize = 'contain';
+                        targetEnemy.element.style.backgroundRepeat = 'no-repeat';
+                        targetEnemy.element.style.backgroundPosition = 'center';
+                    }
+
                     // 0.2 秒後移除敵人
                     setTimeout(() => {
                         if (targetEnemy.element && targetEnemy.element.parentNode) {
@@ -1184,6 +1502,17 @@ const DefenseGameV2 = {
                         }
                         const idx = this.enemies.findIndex(e => e.dir === dir);
                         if (idx !== -1) this.enemies.splice(idx, 1);
+                        
+                        // ✅ 如果是 NORMAL 攻擊且是正確方向，現在才結束攻擊
+                        if (this.state === this.states.NORMAL && 
+                            this.currentAttack && 
+                            this.currentAttack.dir === dir &&
+                            !this.currentAttack.resolved) {
+                            console.log('🎯 子彈擊中敵人，結束 NORMAL 攻擊');
+                            this.currentAttack.resolved = true;
+                            this.finishAttack();
+                        }
+
                         if (onComplete) onComplete();
                     }, 200);
                 } else {
@@ -1297,10 +1626,21 @@ const DefenseGameV2 = {
                     // ✅ 停止敵人的跳動動畫
                     this.stopEnemyBounce(targetEnemy);
 
-                    targetEnemy.element.style.backgroundImage = `url('${cfg.projectileHitImage}')`;
-                    targetEnemy.element.style.backgroundSize = 'contain';
-                    targetEnemy.element.style.backgroundRepeat = 'no-repeat';
-                    targetEnemy.element.style.backgroundPosition = 'center';
+                    // ✅ 判斷是否為石頭（DECOY 或 MULTI_MIXED 錯誤方向）
+                    if (targetEnemy.isDecoy || targetEnemy.isWrong) {
+                        // ✅ 擊中錯誤敵人：觸發紅光 + 震動特效
+                        this.hitWrongEnemyEffect();
+
+                        // 石頭被射中：變成紅色效果
+                        this.turnEnemyRed(targetEnemy);
+                    } else {
+                        // 正常敵人：變成 hit 圖片
+                        targetEnemy.element.style.backgroundImage = `url('${cfg.projectileHitImage}')`;
+                        targetEnemy.element.style.backgroundSize = 'contain';
+                        targetEnemy.element.style.backgroundRepeat = 'no-repeat';
+                        targetEnemy.element.style.backgroundPosition = 'center';
+                    }
+
                     // 0.2 秒後移除敵人
                     setTimeout(() => {
                         if (targetEnemy.element && targetEnemy.element.parentNode) {
@@ -1308,6 +1648,17 @@ const DefenseGameV2 = {
                         }
                         const enemyIdx = this.enemies.findIndex(e => e.dir === dir);
                         if (enemyIdx !== -1) this.enemies.splice(enemyIdx, 1);
+
+                        // ✅ 如果是 NORMAL 攻擊且是正確方向，現在才結束攻擊
+                        if (this.state === this.states.NORMAL && 
+                            this.currentAttack && 
+                            this.currentAttack.dir === dir &&
+                            !this.currentAttack.resolved) {
+                            console.log('🎯 子彈擊中敵人，結束 NORMAL 攻擊');
+                            this.currentAttack.resolved = true;
+                            this.finishAttack();
+                        }
+
                         if (onComplete) onComplete();
                     }, 200);
                 } else {
@@ -1829,6 +2180,55 @@ const DefenseGameV2 = {
         this.msg.style.color = '#ff6666';
         setTimeout(() => { this.msg.style.color = '#ffd700'; }, 500);
     },
+
+    // 顯示紅光特效（擊中錯誤敵人時）
+    showRedFlash: function() {
+        // 創建或取得紅光覆蓋層
+        let flashLayer = document.getElementById('defense-red-flash');
+        if (!flashLayer) {
+            flashLayer = document.createElement('div');
+            flashLayer.id = 'defense-red-flash';
+            flashLayer.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 0, 0, 0.5);
+                pointer-events: none;
+                z-index: 500;
+                opacity: 0;
+                transition: opacity 0.05s;
+            `;
+            this.stage.appendChild(flashLayer);
+        }
+        
+        // 顯示紅光
+        flashLayer.style.opacity = '1';
+        
+        // 0.1 秒後淡出
+        setTimeout(() => {
+            flashLayer.style.opacity = '0';
+        }, 100);
+    },
+
+// 觸發震動（擊中錯誤敵人時）
+triggerVibration: function() {
+    // 檢查瀏覽器是否支援震動 API
+    if (navigator.vibrate) {
+        // 震動模式：震動 50ms
+        navigator.vibrate(50);
+        console.log('📳 震動觸發');
+    } else {
+        console.log('⚠️ 瀏覽器不支援震動 API');
+    }
+},
+
+// 擊中錯誤敵人的特效（紅光 + 震動）
+hitWrongEnemyEffect: function() {
+    this.showRedFlash();
+    this.triggerVibration();
+},
     
     closeResultAndComplete: function() {
         // ✅ 清理軌跡更新循環
