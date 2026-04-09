@@ -2212,23 +2212,42 @@ const DefenseGameV2 = {
         }, 100);
     },
 
-// 觸發震動（擊中錯誤敵人時）
-triggerVibration: function() {
-    // 檢查瀏覽器是否支援震動 API
-    if (navigator.vibrate) {
-        // 震動模式：震動 50ms
-        navigator.vibrate(50);
-        console.log('📳 震動觸發');
-    } else {
-        console.log('⚠️ 瀏覽器不支援震動 API');
-    }
-},
+    // 畫面震動效果（更強制）
+    shakeScreen: function() {
+        const el = this.container;  // 改用 container 而不是 stage
+        if (!el) return;
+        
+        // 記錄原始 transform
+        const originalTransform = el.style.transform;
+        
+        // 震動序列
+        const shakes = [
+            'translate(10px, 0)',
+            'translate(-10px, 0)',
+            'translate(6px, 0)',
+            'translate(-6px, 0)',
+            'translate(3px, 0)',
+            'translate(-3px, 0)',
+            'translate(0, 0)'
+        ];
+        
+        let i = 0;
+        const shakeInterval = setInterval(() => {
+            el.style.transform = shakes[i];
+            i++;
+            if (i >= shakes.length) {
+                clearInterval(shakeInterval);
+                el.style.transform = originalTransform;
+            }
+        }, 50);
+    },
 
-// 擊中錯誤敵人的特效（紅光 + 震動）
-hitWrongEnemyEffect: function() {
-    this.showRedFlash();
-    this.triggerVibration();
-},
+    // 擊中錯誤敵人的特效（紅光 + 畫面震動）
+    hitWrongEnemyEffect: function() {
+        console.log('🔥 hitWrongEnemyEffect 被呼叫！');  // 加入這行
+        this.showRedFlash();
+        this.shakeScreen();  // 取代原本的 triggerVibration
+    },
     
     closeResultAndComplete: function() {
         // ✅ 清理軌跡更新循環
