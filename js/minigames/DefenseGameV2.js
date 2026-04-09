@@ -162,36 +162,67 @@ const DefenseGameV2 = {
         const mode = this.getGameMode();
         console.log(`🎮 防禦遊戲 V2 開始，關卡: ${options.level || 1}，模式: ${mode === 'child' ? '小朋友版' : '一般版'}`);
         
-        const containerWidth = window.innerWidth;
-        const containerHeight = window.innerHeight;
-        this.scale = Math.min(containerWidth / 1920, containerHeight / 1080);
+        // ✅ 先取得關卡設定（用於收集資源）
+        const tempLevelConfig = this.getLevelConfig(options.level || 1);
         
-        this.gameActive = true;
-        this.onCompleteCallback = options.onComplete;
-        this.currentLevel = options.level || 1;
+        // ✅ 收集所有需要預載入的圖片資源
+        const assetsToPreload = [
+            tempLevelConfig.bgImage,
+            tempLevelConfig.playerImage,
+            tempLevelConfig.enemyImage,
+            tempLevelConfig.heavyEnemyImage,
+            tempLevelConfig.projectileImage,
+            tempLevelConfig.projectileHitImage,
+            tempLevelConfig.shieldImage,
+            tempLevelConfig.aoeLineImage
+        ].filter(Boolean);  // 過濾掉 undefined
         
-        this.shieldCooldown = { up: false, down: false, left: false, right: false };
+        console.log('📦 預載入資源:', assetsToPreload);
         
-        // 使用新的方法載入關卡設定
-        this.levelConfig = this.getLevelConfig(this.currentLevel);
+        // ✅ 預載入完成後才真正啟動遊戲
+        const startGame = () => {
+            const containerWidth = window.innerWidth;
+            const containerHeight = window.innerHeight;
+            this.scale = Math.min(containerWidth / 1920, containerHeight / 1080);
+            
+            this.gameActive = true;
+            this.onCompleteCallback = options.onComplete;
+            this.currentLevel = options.level || 1;
+            
+            this.shieldCooldown = { up: false, down: false, left: false, right: false };
+            
+            // 使用新的方法載入關卡設定
+            this.levelConfig = this.getLevelConfig(this.currentLevel);
+            
+            this.combo = 0;
+            this.score = 0;
+            this.mistakes = 0;
+            this.maxScore = this.calculateMaxScore();
+            
+            this.createUI();
+            this.initEventListeners();
+            this.initTrailCanvas();
+            
+            // 啟動軌跡更新循環
+            if (this.trailInterval) clearInterval(this.trailInterval);
+            this.trailInterval = setInterval(() => {
+                this.updateTrail();
+            }, 16);
+            
+            this.setState(this.states.IDLE);
+            setTimeout(() => this.startAttackSequence(), 1000);
+        };
         
-        this.combo = 0;
-        this.score = 0;
-        this.mistakes = 0;
-        this.maxScore = this.calculateMaxScore();
-        
-        this.createUI();
-        this.initEventListeners();
-        this.initTrailCanvas();  // ✅ 初始化軌跡畫布
-        
-        // ✅ 啟動軌跡更新循環（每 16ms 更新一次，約 60fps）
-        if (this.trailInterval) clearInterval(this.trailInterval);
-        this.trailInterval = setInterval(() => {
-            this.updateTrail();
-        }, 16);
-        
-        this.setState(this.states.IDLE);
-        setTimeout(() => this.startAttackSequence(), 1000);
+        // ✅ 使用 LoadingManager 預載入資源
+        if (typeof LoadingManager !== 'undefined' && assetsToPreload.length > 0) {
+            LoadingManager.showAndLoad(assetsToPreload, () => {
+                console.log('✅ 資源預載入完成，啟動遊戲');
+                startGame();
+            });
+        } else {
+            console.warn('⚠️ LoadingManager 未定義或無資源，直接啟動遊戲');
+            startGame();
+        }
     },
     
     calculateMaxScore: function() {
