@@ -61,14 +61,12 @@ const LoadingManager = {
     
     // 顯示 Loading 並載入資源
     showAndLoad: function(assets, onComplete) {
-        // ==== 加入安全檢查 ====
         if (!this.loadingScreen) {
-            console.error('❌ loadingScreen 不存在，無法顯示');
+            console.error('❌ loadingScreen 不存在');
             if (onComplete) onComplete();
             return;
         }
         
-        // 顯示 Loading 畫面
         this.loadingScreen.style.display = 'flex';
         this.updateProgress(0);
         
@@ -80,32 +78,41 @@ const LoadingManager = {
             return;
         }
         
-        // 開始載入資源
         assets.forEach(src => {
-            // 判斷是圖片還是影片
-            if (src.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            // 判斷字型檔案
+            if (src.match(/\.(ttf|otf|woff|woff2)$/i)) {
+                this.loadFont('BpmfZihiKai', src, () => {
+                    loadedCount++;
+                    this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
+                    if (loadedCount === totalCount) {
+                        setTimeout(() => this.finish(onComplete), 300);
+                    }
+                });
+            } 
+            // 判斷圖片
+            else if (src.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
                 this.loadImage(src, () => {
                     loadedCount++;
                     this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                    
                     if (loadedCount === totalCount) {
                         setTimeout(() => this.finish(onComplete), 300);
                     }
                 });
-            } else if (src.match(/\.(mp4|webm|ogg)$/i)) {
+            } 
+            // 判斷影片
+            else if (src.match(/\.(mp4|webm|ogg)$/i)) {
                 this.loadVideo(src, () => {
                     loadedCount++;
                     this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                    
                     if (loadedCount === totalCount) {
                         setTimeout(() => this.finish(onComplete), 300);
                     }
                 });
-            } else {
-                // 其他資源類型
+            } 
+            // 其他資源
+            else {
                 loadedCount++;
                 this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                
                 if (loadedCount === totalCount) {
                     setTimeout(() => this.finish(onComplete), 300);
                 }

@@ -75,6 +75,36 @@ function showScene(sceneId) {
     }
 }
 
+// ========== 根據年齡模式取得對應的章節（僅限關卡章節）==========
+function getChapterByMode(chapterId) {
+    const mode = gameMode || window.gameMode || 'adult';
+    const isChildMode = (mode === 'child');
+    
+    console.log(`📖 根據模式 ${isChildMode ? '小朋友版' : '一般版'} 載入章節:`, chapterId);
+    
+    // 章節映射表（開場不分版本，只有關卡章節分版本）
+    const chapterMapping = {
+        // 第一章
+        'chapter1': isChildMode ? window.Chapter1_Child : window.Chapter1_Teen,
+        
+        // 第二章
+        'chapter2': isChildMode ? (window.Chapter2_Child || window.Chapter2) : (window.Chapter2_Teen || window.Chapter2),
+        
+        // 第三章
+        'chapter3': isChildMode ? (window.Chapter3_Child || window.Chapter3) : (window.Chapter3_Teen || window.Chapter3)
+    };
+    
+    const chapterData = chapterMapping[chapterId];
+    
+    if (!chapterData) {
+        console.error(`❌ 找不到章節: ${chapterId} (模式: ${isChildMode ? 'child' : 'adult'})`);
+        return null;
+    }
+    
+    console.log(`✅ 成功載入 ${chapterId} (${isChildMode ? '小朋友版' : '一般版'})`);
+    return chapterData;
+}
+
 // 預載入開場所需的所有資源（影片 + 字型 + 開場介紹圖片）
 function preloadIntroAssets(onComplete) {
     console.log('📦 開始預載入開場資源...');
@@ -92,14 +122,13 @@ function preloadIntroAssets(onComplete) {
     }
     
     // 2. 只有當選擇小朋友模式時，才預載入注音字型
-    // 這樣可以節省一般模式的載入時間
     if (gameMode === 'child') {
         const fontUrl = './assets/fonts/BpmfZihiKaiStd-Regular.ttf';
         assetsToPreload.push(fontUrl);
         console.log('📦 小朋友模式，加入注音字型預載入');
     }
     
-    // 3. 收集 IntroChapter 中的所有圖片資源
+    // 3. 收集 IntroChapter 中的所有圖片資源（開場不分版本，使用原本的 IntroChapter）
     if (typeof IntroChapter !== 'undefined' && IntroChapter) {
         if (IntroChapter.background) {
             assetsToPreload.push(IntroChapter.background);
@@ -134,9 +163,7 @@ function preloadIntroAssets(onComplete) {
         LoadingManager.showAndLoad(uniqueAssets, () => {
             console.log('✅ 開場資源預載入完成');
             
-            // 額外確保字型已經生效（小朋友模式）
             if (gameMode === 'child') {
-                // 強制瀏覽器重新計算樣式，確保字型生效
                 setTimeout(() => {
                     document.body.style.opacity = '0.999';
                     setTimeout(() => {
@@ -161,39 +188,32 @@ function playIntroVideo() {
     const video = document.getElementById('intro-video');
     const skipBtn = document.getElementById('skip-video-btn');
     
-    // 切換到影片場景
     showScene('video-scene');
-    
-    // 確保影片從頭播放
     video.currentTime = 0;
     
-    // 嘗試播放影片
     const playPromise = video.play();
     
     if (playPromise !== undefined) {
         playPromise.catch(error => {
             console.log('⚠️ 影片自動播放失敗，可能需要用戶互動:', error);
-            // 如果自動播放失敗，顯示播放按鈕
         });
     }
     
-    // 影片結束時，前往開場介紹
     video.onended = () => {
         console.log('📽️ 影片播放結束');
         video.pause();
-        showIntro();  // 前往開場介紹
+        showIntro();
     };
     
-    // 跳過按鈕功能
     skipBtn.onclick = () => {
         console.log('⏭️ 跳過影片');
         video.pause();
         video.currentTime = 0;
-        showIntro();  // 前往開場介紹
+        showIntro();
     };
 }
 
-// 顯示開場介紹
+// 顯示開場介紹（使用原本的 IntroChapter，不分版本）
 function showIntro() {
     const backBtn = document.querySelector('#game-container .back-btn');
     if (backBtn) backBtn.style.display = 'none';
@@ -221,22 +241,21 @@ function showIntro() {
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('📌 DOM 載入完成');
 
-    // 先初始化 LoadingManager
+    // ✅ 載入關卡狀態
+    loadChapterStatus();
+
     if (typeof LoadingManager !== 'undefined') {
         LoadingManager.init();
     }
     
-    // 初始化系統
     if (typeof AudioManager !== 'undefined') AudioManager.init();
     if (typeof SceneManager !== 'undefined') SceneManager.init();
     if (typeof Typewriter !== 'undefined') Typewriter.init();
     if (typeof DialogueSystem !== 'undefined') DialogueSystem.init();
     
-    // 顯示年齡選擇視窗（等待使用者選擇）
     const selectedMode = await showAgeSelect();
     console.log('選擇的模式:', selectedMode);
     
-    // 開始遊戲按鈕 - 加入預載入流程
     const startBtn = document.getElementById('startBtn');
     if (startBtn) {
         startBtn.addEventListener('click', () => {
@@ -245,18 +264,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
             
-            // 先預載入資源，完成後再播放影片
             preloadIntroAssets(() => {
                 playIntroVideo();
             });
         });
     }
     
-    // 離開遊戲按鈕
     const exitBtn = document.getElementById('exitBtn');
     if (exitBtn) {
         exitBtn.addEventListener('click', () => {
-            // 這裡可以呼叫您之前做的退出確認
             if (typeof showExitConfirm !== 'undefined') {
                 showExitConfirm((confirmed) => {
                     if (confirmed) window.close();
@@ -267,14 +283,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    // 設定返回按鈕
     if (typeof setupBackButton !== 'undefined') {
         setupBackButton();
     }
 });
 
-// 載入章節
+// 載入章節（使用動態載入，根據模式選擇版本）
 function loadChapter(chapterId) {
+    // ✅ 檢查關卡是否開放或已完成
+    const status = chapterStatus[chapterId];
+    if (status === 'locked') {
+        alert('此關卡尚未開放！');
+        return;
+    }
+    if (status === 'completed') {
+        alert('你已經完成這個關卡了！');
+        return;
+    }
+    
     const backBtn = document.querySelector('#game-container .back-btn');
     if (backBtn) backBtn.style.display = 'block';
 
@@ -284,18 +310,11 @@ function loadChapter(chapterId) {
         AudioManager.playSFX('assets/sounds/click.mp3');
     }
     
-    const chapterMap = {
-        'chapter1': window.Chapter1,
-        'chapter2': window.Chapter2,
-        'chapter3': window.Chapter3
-    };
-    
-    const chapterData = chapterMap[chapterId];
+    const chapterData = getChapterByMode(chapterId);
     
     if (chapterData) {
         console.log('✅ 找到章節資料');
 
-        // 收集該章節需要的所有資源
         const assets = collectChapterAssets(chapterData);
         
         LoadingManager.showAndLoad(assets, () => {
@@ -304,6 +323,11 @@ function loadChapter(chapterId) {
             if (typeof DialogueSystem !== 'undefined') {
                 DialogueSystem.isIntro = false;
                 DialogueSystem.loadChapter(chapterData);
+                
+                // ✅ 設定章節完成回調
+                DialogueSystem.onChapterComplete = function() {
+                    completeChapter(chapterId);
+                };
             }
         });
     } else {
@@ -316,12 +340,10 @@ function loadChapter(chapterId) {
 function collectChapterAssets(chapterData) {
     const assets = [];
     
-    // 加入背景圖
     if (chapterData.background) {
         assets.push(chapterData.background);
     }
     
-    // 遍歷所有對話，收集角色圖片
     if (chapterData.dialogue) {
         chapterData.dialogue.forEach(line => {
             if (line.characterImage) {
@@ -330,7 +352,6 @@ function collectChapterAssets(chapterData) {
         });
     }
     
-    // 去重
     return [...new Set(assets)];
 }
 
@@ -340,51 +361,35 @@ function showExitConfirm(callback) {
     const yesBtn = document.getElementById('exit-confirm-yes');
     const noBtn = document.getElementById('exit-confirm-no');
     
-    // 顯示彈窗
     if (!dialog || !yesBtn || !noBtn) {
         if (callback) callback(confirm('確定要離開嗎？'));
         return;
     }
     
-    // 暫停遊戲背景互動（可選）
     dialog.style.display = 'flex';
     document.getElementById('game-container').style.pointerEvents = 'none';
     
-    // 清除舊的事件監聽器（避免重複綁定）
     yesBtn.replaceWith(yesBtn.cloneNode(true));
     noBtn.replaceWith(noBtn.cloneNode(true));
     
-    // 重新獲取按鈕
     const newYesBtn = document.getElementById('exit-confirm-yes');
     const newNoBtn = document.getElementById('exit-confirm-no');
     
-    // 確認按鈕
     newYesBtn.onclick = () => {
-        // 播放點擊音效
         if (typeof AudioManager !== 'undefined') {
             AudioManager.playSFX('assets/sounds/click.mp3');
         }
-        
-        // 隱藏彈窗
         dialog.style.display = 'none';
         document.getElementById('game-container').style.pointerEvents = 'auto';
-        
-        // 執行回調（退出邏輯）
         if (callback) callback(true);
     };
     
-    // 取消按鈕
     newNoBtn.onclick = () => {
-        // 播放點擊音效
         if (typeof AudioManager !== 'undefined') {
             AudioManager.playSFX('assets/sounds/click.mp3');
         }
-        
-        // 隱藏彈窗
         dialog.style.display = 'none';
         document.getElementById('game-container').style.pointerEvents = 'auto';
-        
-        // 執行回調（不退出）
         if (callback) callback(false);
     };
 }
@@ -393,34 +398,27 @@ function showExitConfirm(callback) {
 function setupBackButton() {
     const backBtn = document.querySelector('#game-container .back-btn');
     if (backBtn) {
-        // 移除原有 onclick
         backBtn.removeAttribute('onclick');
         
-        // 綁定新事件
         backBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            // 播放點擊音效
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
             
-            // 顯示確認彈窗
             showExitConfirm((confirmed) => {
                 if (confirmed) {
                     console.log('確認退出，返回關卡選擇');
                     
-                    // 停止背景音樂
                     if (typeof AudioManager !== 'undefined') {
                         AudioManager.stopBGM();
                     }
                     
-                    // 清除對話系統
                     if (typeof DialogueSystem !== 'undefined') {
                         DialogueSystem.endDialogue();
                     }
                     
-                    // 返回關卡選擇
                     showScene('level-select');
                 } else {
                     console.log('取消退出，繼續遊戲');
@@ -428,4 +426,113 @@ function setupBackButton() {
             });
         });
     }
+}
+
+// ========== 關卡控制系統 ==========
+// 關卡狀態：'open' = 開放, 'locked' = 鎖定, 'completed' = 已完成
+const chapterStatus = {
+    chapter1: 'open',      // 第一章預設開放
+    chapter2: 'locked',    // 第二章預設鎖定
+    chapter3: 'locked'     // 第三章預設鎖定
+};
+
+// 儲存到 localStorage
+function saveChapterStatus() {
+    localStorage.setItem('chapterStatus', JSON.stringify(chapterStatus));
+    console.log('💾 關卡狀態已儲存:', chapterStatus);
+}
+
+// 是否在重整時清除進度（設為 true 則每次重整都重設）
+const RESET_ON_RELOAD = true;  // 改為 false 則會保留進度
+
+// 載入儲存的狀態
+function loadChapterStatus() {
+    if (RESET_ON_RELOAD) {
+        // ✅ 每次都重設，不讀取儲存
+        chapterStatus.chapter1 = 'open';
+        chapterStatus.chapter2 = 'locked';
+        chapterStatus.chapter3 = 'locked';
+        localStorage.removeItem('chapterStatus');
+        console.log('📀 重整模式：關卡狀態已重設為預設值');
+    } else {
+        // 從 localStorage 讀取
+        const saved = localStorage.getItem('chapterStatus');
+        if (saved) {
+            const loaded = JSON.parse(saved);
+            Object.assign(chapterStatus, loaded);
+            console.log('📀 載入關卡狀態:', chapterStatus);
+        }
+    }
+    updateChapterButtons();
+}
+
+// 更新按鈕外觀
+function updateChapterButtons() {
+    const chapters = ['chapter1', 'chapter2', 'chapter3'];
+    chapters.forEach(chapter => {
+        const btn = document.getElementById(`${chapter}-btn`);
+        if (!btn) return;
+        
+        const status = chapterStatus[chapter];
+        
+        if (status === 'locked') {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.innerHTML = btn.innerHTML.replace(/ 🔒| ✅/g, '') + ' 🔒';
+        } else if (status === 'completed') {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+            btn.innerHTML = btn.innerHTML.replace(/ 🔒| ✅/g, '') + ' ✅';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            btn.innerHTML = btn.innerHTML.replace(/ 🔒| ✅/g, '');
+        }
+    });
+}
+
+// 設定關卡狀態（後台用）
+function setChapterStatus(chapterId, status) {
+    if (chapterStatus[chapterId] !== undefined) {
+        chapterStatus[chapterId] = status;
+        saveChapterStatus();
+        updateChapterButtons();
+        console.log(`🔧 設定 ${chapterId} 狀態為: ${status}`);
+    }
+}
+
+// 完成關卡（遊玩後鎖定）
+function completeChapter(chapterId) {
+    console.log(`🔍 completeChapter 被呼叫: ${chapterId}`);
+    console.log(`🔍 當前狀態: ${chapterStatus[chapterId]}`);
+    
+    if (chapterStatus[chapterId] === 'open') {
+        setChapterStatus(chapterId, 'completed');
+        console.log(`🎉 完成關卡: ${chapterId}，已鎖定`);
+    } else {
+        console.log(`⚠️ 無法完成 ${chapterId}，當前狀態不是 open: ${chapterStatus[chapterId]}`);
+    }
+}
+
+// 開放關卡（後台手動開放）
+function unlockChapter(chapterId) {
+    setChapterStatus(chapterId, 'open');
+}
+
+// 鎖定關卡（後台手動鎖定）
+function lockChapter(chapterId) {
+    setChapterStatus(chapterId, 'locked');
+}
+
+// 重設所有關卡（方便測試）
+function resetAllChapters() {
+    chapterStatus.chapter1 = 'open';
+    chapterStatus.chapter2 = 'locked';
+    chapterStatus.chapter3 = 'locked';
+    saveChapterStatus();
+    updateChapterButtons();
+    console.log('🔄 所有關卡已重設');
 }

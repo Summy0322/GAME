@@ -104,6 +104,13 @@ const DialogueSystem = {
         
         const line = this.currentDialogue[this.currentIndex];
         console.log('📝 當前對話行:', line);
+
+        // ✅ 新增：如果對話有指定背景，就更換背景
+        if (line.background && this.gameBackground) {
+            this.gameBackground.style.backgroundImage = `url('${line.background}')`;
+            this.gameBackground.style.backgroundSize = 'cover';
+            this.gameBackground.style.backgroundPosition = 'center';
+        }
         
         if (!line) {
             console.error('❌ 對話行為空');
@@ -222,8 +229,9 @@ const DialogueSystem = {
         
         // 根據 action 類型處理
         if (option.action === 'minigame') {
-            console.log('🎮 啟動小遊戲:', option.minigame);
-            this.startMinigame(option.minigame, option.returnTo);
+            console.log('🎮 啟動小遊戲:', option.minigame, '關卡:', option.level);
+            // 修改這行：傳入 level 參數
+            this.startMinigame(option.minigame, option.returnTo, option.level);
         } 
         else if (option.action === 'goto') {
             console.log('➡️ 跳轉到節點:', option.target);
@@ -262,8 +270,8 @@ const DialogueSystem = {
         return this.currentDialogue.findIndex(d => d.id === nodeId);
     },
     
-    startMinigame: function(minigameName, returnToNodeId) {
-        console.log('🎮 DialogueSystem 請求啟動小遊戲:', minigameName);
+    startMinigame: function(minigameName, returnToNodeId, level) {
+        console.log('🎮 DialogueSystem 請求啟動小遊戲:', minigameName, '關卡:', level);
         
         this.returnToNode = returnToNodeId;
         
@@ -272,9 +280,10 @@ const DialogueSystem = {
             this.typewriter.clear();
         }
         
-        // 交給 GameEngine 處理
+        // 交給 GameEngine 處理，並傳遞 level
         if (typeof GameEngine !== 'undefined') {
             GameEngine.startMinigame(minigameName, {
+                level: level,  // ← 加入這行！
                 onComplete: (success) => {
                     this.onMinigameComplete(success);
                 }
@@ -341,10 +350,38 @@ const DialogueSystem = {
             this.gameContainer.onclick = null;
         }
         
-        // 檢查是否為開場介紹（可以透過章節 ID 判斷）
+        if (this.dialogBox) {
+            this.dialogBox.style.display = 'none';
+        }
+        if (this.optionsContainer) {
+            this.optionsContainer.style.display = 'none';
+        }
+        
+        // 檢查是否為開場介紹
         if (this.currentChapter && this.currentChapter.id === 'intro') {
             console.log('🎬 開場介紹結束，前往關卡選擇');
-            showScene('level-select');
+            if (typeof showScene !== 'undefined') {
+                showScene('level-select');
+            }
+        }
+        
+        // ✅ 新增：如果是一般章節結束，觸發完成回調
+        if (this.currentChapter && (this.currentChapter.id === 'chapter1_child' || this.currentChapter.id === 'chapter1_teen' || 
+            this.currentChapter.id === 'chapter2_child' || this.currentChapter.id === 'chapter2_teen' ||
+            this.currentChapter.id === 'chapter3_child' || this.currentChapter.id === 'chapter3_teen')) {
+            
+            console.log('🎬 章節結束，觸發完成回調');
+            
+            // 觸發完成回調
+            if (this.onChapterComplete) {
+                this.onChapterComplete();
+                this.onChapterComplete = null;
+            }
+            
+            // 返回關卡選擇
+            if (typeof showScene !== 'undefined') {
+                showScene('level-select');
+            }
         }
         
         if (this.currentChapter && this.currentChapter.onEnd) {

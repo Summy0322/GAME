@@ -117,61 +117,39 @@ const Typewriter = {
     
     // 打字機效果核心函數
     typeText: function(fullText, onComplete) {
-        // 清空原有文字
-        this.dialogueText.innerText = '';
-        
-        // 清除舊的完成指示器
+        // 清空
+        this.dialogueText.textContent = '';
+
+        // 清除舊指示器
         const oldIndicator = document.getElementById('typing-complete-indicator');
         if (oldIndicator) oldIndicator.remove();
-        
-        let charIndex = 0;
-        
-        // 處理換行
-        const lines = fullText.split('\n');
-        const totalChars = fullText.length;
-        
-        // 創建打字間隔
+
+        // ✅ 1. 建立「乾淨字串」（移除 IVS）
+        const cleanText = fullText.replace(/[\u{E0000}-\u{E0FFF}]/gu, '');
+
+        let index = 0;
+        let displayText = '';
+
         const typingInterval = setInterval(() => {
-            if (charIndex < totalChars) {
-                // 顯示目前進度的文字
-                const currentText = fullText.substring(0, charIndex + 1);
-                
-                // 根據換行符號調整顯示
-                let displayText = '';
-                let currentPos = 0;
-                
-                for (let line of lines) {
-                    if (currentPos + line.length <= currentText.length) {
-                        // 這行完整顯示
-                        displayText += line + '\n';
-                        currentPos += line.length;
-                    } else {
-                        // 顯示部分行
-                        const remainingChars = currentText.length - currentPos;
-                        displayText += line.substring(0, remainingChars);
-                        currentPos += line.length;
-                        break;
-                    }
-                }
-                
-                this.dialogueText.innerText = displayText;
-                
-                // 播放打字音效
-                if (charIndex % 3 === 0) {
+            if (index < cleanText.length) {
+                displayText += cleanText[index];
+                this.dialogueText.textContent = displayText;
+
+                // 音效（每3字一次）
+                if (index % 3 === 0) {
                     if (typeof AudioManager !== 'undefined') {
                         AudioManager.playSFX('assets/sounds/sfx-blipmale.wav', 0.1);
                     }
                 }
-                
-                charIndex++;
+
+                index++;
             } else {
-                // 打字完成
                 clearInterval(typingInterval);
-                
-                // 顯示完成標誌
+
+                // ✅ 2. 最後一次才放「完整字串」（含 IVS）
+                this.dialogueText.textContent = fullText;
+
                 this.showCompletionIndicator();
-                
-                // 回呼完成
                 if (onComplete) onComplete();
             }
         }, this.typingSpeed);

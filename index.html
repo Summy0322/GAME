@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>對話探索遊戲</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/defense-game.css">
     <link rel="stylesheet" href="css/minigame.css">
 </head>
 <body>
@@ -56,9 +57,9 @@
         <div id="level-select" class="scene" style="display:none;">
             <h2>選擇故事章節</h2>
             <div class="level-buttons">
-                <button onclick="loadChapter('chapter1')">第一章：紅磚市場</button>
-                <button onclick="loadChapter('chapter2')">第二章：老街記憶</button>
-                <button onclick="loadChapter('chapter3')">第三章：時光印記</button>
+                <button id="chapter1-btn" onclick="loadChapter('chapter1')">第一章：紅磚市場</button>
+                <button id="chapter2-btn" onclick="loadChapter('chapter2')">第二章：老街記憶</button>
+                <button id="chapter3-btn" onclick="loadChapter('chapter3')">第三章：時光印記</button>
             </div>
             <button class="back-btn" onclick="showScene('start-menu')">返回</button>
         </div>
@@ -105,6 +106,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zingtouch/1.0.6/zingtouch.min.js"></script>
     <!-- ===== 核心引擎 - 注意載入順序 ===== -->
     <!-- 1. 最基本的工具 -->
     <script src="js/core/LoadingManager.js"></script>
@@ -120,14 +122,21 @@
     
     <!-- 4. 對話資料 -->
     <script src="js/data/intro.js"></script>
-    <script src="js/data/chapter1.js"></script>
-    <script src="js/data/chapter2.js"></script>
-    <script src="js/data/chapter3.js"></script>
+    <!-- 青少年版（一般模式） -->
+    <script src="js/data/chapter1_teen.js"></script>
+    <!-- <script src="js/data/chapter2_teen.js"></script> -->
+    <!-- <script src="js/data/chapter3_teen.js"></script> -->
+    <!-- 小朋友版 -->
+    <script src="js/data/chapter1_child.js"></script>
+    <!-- <script src="js/data/chapter2_child.js"></script> -->
+    <!-- <script src="js/data/chapter3_child.js"></script> -->
     
     <!-- 5. 小遊戲 -->
     <script src="js/minigames/MemoryGame.js"></script>
-    <script src="js/minigames/PuzzleGame.js"></script>
-    <script src="js/minigames/FindingGame.js"></script>
+    <!-- <script src="js/minigames/PuzzleGame.js"></script> -->
+    <!-- <script src="js/minigames/FindingGame.js"></script> -->
+    <script src="js/minigames/DefenseLevels.js"></script>     <!-- 先載入關卡設定 -->
+    <script src="js/minigames/DefenseGameV2.js"></script>
     
     <!-- 6. 主入口 - 最後載入 -->
     <script src="js/main.js"></script>

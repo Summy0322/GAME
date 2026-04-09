@@ -10,6 +10,49 @@
     font-display: swap;
 }
 
+/* ========== 禁止長按選取文字（提升手機遊戲體驗）========== */
+* {
+    -webkit-tap-highlight-color: transparent;  /* 移除點擊時的灰色背景 */
+    -webkit-touch-callout: none;              /* 禁止長按選單（複製/貼上） */
+    -webkit-user-select: none;                /* Safari 禁止選取 */
+    -khtml-user-select: none;                 /* Konqueror 禁止選取 */
+    -moz-user-select: none;                   /* Firefox 禁止選取 */
+    -ms-user-select: none;                    /* IE/Edge 禁止選取 */
+    user-select: none;                        /* 標準語法禁止選取 */
+}
+
+/* 對話文字保留選取功能（方便閱讀，但不會影響遊戲體驗） */
+#dialogue-text,
+#npc-name {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* 選項按鈕確保文字不可選取（但按鈕可點擊） */
+#options-container button,
+.option-btn {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* 所有按鈕確保文字不可選取 */
+button,
+.age-btn,
+.back-btn,
+.skip-btn,
+.confirm-btn,
+#result-btn,
+.level-buttons button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 /* 基礎樣式：預設成人模式字型 */
 body {
     margin: 0;
@@ -478,46 +521,48 @@ h2 {
     top: 30%;
     left: 50%;
     transform: translateX(-50%);
-    width: min(42%, 320px);
     display: flex;
     flex-direction: column;
     gap: 15px;
     z-index: 30;
-    width: 60%;
-    max-width: 500px;
+    width: 75%;           /* 從 60% 改為 75% */
+    max-width: 650px;     /* 從 500px 改為 650px */
     align-items: center;
     text-align: center;
 }
 
 #options-container button {
     width: 100%;
-    padding: 12px 24px;
-    font-size: clamp(16px, 2.2vw, 20px);
+    padding: 12px 16px;        /* 減少左右內距，讓文字空間更大 */
+    font-size: clamp(15px, 2vw, 18px);  /* 稍微縮小字體 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0;
 }
 
-/* 角色圖片容器 */
+/* 角色圖片容器 - 針對 800x800 圖片優化，底部貼齊 */
 #character-container {
     position: absolute;
-    bottom: 15%;
+    bottom: 0;           /* 改為 0，讓容器底部貼齊畫面 */
     left: 0;
     width: 100%;
-    height: 60%;
+    height: 80%;         /* 稍微增加高度 */
     z-index: 15;
     pointer-events: none;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: flex-end;  /* 改回 flex-end，讓內容靠底部 */
     overflow: visible;
 }
 
 #character-image {
-    max-width: 80%;
-    max-height: 100%;
+    width: auto;
+    height: auto;
+    max-width: 75%;
+    max-height: 90%;     /* 增加高度上限 */
     object-fit: contain;
+    object-position: center bottom;  /* 圖片從底部對齊 */
     border-radius: 10px;
     animation: characterAppear 0.3s ease-out;
 }
@@ -717,23 +762,21 @@ h2 {
     }
 
     #options-container {
-        top: 40%;
-        transform: translateX(-50%) translateY(-50%);
-        width: 40%;
+        width: 55%;           /* 從 40% 改為 55% */
         gap: 8px;
         max-height: 50vh;
     }
 
     #options-container button {
-        padding: 10px 12px;
-        font-size: clamp(12px, 2.5vw, 16px);
+        padding: 8px 12px;
+        font-size: clamp(12px, 2vw, 15px);
         min-width: 100px;
     }
 
-    #character-container {
+    /* #character-container {
         height: 50%;
         bottom: 60px;
-    }
+    } */
     
     .back-btn {
         top: 5px;
@@ -799,10 +842,10 @@ h2 {
         min-width: 80px;
     }
     
-    #character-container {
+    /* #character-container {
         bottom: 50px;
         height: 45%;
-    }
+    } */
     
     .back-btn, .skip-btn {
         padding: 3px 6px;

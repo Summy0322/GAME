@@ -21,10 +21,11 @@ window.Chapter1 = {
                     target: 'story_background'
                 },
                 {
-                    text: '我想先玩個小遊戲',
+                    text: '挑戰肉圓滑溜戰',
                     action: 'minigame',
-                    minigame: 'memory',
-                    returnTo: 'after_minigame'
+                    minigame: 'defense',
+                    level: 1,  // 第一關
+                    returnTo: 'after_game'
                 }
             ]
         },
@@ -77,7 +78,7 @@ window.Chapter1 = {
         
         // 記憶遊戲後
         {
-            id: 'after_memory',
+            id: 'after_defense_1',
             name: '老攤販',
             text: '太感謝你了！你找回了我重要的回憶。',
             options: [
@@ -94,34 +95,34 @@ window.Chapter1 = {
             ]
         },
         
-        // 條件分支範例
-        {
-            id: 'check_items',
-            name: '系統',
-            text: '檢查你的進度...',
-            options: [
-                {
-                    text: '繼續',
-                    action: 'condition',
-                    condition: 'hasItem',
-                    item: 'special_key',
-                    trueTarget: 'special_ending',
-                    falseTarget: 'normal_ending'
-                }
-            ]
-        },
+        // // 條件分支範例
+        // {
+        //     id: 'check_items',
+        //     name: '系統',
+        //     text: '檢查你的進度...',
+        //     options: [
+        //         {
+        //             text: '繼續',
+        //             action: 'condition',
+        //             condition: 'hasItem',
+        //             item: 'special_key',
+        //             trueTarget: 'special_ending',
+        //             falseTarget: 'normal_ending'
+        //         }
+        //     ]
+        // },
         
-        // 多重結局
-        {
-            id: 'special_ending',
-            name: '時光導師',
-            text: '你有特殊道具！解鎖隱藏結局！'
-        },
-        {
-            id: 'normal_ending',
-            name: '時光導師',
-            text: '任務完成，感謝你的幫助。'
-        },
+        // // 多重結局
+        // {
+        //     id: 'special_ending',
+        //     name: '時光導師',
+        //     text: '你有特殊道具！解鎖隱藏結局！'
+        // },
+        // {
+        //     id: 'normal_ending',
+        //     name: '時光導師',
+        //     text: '任務完成，感謝你的幫助。'
+        // },
         
         // 新增結束節點
         {

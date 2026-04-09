@@ -21,7 +21,8 @@ const GameEngine = {
         const minigameMap = {
             'memory': window.MemoryGame,
             'finding': window.FindingGame,
-            'puzzle': window.PuzzleGame
+            'puzzle': window.PuzzleGame,
+            'defense': window.DefenseGameV2
         };
         
         const Minigame = minigameMap[minigameName];
@@ -40,7 +41,8 @@ const GameEngine = {
                     if (options && options.onComplete) {
                         options.onComplete(success);
                     }
-                }
+                },
+                level: options.level || 1  // 傳入關卡編號
             });
         } else {
             console.error('❌ 找不到小遊戲:', minigameName);
