@@ -930,7 +930,7 @@ const DefenseGameV2 = {
                     if (swipedCount >= totalRequired) {
                         // 標記為已處理，防止二次滑動
                         this.currentAttack.resolved = true;
-                        
+
                         // ✅ 清除超時計時器
                         if (this.currentAttack.multiTimeout) {
                             clearTimeout(this.currentAttack.multiTimeout);
@@ -1781,10 +1781,6 @@ const DefenseGameV2 = {
                         }, 150);
                     }
                 });
-                
-                if (typeof AudioManager !== 'undefined') {
-                    AudioManager.playSFX('assets/sounds/sfx-blipmale.wav', 0.3);
-                }
             }
         }
     },
