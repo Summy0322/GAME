@@ -2,8 +2,18 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>對話探索遊戲</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <title>北斗紅磚市場的微光記憶</title>
+    
+    <!-- ========== PWA 設定 ========== -->
+    <link rel="manifest" href="/GAME/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="紅磚市場">
+    <link rel="apple-touch-icon" href="/GAME/assets/icons/icon-192.png">
+    
+    <!-- ========== CSS ========== -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/defense-game.css">
     <link rel="stylesheet" href="css/minigame.css">
@@ -107,7 +117,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/zingtouch/1.0.6/zingtouch.min.js"></script>
-    <!-- ===== 核心引擎 - 注意載入順序 ===== -->
+    
+    <!-- ========== 核心引擎 - 注意載入順序 ========== -->
     <!-- 1. 最基本的工具 -->
     <script src="js/core/LoadingManager.js"></script>
     <script src="js/core/GameEngine.js"></script>
@@ -140,5 +151,18 @@
     
     <!-- 6. 主入口 - 最後載入 -->
     <script src="js/main.js"></script>
+    
+    <!-- ========== Service Worker 註冊（PWA） ========== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/GAME/sw.js').then(function(registration) {
+                    console.log('✅ Service Worker 註冊成功，範圍:', registration.scope);
+                }).catch(function(error) {
+                    console.log('❌ Service Worker 註冊失敗:', error);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

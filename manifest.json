@@ -1,0 +1,38 @@
+{
+  "short_name": "紅磚市場",
+  "name": "北斗紅磚市場的微光記憶",
+  "description": "探索紅磚市場的歷史故事",
+  "icons": [
+    {
+      "src": "/GAME/assets/icons/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/GAME/assets/icons/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/GAME/assets/icons/icon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/GAME/assets/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/GAME/assets/icons/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/GAME/index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "scope": "/GAME/"
+}
