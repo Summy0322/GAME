@@ -20,6 +20,9 @@ const DefenseGameV2 = {
     
     // 遊戲狀態
     gameActive: false,
+    heavyBlockReady: false,     // 重擊是否準備好可以被格擋（方塊飛行中）
+    isShieldActive: false,      // 盾牌是否正在開啟中（任何方向）   
+    shieldEndTime: 0,           // 盾牌結束時間（毫秒時間戳）
     onCompleteCallback: null,
     
     // DOM 元素
@@ -818,6 +821,17 @@ const DefenseGameV2 = {
     // ========== 攻擊結束 ==========
     finishAttack: function() {
         console.log('✅ 攻擊結束, 當前狀態:', this.state);
+
+        // ✅ 清理重擊格擋狀態
+        this.heavyBlockReady = false;
+        if (this.heavyBlockTimeout) {
+            clearTimeout(this.heavyBlockTimeout);
+            this.heavyBlockTimeout = null;
+        }
+        
+        // ✅ 清理盾牌狀態（攻擊結束，重置 CD）
+        this.isShieldActive = false;
+        this.shieldEndTime = 0;
         
         // ✅ 清除多重攻擊的超時計時器
         if (this.currentAttack && this.currentAttack.multiTimeout) {
@@ -1061,6 +1075,116 @@ const DefenseGameV2 = {
         if (Date.now() - this.lastSwipeTime < 200) return;
         this.lastSwipeTime = Date.now();
         
+        // ========== 重擊攻擊的特殊處理 ==========
+        if (this.currentAttack && this.currentAttack.type === 'HEAVY') {
+            const now = Date.now();
+            
+            // ✅ 檢查盾牌是否已經用過（一次攻擊只能開一次）
+            if (this.isShieldActive) {
+                console.log(`⚠️ 盾牌已開啟，無法再次開啟`);
+                this.showWarning('盾牌已開啟！');
+                return;
+            }
+            
+            // ✅ 檢查盾牌 CD 時間
+            if (this.shieldEndTime > now) {
+                const remaining = ((this.shieldEndTime - now) / 1000).toFixed(1);
+                console.log(`⏰ 盾牌冷卻中，剩餘 ${remaining} 秒`);
+                this.showWarning(`盾牌冷卻中！`);
+                
+                // ✅ CD 期間無法開盾，但方塊還在飛行 → 格擋失敗
+                if (this.state === this.states.HEAVY_FLYING && this.heavyBlockReady) {
+                    console.log(`💥 CD 期間無法開盾，格擋失敗！`);
+                    this.heavyBlockFailed('盾牌冷卻中');
+                    this.finishAttack();
+                }
+                return;
+            }
+            
+            // 顯示防護罩
+            this.showShield(dir);
+            
+            // ✅ 設定盾牌為啟用狀態
+            this.isShieldActive = true;
+            
+            // 盾牌持續 0.5 秒後消失
+            setTimeout(() => {
+                this.isShieldActive = false;
+                console.log(`🛡️ 盾牌消失`);
+                
+                // ✅ 設定盾牌 CD（1.5 秒）
+                this.shieldEndTime = Date.now() + 1500;
+                console.log(`⏰ 盾牌進入 CD，1.5 秒後可再次使用`);
+            }, 500);
+            
+            // ✅ 判斷格擋是否成功
+            if (this.state === this.states.HEAVY_FLYING && this.heavyBlockReady) {
+                if (this.currentAttack.dir === dir) {
+                    // ✅ 格擋成功
+                    console.log(`✨ 重擊格擋成功！方向: ${dir}`);
+                    this.addScore(this.currentAttack.points || this.scoreWeights.HEAVY);
+                    
+                    // ✅ 顯示格擋成功文字（使用現有動畫）
+                    const successText = document.createElement('div');
+                    successText.textContent = '✨ 完美格擋！ ✨';
+                    successText.style.cssText = `
+                        position: absolute;
+                        top: 35%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        color: #00ff88;
+                        font-size: 32px;
+                        font-weight: bold;
+                        text-shadow: 0 0 15px #00ff88;
+                        z-index: 150;
+                        white-space: nowrap;
+                        animation: defenseSuccessFloat 0.6s ease-out forwards;
+                        pointer-events: none;
+                    `;
+                    this.stage.appendChild(successText);
+                    setTimeout(() => successText.remove(), 600);
+                    
+                    // 清除飛行中的方塊
+                    this.heavyProjectiles.forEach(p => p?.remove());
+                    this.heavyProjectiles = [];
+                    
+                    // 清除點亮間隔
+                    if (this.lightIntervals && this.lightIntervals[dir]) {
+                        clearInterval(this.lightIntervals[dir]);
+                        this.lightIntervals[dir] = null;
+                    }
+                    
+                    // 清除重擊序列
+                    this.clearHeavySequence();
+                    
+                    // 結束攻擊
+                    this.finishAttack();
+                } else {
+                    // ❌ 方向錯誤，格擋失敗
+                    console.log(`❌ 重擊格擋失敗！方向錯誤: ${dir}，正確方向: ${this.currentAttack.dir}`);
+                    this.heavyBlockFailed('方向錯誤');
+                    this.finishAttack();
+                }
+            } else {
+                // 在 CHARGING 狀態提前開盾
+                console.log(`🛡️ 提前開啟 ${dir} 方向防護罩（等待方塊飛行）`);
+                this.showWarning(`提前開啟防護罩！`);
+                
+                // ✅ 設定一個計時器，檢查方塊飛行時盾牌是否還在
+                const checkTimer = setTimeout(() => {
+                    if (this.state === this.states.HEAVY_FLYING && this.heavyBlockReady && !this.isShieldActive) {
+                        // 方塊開始飛了，但盾牌已經消失 → 格擋失敗
+                        console.log(`💥 盾牌太早開啟，已消失，格擋失敗！`);
+                        this.heavyBlockFailed('盾牌太早開啟');
+                        this.finishAttack();
+                    }
+                }, 500); // 盾牌持續 0.5 秒，所以 0.5 秒後檢查
+                this.timers.push(checkTimer);
+            }
+            return;
+        }
+        
+        // ========== 其他攻擊類型的處理 ==========
         console.log('處理滑動，當前狀態:', this.state, '方向:', dir);
         
         switch (this.state) {
@@ -1146,31 +1270,31 @@ const DefenseGameV2 = {
                 }
                 break;
                 
-            case this.states.HEAVY_FLYING:
-                // 檢查防護罩冷卻
-                if (this.shieldCooldown && this.shieldCooldown[dir]) {
-                    console.log('防護罩冷卻中');
-                    this.showWarning('防護罩冷卻中');
-                    return;
-                }
+            // case this.states.HEAVY_FLYING:
+            //     // 檢查防護罩冷卻
+            //     if (this.shieldCooldown && this.shieldCooldown[dir]) {
+            //         console.log('防護罩冷卻中');
+            //         this.showWarning('防護罩冷卻中');
+            //         return;
+            //     }
                 
-                this.showShield(dir);
+            //     this.showShield(dir);
                 
-                this.shieldCooldown[dir] = true;
-                setTimeout(() => { this.shieldCooldown[dir] = false; }, 1500);
+            //     this.shieldCooldown[dir] = true;
+            //     setTimeout(() => { this.shieldCooldown[dir] = false; }, 1500);
                 
-                if (this.currentAttack && this.currentAttack.dir === dir) {
-                    this.addScore(this.currentAttack.points || this.scoreWeights.HEAVY);
-                    console.log('✨ 完美格擋！');
-                    // 清除飛行中的方塊
-                    this.heavyProjectiles.forEach(p => p?.remove());
-                    this.heavyProjectiles = [];
-                    this.finishAttack();
-                } else {
-                    this.wrongDirection();
-                    console.log('❌ 方向錯誤');
-                }
-                break;
+            //     if (this.currentAttack && this.currentAttack.dir === dir) {
+            //         this.addScore(this.currentAttack.points || this.scoreWeights.HEAVY);
+            //         console.log('✨ 完美格擋！');
+            //         // 清除飛行中的方塊
+            //         this.heavyProjectiles.forEach(p => p?.remove());
+            //         this.heavyProjectiles = [];
+            //         this.finishAttack();
+            //     } else {
+            //         this.wrongDirection();
+            //         console.log('❌ 方向錯誤');
+            //     }
+            //     break;
 
                 case this.states.DECOY:
                     if (this.currentAttack && !this.currentAttack.resolved) {
@@ -1292,15 +1416,54 @@ const DefenseGameV2 = {
     },
     
     wrongDirection: function() {
+        // 只增加錯誤次數和顯示警告
         this.mistakes++;
         this.updateScoreDisplay();
-        this.showWarning('方向錯誤 -1');
+        this.showWarning('方向錯誤');
         
         const warning = document.createElement('div');
         warning.textContent = '❌ 方向錯誤';
         warning.style.cssText = 'position:absolute; top:30%; left:50%; transform:translate(-50%,-50%); color:#ff6666; font-size:24px; z-index:150; text-shadow:0 0 5px #000;';
         this.stage.appendChild(warning);
         setTimeout(() => warning.remove(), 500);
+    },
+
+    // ✅ 重擊格擋失敗的統一處理
+    heavyBlockFailed: function(reason) {
+        console.log(`💥 重擊格擋失敗！原因: ${reason}`);
+        
+        // 扣分懲罰
+        this.addScore(-50);
+        
+        // 增加錯誤次數
+        this.mistakes++;
+        this.updateScoreDisplay();
+        
+        // 觸發紅光特效
+        this.showRedFlash();
+        
+        // 觸發畫面震動
+        this.shakeScreen();
+        
+        // 顯示失敗文字
+        const failText = document.createElement('div');
+        failText.textContent = '💥 格擋失敗！';
+        failText.style.cssText = `
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff0000;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0000;
+            z-index: 150;
+            white-space: nowrap;
+            animation: penaltyFloat 0.6s ease-out forwards;
+            pointer-events: none;
+        `;
+        this.stage.appendChild(failText);
+        setTimeout(() => failText.remove(), 600);
     },
     
     missAttack: function(reason) {
@@ -1675,6 +1838,17 @@ const DefenseGameV2 = {
     
     // ========== 重擊 ==========
     spawnHeavySequence: function(dir) {
+        // ✅ 重置格擋準備狀態
+        this.heavyBlockReady = false;
+        if (this.heavyBlockTimeout) {
+            clearTimeout(this.heavyBlockTimeout);
+            this.heavyBlockTimeout = null;
+        }
+        
+        // ✅ 重置盾牌狀態（新攻擊開始，重置 CD）
+        this.isShieldActive = false;
+        this.shieldEndTime = 0;
+
         if (this.lightIntervals[dir]) {
             clearInterval(this.lightIntervals[dir]);
             this.lightIntervals[dir] = null;
@@ -1834,6 +2008,18 @@ const DefenseGameV2 = {
     launchHeavyProjectile: function(dir) {
         console.log('launchHeavyProjectile 執行，方向:', dir);
 
+        // ✅ 設定格擋準備狀態
+        this.heavyBlockReady = true;
+        
+        // ✅ 設定超時：如果一段時間沒格擋，自動失敗
+        this.heavyBlockTimeout = setTimeout(() => {
+            if (this.heavyBlockReady && this.state === this.states.HEAVY_FLYING && !this.currentAttack?.resolved) {
+                console.log('⏰ 重擊格擋超時！完全沒有格擋');
+                this.heavyBlockFailed('未及時格擋');
+                this.finishAttack();
+            }
+        }, 1000);
+
         // ✅ 先停止所有跳動動畫
         this.stopAllHeavyBlocksBounce();
         
@@ -1896,7 +2082,9 @@ const DefenseGameV2 = {
                     if (completedCount === totalBlocks) {
                         console.log('所有方塊飛行完成');
                         if (this.state === this.states.HEAVY_FLYING && !this.currentAttack?.resolved) {
-                            this.missAttack('未及時格擋');
+                            // 方塊飛完了還沒被格擋 → 失敗
+                            console.log('💥 方塊擊中玩家！未格擋');
+                            this.heavyBlockFailed('被方塊擊中');
                             this.finishAttack();
                         }
                     }
