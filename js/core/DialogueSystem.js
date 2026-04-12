@@ -190,16 +190,70 @@ const DialogueSystem = {
         );
         
         // 對話顯示完成後的處理
-        if (line.options && line.options.length > 0) {
+        if (line.gallery && line.gallery.length > 0) {
+            console.log('🖼️ 發現相簿資料，開啟圖文展示');
+            
+            // 暫停點擊換頁
+            if (this.gameContainer) {
+                this.gameContainer.onclick = null;
+            }
+            
+            // 開啟相簿
+            if (typeof GallerySystem !== 'undefined') {
+                GallerySystem.open(line.gallery, 0);
+                
+                // 監聽相簿關閉事件（需要修改 GallerySystem，或使用輪詢檢查）
+                const checkGalleryClosed = setInterval(() => {
+                    if (!GallerySystem.isActive) {
+                        clearInterval(checkGalleryClosed);
+                        // 相簿關閉後，繼續原本的流程
+                        this.continueAfterGallery(line);
+                    }
+                }, 200);
+            } else {
+                console.warn('⚠️ GallerySystem 未載入，跳過相簿');
+                this.continueAfterGallery(line);
+            }
+        }else if (line.options && line.options.length > 0) {
             console.log('🔘 顯示選項:', line.options);
+            
             
             if (!this.optionsContainer) {
                 console.error('❌ optionsContainer 不存在，無法顯示選項');
                 return;
             }
             
+            // ✅ 等待玩家選擇選項
             const selectedOption = await this.typewriter.showOptions(line.options);
-            await this.handleOption(selectedOption);
+            // ✅ 檢查選項是否帶有 gallery
+            if (selectedOption.gallery && selectedOption.gallery.length > 0) {
+                console.log('🖼️ 選項帶有相簿，先開啟圖文展示');
+                
+                // 暫停點擊換頁
+                if (this.gameContainer) {
+                    this.gameContainer.onclick = null;
+                }
+                
+                // 開啟相簿
+                if (typeof GallerySystem !== 'undefined') {
+                    GallerySystem.open(selectedOption.gallery, 0);
+                    
+                    // 等待相簿關閉後才執行選項的 action
+                    const checkGalleryClosed = setInterval(() => {
+                        if (!GallerySystem.isActive) {
+                            clearInterval(checkGalleryClosed);
+                            console.log('🖼️ 相簿已關閉，繼續執行選項動作');
+                            this.handleOption(selectedOption);
+                        }
+                    }, 200);
+                } else {
+                    console.warn('⚠️ GallerySystem 未載入');
+                    this.handleOption(selectedOption);
+                }
+            } else {
+                // 沒有相簿，直接執行選項動作
+                await this.handleOption(selectedOption);
+            }
         } else if (line.next) {
             console.log('⏩ 點擊畫面前往:', line.next);
             if (this.gameContainer) {
@@ -230,8 +284,11 @@ const DialogueSystem = {
         // 根據 action 類型處理
         if (option.action === 'minigame') {
             console.log('🎮 啟動小遊戲:', option.minigame, '關卡:', option.level);
-            // 修改這行：傳入 level 參數
-            this.startMinigame(option.minigame, option.returnTo, option.level);
+            // ✅ 準備額外選項（過濾掉 action, minigame, returnTo 等）
+            const { action, minigame, returnTo, ...extraOptions } = option;
+            
+            // 傳入 level 和額外選項
+            this.startMinigame(option.minigame, option.returnTo, option.level, extraOptions);
         } 
         else if (option.action === 'goto') {
             console.log('➡️ 跳轉到節點:', option.target);
@@ -249,6 +306,42 @@ const DialogueSystem = {
             console.log('➡️ 預設：下一句對話');
             this.currentIndex++;
             this.showDialogue();
+        }
+    },
+
+    // ✅ 在這裡添加 continueAfterGallery 方法
+    continueAfterGallery: function(line) {
+        console.log('🖼️ 相簿已關閉，繼續對話流程');
+        
+        // 檢查原本的對話行後續處理
+        if (line.options && line.options.length > 0) {
+            console.log('🔘 顯示選項:', line.options);
+            
+            if (!this.optionsContainer) {
+                console.error('❌ optionsContainer 不存在，無法顯示選項');
+                return;
+            }
+            
+            // 注意：這裡需要用 async/await，但 continueAfterGallery 不是 async
+            // 解決方案：使用 Promise 或直接呼叫 typewriter.showOptions
+            this.typewriter.showOptions(line.options).then(async (selectedOption) => {
+                await this.handleOption(selectedOption);
+            });
+        } else if (line.next) {
+            console.log('⏩ 點擊畫面前往:', line.next);
+            if (this.gameContainer) {
+                this.gameContainer.onclick = () => {
+                    this.goToNode(line.next);
+                };
+            }
+        } else {
+            console.log('⏩ 點擊畫面到下一句');
+            if (this.gameContainer) {
+                this.gameContainer.onclick = () => {
+                    this.currentIndex++;
+                    this.showDialogue();
+                };
+            }
         }
     },
     
@@ -270,7 +363,7 @@ const DialogueSystem = {
         return this.currentDialogue.findIndex(d => d.id === nodeId);
     },
     
-    startMinigame: function(minigameName, returnToNodeId, level) {
+    startMinigame: function(minigameName, returnToNodeId, level, extraOptions = {}) {
         console.log('🎮 DialogueSystem 請求啟動小遊戲:', minigameName, '關卡:', level);
         
         this.returnToNode = returnToNodeId;
@@ -284,6 +377,7 @@ const DialogueSystem = {
         if (typeof GameEngine !== 'undefined') {
             GameEngine.startMinigame(minigameName, {
                 level: level,  // ← 加入這行！
+                ...extraOptions,  // ✅ 傳入額外選項（如 cols, rows, time, memorizationTime 等）
                 onComplete: (success) => {
                     this.onMinigameComplete(success);
                 }

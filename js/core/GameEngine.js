@@ -19,16 +19,17 @@ const GameEngine = {
         
         // 小遊戲映射表
         const minigameMap = {
-            'memory': window.MemoryGame,
             'finding': window.FindingGame,
             'puzzle': window.PuzzleGame,
-            'defense': window.DefenseGameV2
+            'defense': window.DefenseGameV2,
+            'memory': window.MemoryGameV2,  // 新的記憶遊戲
         };
         
         const Minigame = minigameMap[minigameName];
         if (Minigame && Minigame.start) {
             this.currentMinigame = minigameName;
             Minigame.start({
+                ...options,  // 展開所有參數（包含 cols, rows, time, memorizationTime, onComplete 等）
                 onComplete: (success) => {
                     // 小遊戲結束後隱藏畫布
                     if (canvas) {

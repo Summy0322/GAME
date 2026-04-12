@@ -252,6 +252,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (typeof SceneManager !== 'undefined') SceneManager.init();
     if (typeof Typewriter !== 'undefined') Typewriter.init();
     if (typeof DialogueSystem !== 'undefined') DialogueSystem.init();
+    if (typeof GallerySystem !== 'undefined') GallerySystem.init();
     
     const selectedMode = await showAgeSelect();
     console.log('選擇的模式:', selectedMode);
@@ -432,7 +433,7 @@ function setupBackButton() {
 // 關卡狀態：'open' = 開放, 'locked' = 鎖定, 'completed' = 已完成
 const chapterStatus = {
     chapter1: 'open',      // 第一章預設開放
-    chapter2: 'locked',    // 第二章預設鎖定
+    chapter2: 'open',    // 第二章預設鎖定
     chapter3: 'locked'     // 第三章預設鎖定
 };
 
@@ -450,7 +451,7 @@ function loadChapterStatus() {
     if (RESET_ON_RELOAD) {
         // ✅ 每次都重設，不讀取儲存
         chapterStatus.chapter1 = 'open';
-        chapterStatus.chapter2 = 'locked';
+        chapterStatus.chapter2 = 'open';
         chapterStatus.chapter3 = 'locked';
         localStorage.removeItem('chapterStatus');
         console.log('📀 重整模式：關卡狀態已重設為預設值');

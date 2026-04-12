@@ -16,7 +16,12 @@
     <!-- ========== CSS ========== -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/defense-game.css">
+    <link rel="stylesheet" href="css/memory-game.css">
     <link rel="stylesheet" href="css/minigame.css">
+
+    <!-- Swiper.js CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 </head>
 <body>
     <div id="game-wrapper">
@@ -135,7 +140,7 @@
     <script src="js/data/intro.js"></script>
     <!-- 青少年版（一般模式） -->
     <script src="js/data/chapter1_teen.js"></script>
-    <!-- <script src="js/data/chapter2_teen.js"></script> -->
+    <script src="js/data/chapter2_teen.js"></script>
     <!-- <script src="js/data/chapter3_teen.js"></script> -->
     <!-- 小朋友版 -->
     <script src="js/data/chapter1_child.js"></script>
@@ -148,8 +153,12 @@
     <!-- <script src="js/minigames/FindingGame.js"></script> -->
     <script src="js/minigames/DefenseLevels.js"></script>     <!-- 先載入關卡設定 -->
     <script src="js/minigames/DefenseGameV2.js"></script>
+    <script src="js/minigames/MemoryGameV2.js"></script>
+
+    <!-- 6. 圖文展示系統 -->
+    <script src="js/core/GallerySystem.js"></script>
     
-    <!-- 6. 主入口 - 最後載入 -->
+    <!-- 7. 主入口 - 最後載入 -->
     <script src="js/main.js"></script>
     
     <!-- ========== Service Worker 註冊（PWA） ========== -->

@@ -1,6 +1,6 @@
 // sw.js - Service Worker
 // 快取名稱（更新版本時記得修改）
-const CACHE_NAME = 'game-v1';
+const CACHE_NAME = 'game-v2';
 
 // 需要快取的檔案列表（您的遊戲所有核心檔案）
 const urlsToCache = [
@@ -26,6 +26,39 @@ const urlsToCache = [
   '/GAME/assets/images/intro/封面.jpg',
   '/GAME/assets/images/ch1/background.jpg',
   '/GAME/assets/images/characters/阿斗仔.png',
+
+  // Level 1 需要的圖片
+'/GAME/assets/images/defense/level1/bg.png',
+'/GAME/assets/images/defense/level1/player.png',
+'/GAME/assets/images/defense/level1/enemy.png',
+'/GAME/assets/images/defense/level1/stone.png',
+'/GAME/assets/images/defense/level1/projectile.png',
+'/GAME/assets/images/defense/level1/projectile_hit.png',
+'/GAME/assets/images/defense/level1/shield.png',
+'/GAME/assets/images/defense/level1/aoe_line.png',
+
+// Level 2 需要的圖片
+'/GAME/assets/images/defense/level2/bg.png',
+'/GAME/assets/images/defense/level2/player.png',
+'/GAME/assets/images/defense/level2/enemy.png',
+'/GAME/assets/images/defense/level2/stone.png',
+'/GAME/assets/images/defense/level2/projectile.png',
+'/GAME/assets/images/defense/level2/projectile_hit.png',
+'/GAME/assets/images/defense/level2/shield.png',
+'/GAME/assets/images/defense/level2/aoe_line.png',
+'/GAME/assets/images/defense/level2/heavy_enemy.png',
+
+// Level 3 需要的圖片
+'/GAME/assets/images/defense/level3/bg.png',
+'/GAME/assets/images/defense/level3/player.png',
+'/GAME/assets/images/defense/level3/enemy.png',
+'/GAME/assets/images/defense/level3/stone.png',
+'/GAME/assets/images/defense/level3/projectile.png',
+'/GAME/assets/images/defense/level3/projectile_hit.png',
+'/GAME/assets/images/defense/level3/shield.png',
+'/GAME/assets/images/defense/level3/aoe_line.png',
+'/GAME/assets/images/defense/level3/heavy_enemy.png',
+
 ];
 
 // ========== 安裝 Service Worker ==========
