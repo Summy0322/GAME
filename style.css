@@ -879,32 +879,42 @@ h2 {
 /* 分頁標籤列 - 右邊留空間給關閉按鈕 */
 .detail-tabs {
     display: flex;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     border-bottom: 2px solid #e67e22;
     padding-right: 100px;
+    gap: 2px;  /* 分頁之間微間距，避免邊框重疊 */
 }
 
 .detail-tab {
     flex: 1;
-    padding: 12px 20px;
+    padding: 12px 16px;
     text-align: center;
     font-size: clamp(14px, 2vw, 18px);
     font-weight: bold;
     color: #ecf0f1;
     background: transparent;
     border: none;
+    border-bottom: 2px solid transparent;  /* 預設透明邊框，保持高度一致 */
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.detail-tab:hover {
+    transform: none;  /* ✅ 完全取消 transform 效果 */
+    background: rgba(230, 126, 34, 0.15);
+    color: #f0a050;
 }
 
 .detail-tab.active {
     background: rgba(230, 126, 34, 0.3);
     color: #ffd700;
-    border-bottom: 3px solid #e67e22;
+    border-bottom: 2px solid #e67e22;  /* 改為 2px，與容器邊框同寬 */
 }
 
 .detail-tab:hover:not(.active) {
     background: rgba(230, 126, 34, 0.15);
+    color: #f0a050;
 }
 
 /* 分頁內容區 */
