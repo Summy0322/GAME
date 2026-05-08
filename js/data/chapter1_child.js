@@ -3,27 +3,50 @@ window.Chapter1_Child = {
     id: 'chapter1_child',
     background: 'assets/images/ch1/background.png',
     
+    // ✅ 紀錄三個關卡的通關狀態
+    gameProgress: {
+        level1Completed: false,
+        level2Completed: false,
+        level3Completed: false
+    },
+    
+    // ✅ 重置遊戲進度的方法
+    resetProgress: function() {
+        this.gameProgress = {
+            level1Completed: false,
+            level2Completed: false,
+            level3Completed: false
+        };
+    },
+    
+    // ✅ 記錄關卡完成
+    setLevelCompleted: function(level) {
+        this.gameProgress[`level${level}Completed`] = true;
+        console.log(`✅ 關卡 ${level} 通關記錄已儲存，目前進度:`, this.gameProgress);
+    },
+    
+    // ✅ 檢查是否全部通關
+    isAllCompleted: function() {
+        return this.gameProgress.level1Completed && 
+               this.gameProgress.level2Completed && 
+               this.gameProgress.level3Completed;
+    },
+    
     dialogue: [
-        // ========== 開場 ==========
+        // ========== 開場旁白 ==========
         {
             id: 'start',
-            name: '阿斗仔',
-            text: '小朋友，歡迎來到紅磚市場！這裡藏著好多以前的故事，也有好多有趣的小任務。準備好了嗎？',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            options: [
-                {
-                    text: '準備好了！出發！',
-                    action: 'goto',
-                    target: 'intro_level1'
-                }
-            ]
+            type: 'narration',
+            text: '歡迎來到紅磚市場！\n這裡有好多有趣故事\n和小任務。\n快跟著阿斗仔一起出發吧！',
+            speed: 60,
+            next: 'intro_level1'
         },
         
         // ========== 第一關：最早的市場 ==========
         {
             id: 'intro_level1',
             name: '阿斗仔',
-            text: '你知道嗎？這裡以前還沒有紅磚房子喔！',
+            text: '小朋友，你知道嗎？這裡以前還沒有紅磚房子喔！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_reply1'
         },
@@ -37,7 +60,7 @@ window.Chapter1_Child = {
         {
             id: 'level1_story1',
             name: '阿斗仔',
-            text: '以前這裡是熱鬧的牛墟，旁邊還有一個簡單的臨時市場。大家會來賣牛、賣農具，清早的時候特別熱鬧。',
+            text: '以前這裡有牛墟，還有臨時市場。\n大家會來賣牛、賣農具，清早很熱鬧。',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_reply2'
         },
@@ -73,7 +96,10 @@ window.Chapter1_Child = {
                     action: 'minigame',
                     minigame: 'defense',
                     level: 1,
-                    returnTo: 'level1_complete'
+                    returnTo: {
+                        success: 'level1_complete',
+                        fail: 'level1_fail'
+                    }
                 }
             ]
         },
@@ -97,6 +123,29 @@ window.Chapter1_Child = {
             text: '太好了！繼續下一關吧！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'intro_level2'
+        },
+        {
+            id: 'level1_fail',
+            name: '阿斗仔',
+            text: '沒關係，肉圓滑掉了可以再試一次。要再挑戰一次嗎？還是先往前走？',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            options: [
+                {
+                    text: '再試一次',
+                    action: 'minigame',
+                    minigame: 'defense',
+                    level: 1,
+                    returnTo: {
+                        success: 'level1_complete',
+                        fail: 'level1_fail'
+                    }
+                },
+                {
+                    text: '繼續往下一關',
+                    action: 'goto',
+                    target: 'intro_level2'
+                }
+            ]
         },
         
         // ========== 第二關：火災與重建 ==========
@@ -153,7 +202,10 @@ window.Chapter1_Child = {
                     action: 'minigame',
                     minigame: 'defense',
                     level: 2,
-                    returnTo: 'level2_complete'
+                    returnTo: {
+                        success: 'level2_complete',
+                        fail: 'level2_fail'
+                    }
                 }
             ]
         },
@@ -177,6 +229,29 @@ window.Chapter1_Child = {
             text: '你好棒！我們來看最後一關吧！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'intro_level3'
+        },
+        {
+            id: 'level2_fail',
+            name: '阿斗仔',
+            text: '火勢太猛了...沒關係，我們可以再試一次，市場還等著我們保護呢！要再挑戰一次嗎？',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            options: [
+                {
+                    text: '再試一次',
+                    action: 'minigame',
+                    minigame: 'defense',
+                    level: 2,
+                    returnTo: {
+                        success: 'level2_complete',
+                        fail: 'level2_fail'
+                    }
+                },
+                {
+                    text: '繼續往下一關',
+                    action: 'goto',
+                    target: 'intro_level3'
+                }
+            ]
         },
         
         // ========== 第三關：現在的樣子 ==========
@@ -219,7 +294,10 @@ window.Chapter1_Child = {
                     action: 'minigame',
                     minigame: 'defense',
                     level: 3,
-                    returnTo: 'level3_complete'
+                    returnTo: {
+                        success: 'level3_complete',
+                        fail: 'level3_fail'
+                    }
                 }
             ]
         },
@@ -235,12 +313,61 @@ window.Chapter1_Child = {
             name: '小朋友',
             text: '哇～我成功了！謝謝阿斗仔帶我認識紅磚市場！',
             characterImage: 'assets/images/characters/non_character.png',
-            next: 'ending'
+            // ✅ 根據通關進度動態決定跳轉目標（參考 teen 版）
+            get next() {
+                if (window.Chapter1_Child.isAllCompleted()) {
+                    return 'good_ending';
+                } else {
+                    return 'normal_ending';
+                }
+            }
+        },
+        {
+            id: 'level3_fail',
+            name: '阿斗仔',
+            text: '研磨失敗了...沒關係，豆乳可以重新磨。要再試一次嗎？還是要去看看結局？',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            options: [
+                {
+                    text: '再試一次',
+                    action: 'minigame',
+                    minigame: 'defense',
+                    level: 3,
+                    returnTo: {
+                        success: 'level3_complete',
+                        fail: 'level3_fail'
+                    }
+                },
+                {
+                    text: '前往結局',
+                    action: 'goto',
+                    // ✅ 根據通關進度動態決定跳轉目標（參考 teen 版）
+                    target: 'normal_ending'
+                }
+            ]
         },
         
-        // ========== 結束 ==========
+        // ========== 好結局（三關全通） ==========
         {
-            id: 'ending',
+            id: 'good_ending',
+            name: '阿斗仔',
+            text: '🎉 太厲害了！三個任務你都完成了！你保護了肉圓、守住了大火中的市場、還做出了好喝的豆乳！你是最棒的小幫手！紅磚市場會永遠記得你喔！',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            next: 'final_thanks'
+        },
+        
+        // ========== 普通結局（未全通） ==========
+        {
+            id: 'normal_ending',
+            name: '阿斗仔',
+            text: '沒關係，市場還在這裡，歡迎你隨時再來。',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            next: 'final_thanks'
+        },
+        
+        // ========== 最終感謝 ==========
+        {
+            id: 'final_thanks',
             name: '阿斗仔',
             text: '紅磚市場的大門永遠為你打開喔！下次再來聽更多故事吧！拜拜～',
             characterImage: 'assets/images/characters/阿斗仔.png'

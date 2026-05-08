@@ -191,70 +191,109 @@ const DefenseGameV2 = {
     
     // ========== 初始化 ==========
     start: function(options) {
+        // ✅ 加入這兩行
+        this.sessionId = Date.now();
+        const currentSession = this.sessionId;
+
+        // ========== 完整重置 ==========
+        if (this.zingRegion && this.container) {
+            this.zingRegion.unbind(this.container);
+            this.zingRegion = null;
+        }
+        // 清除所有計時器
+        if (this.timers) {
+            this.timers.forEach(t => { if (t) clearTimeout(t); });
+            this.timers = [];
+        }
+        
+        if (this.aoeTimers) {
+            this.aoeTimers.forEach(t => {
+                if (t && t.id) clearInterval(t.id);
+                if (t && t.id) clearTimeout(t.id);
+            });
+            this.aoeTimers = [];
+        }
+        
+        // 清除所有間隔
+        if (this.lightIntervals) {
+            ['up', 'down', 'left', 'right'].forEach(dir => {
+                if (this.lightIntervals[dir]) {
+                    clearInterval(this.lightIntervals[dir]);
+                    this.lightIntervals[dir] = null;
+                }
+            });
+        }
+        
+        if (this.trailInterval) {
+            clearInterval(this.trailInterval);
+            this.trailInterval = null;
+        }
+        
+        // 取消動畫
+        if (this.currentAnimationId) {
+            cancelAnimationFrame(this.currentAnimationId);
+            this.currentAnimationId = null;
+        }
+        
+        // 移除 DOM 容器（關鍵！）
+        if (this.container && this.container.parentNode) {
+            this.container.remove();
+            this.container = null;
+        }
+        
+        // 重置所有陣列和狀態
+        this.enemies = [];
+        this.projectiles = [];
+        this.multiProjectiles = [];
+        this.heavySequence = [];
+        this.heavyProjectiles = [];
+        this.attackQueue = [];
+        this.currentAttack = null;
+        this.gameActive = false;
+        this.state = this.states.IDLE;
+        this.score = 0;
+        this.mistakes = 0;
+        this.combo = 0;
+        this.heavyBlockReady = false;
+        this.isShieldActive = false;
+        this.shieldEndTime = 0;
+        this.rotationAccumulator = { totalAngle: 0, lastAngle: 0 };
+        this.aoePushProgress = 0;
+        this.trailPoints = [];
+        this.lastTrailX = null;
+        this.lastTrailY = null;
+        
+        // ========== 正常啟動 ==========
         const mode = this.getGameMode();
         console.log(`🎮 防禦遊戲 V2 開始，關卡: ${options.level || 1}，模式: ${mode === 'child' ? '小朋友版' : '一般版'}`);
         
-        // ✅ 先取得關卡設定（用於收集資源）
-        const tempLevelConfig = this.getLevelConfig(options.level || 1);
+        const containerWidth = window.innerWidth;
+        const containerHeight = window.innerHeight;
+        this.scale = Math.min(containerWidth / 1920, containerHeight / 1080);
         
-        // ✅ 收集所有需要預載入的圖片資源
-        const assetsToPreload = [
-            tempLevelConfig.bgImage,
-            tempLevelConfig.playerImage,
-            tempLevelConfig.enemyImage,
-            tempLevelConfig.heavyEnemyImage,
-            tempLevelConfig.projectileImage,
-            tempLevelConfig.projectileHitImage,
-            tempLevelConfig.shieldImage,
-            tempLevelConfig.aoeLineImage
-        ].filter(Boolean);  // 過濾掉 undefined
+        this.gameActive = true;
+        this.onCompleteCallback = options.onComplete;
+        this.currentLevel = options.level || 1;
         
-        console.log('📦 預載入資源:', assetsToPreload);
+        this.shieldCooldown = { up: false, down: false, left: false, right: false };
         
-        // ✅ 預載入完成後才真正啟動遊戲
-        const startGame = () => {
-            const containerWidth = window.innerWidth;
-            const containerHeight = window.innerHeight;
-            this.scale = Math.min(containerWidth / 1920, containerHeight / 1080);
-            
-            this.gameActive = true;
-            this.onCompleteCallback = options.onComplete;
-            this.currentLevel = options.level || 1;
-            
-            this.shieldCooldown = { up: false, down: false, left: false, right: false };
-            
-            // 使用新的方法載入關卡設定
-            this.levelConfig = this.getLevelConfig(this.currentLevel);
-            
-            this.combo = 0;
-            this.score = 0;
-            this.mistakes = 0;
-            this.maxScore = this.calculateMaxScore();
-            
-            this.createUI();
-            this.initEventListeners();
-            this.initTrailCanvas();
-            
-            // 啟動軌跡更新循環
-            if (this.trailInterval) clearInterval(this.trailInterval);
-            this.trailInterval = setInterval(() => {
-                this.updateTrail();
-            }, 16);
-            
-            this.setState(this.states.IDLE);
-            setTimeout(() => this.startAttackSequence(), 1000);
-        };
+        this.levelConfig = this.getLevelConfig(this.currentLevel);
         
-        // ✅ 使用 LoadingManager 預載入資源
-        if (typeof LoadingManager !== 'undefined' && assetsToPreload.length > 0) {
-            LoadingManager.showAndLoad(assetsToPreload, () => {
-                console.log('✅ 資源預載入完成，啟動遊戲');
-                startGame();
-            });
-        } else {
-            console.warn('⚠️ LoadingManager 未定義或無資源，直接啟動遊戲');
-            startGame();
-        }
+        this.combo = 0;
+        this.score = 0;
+        this.mistakes = 0;
+        this.maxScore = this.calculateMaxScore();
+        
+        this.createUI();
+        this.initEventListeners();
+        this.initTrailCanvas();
+        
+        this.trailInterval = setInterval(() => {
+            this.updateTrail();
+        }, 16);
+        
+        this.setState(this.states.IDLE);
+        setTimeout(() => this.startAttackSequence(), 1000);
     },
     
     calculateMaxScore: function() {
@@ -410,7 +449,7 @@ const DefenseGameV2 = {
         const finishGame = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.closeResultAndComplete();
+            this.closeResultAndComplete(this.gameResult);
         };
         this.resultBtn.addEventListener('click', finishGame);
         this.resultBtn.addEventListener('touchstart', finishGame, { passive: false });
@@ -598,15 +637,23 @@ const DefenseGameV2 = {
         });
         
         if (window.ZingTouch) {
-            const region = new ZingTouch.Region(this.container);
-            region.bind(this.container, 'rotate', (e) => this.handleRotate(e));
+            this.zingRegion = new ZingTouch.Region(this.container);
+            this.zingRegion.bind(this.container, 'rotate', (e) => this.handleRotate(e));
         }
     },
     
     // ========== 攻擊序列 ==========
     startAttackSequence: function() {
         if (!this.gameActive) return;
-        this.attackQueue = [...this.levelConfig.attackPatterns];
+        // ✅ 深拷貝，避免污染原始設定
+        this.attackQueue = this.levelConfig.attackPatterns.map(attack => {
+            const copy = { ...attack };
+            if (attack.dirs) copy.dirs = [...attack.dirs];
+            if (attack.correctDirs) copy.correctDirs = [...attack.correctDirs];
+            if (attack.wrongDirs) copy.wrongDirs = [...attack.wrongDirs];
+            copy.resolved = false;
+            return copy;
+        });
         this.processNextAttack();
     },
     
@@ -623,7 +670,11 @@ const DefenseGameV2 = {
         
         if (this.state !== this.states.IDLE) {
             console.log(`狀態不是 IDLE (${this.state})，等待...`);
-            setTimeout(() => this.processNextAttack(), 100);
+            const session = this.sessionId;
+            setTimeout(() => {
+                if (session !== this.sessionId) return;
+                this.processNextAttack();
+            }, 100);
             return;
         }
         
@@ -636,13 +687,18 @@ const DefenseGameV2 = {
         // ✅ 準備時間也可以動態調整
         const prepareTime = Math.max(300, Math.min(800, this.getCurrentGap() / 2));
         
+        const session = this.sessionId;
         setTimeout(() => {
+            if (session !== this.sessionId) return;
             this.executeAttack(attack);
         }, prepareTime);
     },
     
     executeAttack: function(attack) {
         console.log('executeAttack 開始，類型:', attack.type);
+
+        // ✅ 加入這行
+        const currentSession = this.sessionId;
         
         // ✅ 清除所有舊的 timer（關鍵！防止舊 timer 殺掉新攻擊）
         this.clearAllTimers();
@@ -667,6 +723,7 @@ const DefenseGameV2 = {
                 this.spawnEnemy(attack.dir);
                 
                 const normalTimer = setTimeout(() => {
+                    if (this.sessionId !== currentSession) return;  // ✅ 加這行
                     if (this.state === this.states.NORMAL && this.currentAttack && !this.currentAttack.resolved) {
                         console.log(`⏰ NORMAL 攻擊超時！方向: ${attack.dir}`);
                         
@@ -879,6 +936,8 @@ const DefenseGameV2 = {
             if (line) {
                 line.style.opacity = '0';
                 line.style.transform = 'translate(0,0)';
+                line.style.display = 'none';           // ✅ 新增
+                line.style.pointerEvents = 'none';     // ✅ 新增
             }
         });
         
@@ -888,7 +947,9 @@ const DefenseGameV2 = {
         const gap = this.getCurrentGap();
         console.log(`⏱️ 下一攻擊將在 ${gap}ms 後開始`);
         
+        const session = this.sessionId;
         setTimeout(() => {
+            if (session !== this.sessionId) return;
             this.processNextAttack();
         }, gap);
     },
@@ -1189,19 +1250,33 @@ const DefenseGameV2 = {
         
         switch (this.state) {
             case this.states.NORMAL:
+                if (!this.currentAttack) {
+                    console.log('⚠️ currentAttack 為 null');
+                    break;
+                }
+                if (this.currentAttack.resolved) {
+                    console.log('⚠️ 攻擊已經 resolved，忽略滑動');
+                    break;
+                }
                 if (this.currentAttack && !this.currentAttack.resolved) {
                     // ✅ 無論滑對還是滑錯，都射出子彈
                     this.launchProjectile(dir, () => {});
                     
                     // ✅ 檢查滑動方向是否正確
                     if (this.currentAttack.dir === dir) {
-                        // ✅ 立即加分
-                        this.addScore(this.currentAttack.points || this.scoreWeights.NORMAL, dir);
-                        console.log('✅ 正確方向，+100分');
-                        
-                        // 正確方向：標記為等待擊中，不立即結束
-                        console.log('✅ 正確方向，等待子彈擊中敵人');
-                        this.currentAttack.correctHit = true;
+                        // ✅ 檢查是否已經加過分
+                        if (!this.currentAttack.scored) {
+                            // 立即加分
+                            this.addScore(this.currentAttack.points || this.scoreWeights.NORMAL, dir);
+                            console.log('✅ 正確方向，+100分');
+                            this.currentAttack.scored = true;  // 標記已加分
+
+                            // 正確方向：標記為等待擊中，不立即結束
+                            console.log('✅ 正確方向，等待子彈擊中敵人');
+                            this.currentAttack.correctHit = true;
+                        } else {
+                            console.log('⚠️ 已經加過分，忽略');
+                        }
                     } else {
                         // 錯誤方向：不扣分，只顯示提示，不結束攻擊
                         console.log('⚠️ 滑錯方向，不扣分，可以再試');
@@ -1555,6 +1630,9 @@ const DefenseGameV2 = {
         
         const successRate = this.maxScore > 0 ? (this.score / this.maxScore) * 100 : 100;
         const isSuccess = successRate >= 60;
+
+        // ✅ 儲存結果，供 closeResultAndComplete 使用
+        this.gameResult = isSuccess;
         
         if (this.resultOverlay) {
             this.resultOverlay.style.display = 'flex';
@@ -1568,14 +1646,19 @@ const DefenseGameV2 = {
             this.resultScore.textContent = `總分: ${this.score} / ${this.maxScore}`;
             this.resultMistakes.textContent = `錯誤次數: ${this.mistakes}`;
         } else {
-            this.closeResultAndComplete();
+            this.closeResultAndComplete(this.gameResult);
         }
     },
     
     launchProjectile: function(dir, onComplete) {
+        const currentSession = this.sessionId;  // ✅ 加這行
         const cfg = this.levelConfig;
         const target = this.scaledPositions[dir];
         const size = this.scaledSizes.projectile;
+
+        // ✅ 儲存當前的攻擊引用
+        const currentAttackRef = this.currentAttack;
+        const currentState = this.state;
         
         // 計算起始位置（玩家邊緣）
         const playerRect = this.player.getBoundingClientRect();
@@ -1625,6 +1708,7 @@ const DefenseGameV2 = {
         const duration = 400;
         
         const animate = (now) => {
+            if (this.sessionId !== currentSession) return;
             const elapsed = now - startTime;
             const t = Math.min(1, elapsed / duration);
             const easeOut = 1 - Math.pow(1 - t, 2);
@@ -1668,13 +1752,13 @@ const DefenseGameV2 = {
                         const idx = this.enemies.findIndex(e => e.dir === dir);
                         if (idx !== -1) this.enemies.splice(idx, 1);
                         
-                        // ✅ 如果是 NORMAL 攻擊且是正確方向，現在才結束攻擊
-                        if (this.state === this.states.NORMAL && 
-                            this.currentAttack && 
-                            this.currentAttack.dir === dir &&
-                            !this.currentAttack.resolved) {
+                        // ✅ 使用儲存的引用進行判斷
+                        if (currentState === this.states.NORMAL && 
+                            currentAttackRef && 
+                            currentAttackRef.dir === dir &&
+                            !currentAttackRef.resolved) {
                             console.log('🎯 子彈擊中敵人，結束 NORMAL 攻擊');
-                            this.currentAttack.resolved = true;
+                            currentAttackRef.resolved = true;
                             this.finishAttack();
                         }
 
@@ -1747,6 +1831,7 @@ const DefenseGameV2 = {
 
     // 新增：從指定位置發射投射物到目標方向
     launchProjectileFromPosition: function(dir, projectile, onComplete) {
+        const currentSession = this.sessionId;  // ✅ 加這行
         const cfg = this.levelConfig;
         const target = this.scaledPositions[dir];
         
@@ -1769,6 +1854,7 @@ const DefenseGameV2 = {
         projectile.style.zIndex = '20';  /* ✅ 統一為 20（原本是 999） */
         
         const animate = (now) => {
+            if (this.sessionId !== currentSession) return;  // ✅ 加這行
             const elapsed = now - startTime;
             const t = Math.min(1, elapsed / duration);
             const easeOut = 1 - Math.pow(1 - t, 2);
@@ -2008,6 +2094,9 @@ const DefenseGameV2 = {
     launchHeavyProjectile: function(dir) {
         console.log('launchHeavyProjectile 執行，方向:', dir);
 
+        // ✅ 加入這行！定義 currentSession
+        const currentSession = this.sessionId;
+
         // ✅ 設定格擋準備狀態
         this.heavyBlockReady = true;
         
@@ -2062,6 +2151,7 @@ const DefenseGameV2 = {
             const duration = 400;
             
             const animate = (now) => {
+                if (this.sessionId !== currentSession) return;  // ✅ 加這行
                 const elapsed = now - startTime;
                 const t = Math.min(1, elapsed / duration);
                 
@@ -2104,13 +2194,28 @@ const DefenseGameV2 = {
             return;
         }
 
-        // ✅ 儲存 AOE 時間資訊（供 handleRotate 使用）
-        this.aoeStartTime = Date.now();
-        this.aoeDuration = wait;
+        // ✅ 先隱藏所有 AOE 線條，防止瞬間碰撞
+        const aoeUp = document.getElementById('aoe-up');
+        const aoeDown = document.getElementById('aoe-down');
+        const aoeLeft = document.getElementById('aoe-left');
+        const aoeRight = document.getElementById('aoe-right');
         
-        // 重置回推進度
-        this.aoePushProgress = 0;
+        // 先全部隱藏
+        [aoeUp, aoeDown, aoeLeft, aoeRight].forEach(line => {
+            if (line) {
+                line.style.opacity = '0';
+                line.style.display = 'none';
+            }
+        });
         
+        // ✅ 延遲一點點再開始，讓 DOM 更新
+        setTimeout(() => {
+            this._startAOEMovement(wait);
+        }, 50);
+    },
+
+    // ✅ 新增：真正開始 AOE 動畫的方法
+    _startAOEMovement: function(wait) {
         const aoeUp = document.getElementById('aoe-up');
         const aoeDown = document.getElementById('aoe-down');
         const aoeLeft = document.getElementById('aoe-left');
@@ -2127,23 +2232,32 @@ const DefenseGameV2 = {
         const maxLeftMove = stageWidth / 2;
         const maxRightMove = stageWidth / 2;
         
-        // 重置線條位置（從邊緣開始）
+        // ✅ 設置初始位置並顯示
         if (aoeUp) {
             aoeUp.style.transform = `translateY(0)`;
             aoeUp.style.opacity = '0.7';
+            aoeUp.style.display = 'block';
         }
         if (aoeDown) {
             aoeDown.style.transform = `translateY(0)`;
             aoeDown.style.opacity = '0.7';
+            aoeDown.style.display = 'block';
         }
         if (aoeLeft) {
             aoeLeft.style.transform = `translateX(-${stageWidth / 2}px) translateY(-50%) rotate(90deg)`;
             aoeLeft.style.opacity = '0.7';
+            aoeLeft.style.display = 'block';
         }
         if (aoeRight) {
             aoeRight.style.transform = `translateX(${stageWidth / 2}px) translateY(-50%) rotate(-90deg)`;
             aoeRight.style.opacity = '0.7';
+            aoeRight.style.display = 'block';
         }
+        
+        // 儲存 AOE 時間資訊
+        this.aoeStartTime = Date.now();
+        this.aoeDuration = wait;
+        this.aoePushProgress = 0;
         
         let finished = false;
         let animationId = null;
@@ -2174,62 +2288,55 @@ const DefenseGameV2 = {
             }
         };
         
-        // 初始化平滑進度
-    let smoothProgress = 0;
-
-    const animate = () => {
-        if (finished || this.state !== this.states.AOE_ACTIVE) {
-            return;
-        }
+        let smoothProgress = 0;
         
-        const elapsed = Date.now() - startTime;
-        const actualProgress = Math.min(1, elapsed / duration);
-        
-        // 檢測是否放手
-        const now = Date.now();
-        const timeSinceLastRotate = now - (this.lastRotateTime || 0);
-        const isRotating = timeSinceLastRotate < 300;
-        
-        let targetProgress;
-        
-        if (isRotating) {
-            // 旋轉中：使用延遲後的進度
-            const pushDelay = (this.aoePushProgress || 0) * 200;
-            const adjustedElapsed = Math.max(0, elapsed - pushDelay);
-            targetProgress = Math.min(1, adjustedElapsed / duration);
-            // 更新平滑進度為當前目標
-            smoothProgress = targetProgress;
-        } else {
-            // 放手後：平滑追趕實際進度
-            const catchUpSpeed = 0.015; // 每次增加 1.5%
-            if (smoothProgress < actualProgress) {
-                smoothProgress = Math.min(actualProgress, smoothProgress + catchUpSpeed);
-            } else {
-                smoothProgress = actualProgress;
+        const animate = () => {
+            if (finished || this.state !== this.states.AOE_ACTIVE) {
+                return;
             }
-            targetProgress = smoothProgress;
-        }
-        
-        // 使用 easeOutQuad
-        const easeProgress = 1 - Math.pow(1 - targetProgress, 2);
-        
-        const upMove = maxUpMove * easeProgress;
-        const downMove = -maxDownMove * easeProgress;
-        const leftMove = -maxLeftMove + (maxLeftMove * easeProgress);
-        const rightMove = maxRightMove - (maxRightMove * easeProgress);
-        
-        if (aoeUp) aoeUp.style.transform = `translateY(${upMove}px)`;
-        if (aoeDown) aoeDown.style.transform = `translateY(${downMove}px)`;
-        if (aoeLeft) aoeLeft.style.transform = `translateX(${leftMove}px) translateY(-50%) rotate(90deg)`;
-        if (aoeRight) aoeRight.style.transform = `translateX(${rightMove}px) translateY(-50%) rotate(-90deg)`;
+            
+            const elapsed = Date.now() - startTime;
+            const actualProgress = Math.min(1, elapsed / duration);
+            
+            const now = Date.now();
+            const timeSinceLastRotate = now - (this.lastRotateTime || 0);
+            const isRotating = timeSinceLastRotate < 300;
+            
+            let targetProgress;
+            
+            if (isRotating) {
+                const pushDelay = (this.aoePushProgress || 0) * 200;
+                const adjustedElapsed = Math.max(0, elapsed - pushDelay);
+                targetProgress = Math.min(1, adjustedElapsed / duration);
+                smoothProgress = targetProgress;
+            } else {
+                const catchUpSpeed = 0.015;
+                if (smoothProgress < actualProgress) {
+                    smoothProgress = Math.min(actualProgress, smoothProgress + catchUpSpeed);
+                } else {
+                    smoothProgress = actualProgress;
+                }
+                targetProgress = smoothProgress;
+            }
+            
+            const easeProgress = 1 - Math.pow(1 - targetProgress, 2);
+            
+            const upMove = maxUpMove * easeProgress;
+            const downMove = -maxDownMove * easeProgress;
+            const leftMove = -maxLeftMove + (maxLeftMove * easeProgress);
+            const rightMove = maxRightMove - (maxRightMove * easeProgress);
+            
+            if (aoeUp) aoeUp.style.transform = `translateY(${upMove}px)`;
+            if (aoeDown) aoeDown.style.transform = `translateY(${downMove}px)`;
+            if (aoeLeft) aoeLeft.style.transform = `translateX(${leftMove}px) translateY(-50%) rotate(90deg)`;
+            if (aoeRight) aoeRight.style.transform = `translateX(${rightMove}px) translateY(-50%) rotate(-90deg)`;
+            
+            animationId = requestAnimationFrame(animate);
+        };
         
         animationId = requestAnimationFrame(animate);
-    };
         
-        // 啟動動畫
-        animationId = requestAnimationFrame(animate);
-        
-        // 碰撞檢測
+        // ✅ 延遲 100ms 再開始碰撞檢測，避免在動畫開始前就碰撞
         const collisionCheck = setInterval(() => {
             if (finished || this.state !== this.states.AOE_ACTIVE) {
                 clearInterval(collisionCheck);
@@ -2278,9 +2385,8 @@ const DefenseGameV2 = {
                 cancelAnimationFrame(animationId);
                 fail();
             }
-        }, 16);
+        }, 100);  // ✅ 延遲 100ms
         
-        // 成功計時器
         const successTimer = setTimeout(() => {
             if (!finished && this.state === this.states.AOE_ACTIVE) {
                 clearInterval(collisionCheck);
@@ -2439,17 +2545,86 @@ const DefenseGameV2 = {
         this.shakeScreen();  // 取代原本的 triggerVibration
     },
     
-    closeResultAndComplete: function() {
+    // 在 DefenseGameV2.js 中修改 closeResultAndComplete 方法
+    closeResultAndComplete: function(result) {
+        console.log('🎮 closeResultAndComplete 被呼叫，結果:', result);
+        
         // ✅ 清理軌跡更新循環
         if (this.trailInterval) {
             clearInterval(this.trailInterval);
             this.trailInterval = null;
         }
         
-        if (this.container) this.container.remove();
+        // ✅ 清理所有計時器
+        this.clearAllTimers();
+        
+        // ✅ 清理所有 AOE 計時器
+        if (this.aoeTimers) {
+            this.aoeTimers.forEach(t => {
+                if (t && t.id) clearInterval(t.id);
+                if (t && t.id) clearTimeout(t.id);
+            });
+            this.aoeTimers = [];
+        }
+        
+        // ✅ 清理所有動畫
+        if (this.currentAnimationId) {
+            cancelAnimationFrame(this.currentAnimationId);
+            this.currentAnimationId = null;
+        }
+        
+        // ✅ 清理所有敵人、投射物等
+        this.clearAll();
+        
+        // ✅ 移除容器
+        if (this.container && this.container.parentNode) {
+            this.container.remove();
+        }
+        
+        // ✅ 顯示原本的 gameCanvas
         const gameCanvas = document.getElementById('gameCanvas');
-        if (gameCanvas) gameCanvas.style.display = 'none';
-        if (this.onCompleteCallback) this.onCompleteCallback(true);
+        if (gameCanvas) {
+            gameCanvas.style.display = 'block';
+        }
+        
+        // ✅ 重置遊戲狀態（重要！）
+        this.gameActive = false;
+        this.state = this.states.IDLE;
+        this.currentAttack = null;
+        this.attackQueue = [];
+        this.score = 0;
+        this.mistakes = 0;
+        this.combo = 0;
+        
+        // ✅ 重置所有特殊狀態
+        this.heavyBlockReady = false;
+        this.isShieldActive = false;
+        this.shieldEndTime = 0;
+        this.rotationAccumulator = { totalAngle: 0, lastAngle: 0 };
+        this.aoePushProgress = 0;
+        
+        // ✅ 清理 lightIntervals
+        ['up', 'down', 'left', 'right'].forEach(dir => {
+            if (this.lightIntervals[dir]) {
+                clearInterval(this.lightIntervals[dir]);
+                this.lightIntervals[dir] = null;
+            }
+        });
+
+        // ✅ 確保 result 有正確的值
+        let finalResult = result;
+        if (finalResult === undefined) {
+            // 如果沒有傳入，使用儲存的 gameResult
+            finalResult = this.gameResult === true;
+        }
+        // 確保是布林值
+        finalResult = finalResult === true;
+        
+        // ✅ 回調傳遞結果（讓劇情管理器決定下一步）
+        if (this.onCompleteCallback) {
+            console.log('📤 傳遞遊戲結果給回調:', result);
+            this.onCompleteCallback(result);
+        }
     },
     
     // 關卡設定（從外部檔案載入）
@@ -2501,6 +2676,17 @@ const DefenseGameV2 = {
             });
             this.multiProjectiles = [];
         }
+
+        // ✅ 新增：清理 AOE 線條
+        ['up', 'down', 'left', 'right'].forEach(dir => {
+            const line = document.getElementById(`aoe-${dir}`);
+            if (line) {
+                line.style.opacity = '0';
+                line.style.display = 'none';
+                line.style.pointerEvents = 'none';
+                line.style.transform = 'translate(0,0)';
+            }
+        });
         
         // 清理當前攻擊的計時器
         if (this.currentAttack && this.currentAttack.timer) {

@@ -67,37 +67,43 @@ const chapter2TeenData = {
         // ========== 開場 ==========
         {
             id: 'start',
-            name: '旁白',  // 旁白沒有名字
-            text: '你走過紅磚市場的過去，\n從最早的臨時市場與牛墟，到火災帶來的轉折，再到被保存下來的今日樣貌。',
-            characterImage: 'assets/images/characters/non_character.png',
-            next: 'after_narrative_1'
+            type: 'narration',
+            text: '你走過紅磚市場的過去，從最早的臨時市場與牛墟，到火災帶來的轉折，再到被保存下來的今日樣貌。\n阿斗仔停下腳步，看向市場深處： \n「但這裡的故事，不只停在歷史。」\n攤位之間仍有人來人往， 空氣裡混著米香、豆香與剛出鍋的熱氣。',
+            speed: 60,                   // 可選：打字速度（毫秒/字），預設 50
+            next: 'after_narration_1'
         },
         {
-            id: 'after_narrative_1',
+            id: 'after_narration_1',
+            type: 'narration',
+            text: '「真正的故事，其實藏在這些食物裡。」\n\n接下來，你將走進市場的每一個角落， \n從一間店、一種味道開始，\n 認識這座市場現在正在發生的事。',
+            speed: 60,
+            next: 'show_options'
+        },
+        {
+            id: 'show_options',
             name: '阿斗仔',
-            text: '但這裡的故事，不只停在歷史。',
+            text: '選擇一個開場',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            next: 'after_narrative_2'
+            options: [
+                {
+                    text: '市場的味道',
+                    action: 'goto',
+                    target: 'intro'
+                },
+                {
+                    text: '市場的人情',
+                    action: 'goto',
+                    target: 'intro'
+                }
+            ]
         },
+        
+        // ========== 圖文展示介紹 ==========
         {
-            id: 'after_narrative_2',
-            name: '旁白',  // 旁白
-            text: '攤位之間仍有人來人往，\n空氣裡混著米香、豆香與剛出鍋的熱氣。',
-            characterImage: 'assets/images/characters/non_character.png',
-            next: 'after_narrative_3'
-        },
-        {
-            id: 'after_narrative_3',
+            id: 'intro',
             name: '阿斗仔',
-            text: '真正的故事，其實藏在這些食物裡。',
+            text: '準備好了嗎?',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            next: 'after_narrative_4'
-        },
-        {
-            id: 'after_narrative_4',
-            name: '旁白',  // 旁白
-            text: '接下來，你將走進市場的每一個角落，\n從一間店、一種味道開始，認識這座市場現在正在發生的事。',
-            characterImage: 'assets/images/characters/non_character.png',
             options: [
                 {
                     text: '先看看介紹',
@@ -107,8 +113,6 @@ const chapter2TeenData = {
                 }
             ]
         },
-        
-        // ========== 圖文展示介紹 ==========
         {
             id: 'show_gallery_intro',
             name: '阿斗仔',

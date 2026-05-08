@@ -67,23 +67,36 @@ const chapter2ChildData = {
         // ========== 開場 ==========
         {
             id: 'start',
-            name: '旁白',  // 旁白沒有名字
-            text: '你剛認識紅磚市場的故事。',
-            characterImage: 'assets/images/characters/non_character.png',
-            next: 'after_narrative_1'
+            type: 'narration',
+            text: '你剛認識紅磚市場的故事。\n 阿斗仔說：「現在，我們\n來看看這裡的食物吧！」\n跟著他走進市場，\n開始新的冒險。',
+            speed: 60,                   // 可選：打字速度（毫秒/字），預設 50
+            next: 'show_options'
         },
         {
-            id: 'after_narrative_1',
+            id: 'show_options',
             name: '阿斗仔',
-            text: '現在，我們來看看這裡的食物吧！',
+            text: '選擇一個開場',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            next: 'after_narrative_2'
+            options: [
+                {
+                    text: '市場的味道',
+                    action: 'goto',
+                    target: 'intro'
+                },
+                {
+                    text: '市場的人情',
+                    action: 'goto',
+                    target: 'intro'
+                }
+            ]
         },
+        
+        // ========== 圖文展示介紹 ==========
         {
-            id: 'after_narrative_2',
-            name: '旁白',  // 旁白
-            text: '跟著他走進市場，開始新的冒險。',
-            characterImage: 'assets/images/characters/non_character.png',
+            id: 'intro',
+            name: '阿斗仔',
+            text: '準備好了嗎?',
+            characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
                     text: '先看看介紹',
@@ -93,8 +106,6 @@ const chapter2ChildData = {
                 }
             ]
         },
-        
-        // ========== 圖文展示介紹 ==========
         {
             id: 'show_gallery_intro',
             name: '阿斗仔',

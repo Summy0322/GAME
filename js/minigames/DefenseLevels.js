@@ -214,6 +214,8 @@ const DefenseLevels = {
             attackPatterns: [
                 { type: 'HEAVY', dir: 'left', wait: 6000, text: '💨 蒸氣' },
                 { type: 'HEAVY', dir: 'right', wait: 6000, text: '💨 蒸氣' },
+                { type: 'AOE', wait: 6500, text: '🔄 旋轉' },
+                { type: 'AOE', wait: 6500, text: '🔄 旋轉' },
                 { type: 'NORMAL', dir: 'up', wait: 3000, text: '⬆️ 肉圓' },
                 { type: 'NORMAL', dir: 'down', wait: 3000, text: '⬇️ 肉圓' },
                 { type: 'DECOY', dir: 'up', wait: 2500, text: '🪨 石頭' },
