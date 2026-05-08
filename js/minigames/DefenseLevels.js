@@ -25,12 +25,12 @@ const DefenseLevels = {
                 { type: 'DECOY', dir: 'right', wait: 2500, text: '🪨 石頭！別滑' },
                 { type: 'MULTI', dirs: ['up', 'down'], wait: 4000, text: '⬆️⬇️ 肉圓' },
                 { type: 'MULTI', dirs: ['left', 'right'], wait: 4000, text: '⬅️➡️ 肉圓' },
-                { type: 'MULTI_MIXED', dirs: ['left', 'right'], correctDirs: ['left'], wrongDirs: ['right'], wait: 4000, text: '⬅️黃豆｜➡️石頭' },
-                { type: 'MULTI_MIXED', dirs: ['up', 'down'], correctDirs: ['down'], wrongDirs: ['up'], wait: 4000, text: '⬆️石頭｜⬇️黃豆' },
+                { type: 'MULTI_MIXED', dirs: ['left', 'right'], correctDirs: ['left'], wrongDirs: ['right'], wait: 4000, text: '⬅️肉圓｜➡️石頭' },
+                { type: 'MULTI_MIXED', dirs: ['up', 'down'], correctDirs: ['down'], wrongDirs: ['up'], wait: 4000, text: '⬆️石頭｜⬇️肉圓' },
                 { type: 'NORMAL', dir: 'up', wait: 3500, text: '⬆️ 肉圓' },
                 { type: 'NORMAL', dir: 'left', wait: 3500, text: '⬅️ 肉圓' },
                 { type: 'MULTI', dirs: ['up', 'left', 'right'], wait: 4500, text: '⬆️⬅️➡️ 肉圓' },
-                { type: 'MULTI_MIXED', dirs: ['up', 'down', 'right'], correctDirs: ['up', 'right'], wrongDirs: ['down'], wait: 4500, text: '⬆️➡️黃豆｜⬇️石頭' },
+                { type: 'MULTI_MIXED', dirs: ['up', 'down', 'right'], correctDirs: ['up', 'right'], wrongDirs: ['down'], wait: 4500, text: '⬆️➡️肉圓｜⬇️石頭' },
                 { type: 'END', text: '' }
             ]
         },
@@ -54,7 +54,7 @@ const DefenseLevels = {
                 { type: 'DECOY', dir: 'up', wait: 3000, text: '🪨 石頭' },
                 { type: 'MULTI', dirs: ['up', 'down'], wait: 5000, text: '⬆️⬇️ 肉圓' },
                 { type: 'MULTI', dirs: ['left', 'right'], wait: 5000, text: '⬅️➡️ 肉圓' },
-                { type: 'MULTI_MIXED', dirs: ['left', 'right'], correctDirs: ['left'], wrongDirs: ['right'], wait: 5000, text: '⬅️黃豆｜➡️石頭' },
+                { type: 'MULTI_MIXED', dirs: ['left', 'right'], correctDirs: ['left'], wrongDirs: ['right'], wait: 5000, text: '⬅️肉圓｜➡️石頭' },
                 { type: 'MULTI', dirs: ['up', 'left', 'right'], wait: 5500, text: '⬆️⬅️➡️ 肉圓' },
                 { type: 'END', text: '' }
             ]

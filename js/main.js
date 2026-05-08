@@ -88,7 +88,7 @@ function getChapterByMode(chapterId) {
         'chapter1': isChildMode ? window.Chapter1_Child : window.Chapter1_Teen,
         
         // 第二章
-        'chapter2': isChildMode ? (window.Chapter2_Child || window.Chapter2) : (window.Chapter2_Teen || window.Chapter2),
+        'chapter2': isChildMode ? window.Chapter2_Child : window.Chapter2_Teen,
         
         // 第三章
         'chapter3': isChildMode ? (window.Chapter3_Child || window.Chapter3) : (window.Chapter3_Teen || window.Chapter3)

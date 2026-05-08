@@ -24,7 +24,7 @@ const urlsToCache = [
   // 如果有圖片資源（可選）
   '/GAME/assets/images/title2.png',
   '/GAME/assets/images/intro/封面.jpg',
-  '/GAME/assets/images/ch1/background.jpg',
+  '/GAME/assets/images/ch1/background.png',
   '/GAME/assets/images/characters/阿斗仔.png',
 
   // Level 1 需要的圖片

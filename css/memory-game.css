@@ -21,7 +21,8 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background: #f1e4d0;  /* ✅ 米黃色背景 */
+    /* background: #f1e4d0;  ✅ 米黃色背景 */
+    background-image: url('../assets/images/ch2/bg.png');
 }
 
 /* 遊戲主面板 - 相對於舞台，使用 flex 佈局 */
@@ -34,7 +35,13 @@
     max-width: 1200px;
     height: 85%;
     max-height: 85%;
-    background: rgba(253, 246, 235, 0.85);  /* ✅ 通透淡米色 */
+    /* 替換成圖片 */
+    background-image: url('../assets/images/ch2/面板.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 移除原本的純色背景 */
+    /* background: rgba(253, 246, 235, 0.85); */ /* ✅ 通透淡米色 */
     border: 3px solid #e67e22;
     border-radius: 20px;
     padding: 12px;
@@ -62,7 +69,13 @@
     align-items: center;
     gap: 12px;
     padding: 5px 16px;
-    background: rgba(230, 215, 195, 0.6);  /* ✅ 半透明米棕色 */
+    /* 替換成圖片 */
+    background-image: url('../assets/images/ch2/資訊欄.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 移除原本的半透明背景 */
+    /* background: rgba(230, 215, 195, 0.6); */  /* ✅ 半透明米棕色 */
     border-radius: 40px;
     backdrop-filter: blur(5px);
 }
@@ -118,6 +131,31 @@
     font-family: monospace;
     letter-spacing: 3px;
     text-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+/* 限次數模式 - 次數顯示器 */
+.memory-attempts-large {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: rgba(240, 230, 210, 0.7);
+    padding: 8px 24px;
+    border-radius: 60px;
+    border: 1px solid rgba(231, 126, 34, 0.5);
+}
+
+.memory-attempts-label {
+    color: #5c4a2a;
+    font-size: clamp(16px, 3vh, 22px);
+    font-weight: normal;
+}
+
+#memory-attempts {
+    color: #e67e22;
+    font-size: clamp(36px, 7vh, 56px);
+    font-weight: bold;
+    font-family: monospace;
+    letter-spacing: 3px;
 }
 
 /* 右側：狀態文字 - 靠右對齊，自動縮放 */
@@ -312,7 +350,7 @@
 /* 背面 - 圖片風格 */
 .memory-card-back {
     background: linear-gradient(135deg, #d4a574, #c49464);  /* ✅ 溫暖木質色調 */
-    background-image: url('../assets/images/memory/card-back.jpg');
+    background-image: url('../assets/images/ch2/卡背.png');
     background-size: cover;
     background-position: center;
 }

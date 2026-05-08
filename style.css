@@ -306,14 +306,88 @@ html {
     background-color: #000;
 }
 
-/* 標題畫面背景 */
+/* 標題畫面背景 - 修改為圖片按鈕風格 */
 #start-menu {
-    background-image: url('assets/images/title2.png');
+    background-image: url('assets/images/title/background.png') !important;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-color: #000;
-    color: white;
+    position: relative;
+    display: block;  /* 取消原本的 flex 居中 */
+}
+
+/* 標題圖片容器 - 新增 */
+.title-container {
+    position: absolute;
+    top: 10%;
+    left: 60%;
+    transform: translateX(-50%);
+    width: 60%;
+    max-width: 600px;
+    z-index: 5;
+}
+
+/* 標題圖片 - 不規則呼吸動畫 */
+.start-title-img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+    animation: irregularBreath 3s ease-in-out infinite alternate;
+}
+
+@keyframes irregularBreath {
+    0% {
+        transform: scale(0.95);
+    }
+    30% {
+        transform: scale(1.02);
+    }
+    60% {
+        transform: scale(0.98);
+    }
+    100% {
+        transform: scale(1.05);
+    }
+}
+
+/* 按鈕容器 - 新增 */
+.menu-buttons {
+    position: absolute;
+    bottom: 15%;
+    right: 8%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 20%;
+    max-width: 220px;
+    z-index: 5;
+}
+
+/* 圖片按鈕樣式 - 新增 */
+.img-btn {
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.img-btn img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* 互動效果 */
+.img-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+.img-btn:active {
+    transform: scale(0.95);
 }
 
 /* 關卡選擇畫面背景 */

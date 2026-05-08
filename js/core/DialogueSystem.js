@@ -290,6 +290,43 @@ const DialogueSystem = {
             // 傳入 level 和額外選項
             this.startMinigame(option.minigame, option.returnTo, option.level, extraOptions);
         } 
+        else if (option.action === 'quiz') {
+            console.log('📝 啟動問答測驗');
+            
+            // 暫停點擊換頁
+            if (this.gameContainer) {
+                this.gameContainer.onclick = null;
+            }
+            
+            // 開始問答
+            this.startQuiz(
+                option.questionRange,
+                option.questionCount,
+                (score) => {
+                    console.log(`🎯 問答完成，答對 ${score} 題`);
+                    
+                    // 將分數儲存到全域
+                    window.lastQuizScore = score;
+                    
+                    // ✅ 根據實際答對題數決定跳轉節點（方法一：精確分數映射）
+                    let targetNode = null;
+                    
+                    if (option.scoreTargets && option.scoreTargets[score] !== undefined) {
+                        targetNode = option.scoreTargets[score];
+                    } else if (option.returnTo) {
+                        targetNode = option.returnTo;
+                    }
+                    
+                    if (targetNode) {
+                        this.goToNode(targetNode);
+                    } else {
+                        console.error('❌ 無法決定跳轉節點，score:', score);
+                        this.currentIndex++;
+                        this.showDialogue();
+                    }
+                }
+            );
+        }
         else if (option.action === 'goto') {
             console.log('➡️ 跳轉到節點:', option.target);
             this.goToNode(option.target);
@@ -342,6 +379,132 @@ const DialogueSystem = {
                     this.showDialogue();
                 };
             }
+        }
+    },
+
+    // 問答系統相關屬性
+    quizScore: 0,
+    currentQuizQuestions: [],
+    currentQuizIndex: 0,
+    quizCallback: null,
+
+    // 開始問答測驗
+    startQuiz: function(questionRange, questionCount, onComplete) {
+        console.log('📝 開始問答測驗，範圍:', questionRange, '抽題數:', questionCount);
+        
+        this.quizScore = 0;
+        this.quizCallback = onComplete;
+        
+        // 從題庫抽題
+        this.currentQuizQuestions = QuizQuestions.getRandomQuestions(
+            questionRange.start, 
+            questionRange.end, 
+            questionCount
+        );
+        
+        this.currentQuizIndex = 0;
+        
+        if (this.currentQuizQuestions.length === 0) {
+            console.warn('⚠️ 沒有找到符合範圍的題目');
+            if (onComplete) onComplete(0);
+            return;
+        }
+        
+        // 開始第一題
+        this.showQuizQuestion();
+    },
+
+    // 顯示一題問答
+    showQuizQuestion: function() {
+        if (this.currentQuizIndex >= this.currentQuizQuestions.length) {
+            // 所有題目答完
+            console.log(`📊 問答完成！答對 ${this.quizScore} / ${this.currentQuizQuestions.length} 題`);
+            if (this.quizCallback) {
+                this.quizCallback(this.quizScore);
+                this.quizCallback = null;
+            }
+            return;
+        }
+        
+        const question = this.currentQuizQuestions[this.currentQuizIndex];
+        console.log(`📝 第 ${this.currentQuizIndex + 1} 題:`, question.text);
+        
+        // 使用現有的選項系統顯示問題
+        const options = question.options.map(opt => ({
+            text: opt.text,
+            action: 'quiz_answer',
+            isCorrect: opt.correct,
+            explanation: question.explanation
+        }));
+        
+        // 顯示問題和選項
+        this.typewriter.showDialogue(
+            '考考你',
+            question.text,
+            null,
+            null,
+            'left',
+            ''
+        ).then(() => {
+            this.typewriter.showOptions(options).then(selected => {
+                this.handleQuizAnswer(selected);
+            });
+        });
+    },
+
+    // 處理回答
+    handleQuizAnswer: function(selectedOption) {
+        const question = this.currentQuizQuestions[this.currentQuizIndex];
+        const isCorrect = selectedOption.isCorrect === true;
+        
+        if (isCorrect) {
+            this.quizScore++;
+            console.log(`✅ 答對！目前累積: ${this.quizScore}`);
+            
+            // 顯示答對訊息
+            this.typewriter.showDialogue(
+                '結果',
+                '✅ 答對了！\n' + (selectedOption.explanation || ''),
+                null,
+                null,
+                'left',
+                ''
+            ).then(() => {
+                // ✅ 修改：顯示完成後，需要點擊畫面才繼續下一題
+                this.waitForClickToContinue();
+            });
+        } else {
+            console.log(`❌ 答錯！正確答案: ${QuizQuestions.getCorrectAnswerText(question)}`);
+            
+            // 顯示答錯訊息和正確答案
+            this.typewriter.showDialogue(
+                '結果',
+                `❌ 答錯了！正確答案是：${QuizQuestions.getCorrectAnswerText(question)}\n${question.explanation || ''}`,
+                null,
+                null,
+                'left',
+                ''
+            ).then(() => {
+                // ✅ 修改：顯示完成後，需要點擊畫面才繼續下一題
+                this.waitForClickToContinue();
+            });
+        }
+    },
+
+    // ✅ 新增方法：等待點擊後繼續下一題
+    waitForClickToContinue: function() {
+        // 清除舊的點擊事件
+        if (this.gameContainer) {
+            this.gameContainer.onclick = null;
+        }
+        
+        // 設定點擊事件
+        if (this.gameContainer) {
+            this.gameContainer.onclick = () => {
+                this.gameContainer.onclick = null;
+                this.currentQuizIndex++;
+                this.showQuizQuestion();
+            };
         }
     },
     

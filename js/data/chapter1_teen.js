@@ -1,7 +1,7 @@
 // js/data/chapter1_teen.js
 window.Chapter1_Teen = {
     id: 'chapter1_teen',
-    background: 'assets/images/ch1/background.jpg',
+    background: 'assets/images/ch1/background.png',
     
     dialogue: [
         // ========== 開場 ==========

@@ -55,9 +55,19 @@
 
         <!-- 起始頁面 -->
         <div id="start-menu" class="scene">
-            <h1>北斗紅磚市場的微光記憶</h1>
-            <button id="startBtn">開始遊戲</button>
-            <button id="exitBtn">離開遊戲</button>
+            <!-- 背景由 CSS 控制，這裡放置 UI 元素 -->
+            <div class="title-container">
+                <img src="assets/images/title/title.png" alt="標題" class="start-title-img">
+            </div>
+            
+            <div class="menu-buttons">
+                <div id="startBtn" class="img-btn">
+                    <img src="assets/images/title/enter.png" alt="進入市場">
+                </div>
+                <div id="exitBtn" class="img-btn">
+                    <img src="assets/images/title/leave.png" alt="離開市場">
+                </div>
+            </div>
         </div>
 
         <div id="video-scene" class="scene" style="display:none;">
@@ -144,8 +154,10 @@
     <!-- <script src="js/data/chapter3_teen.js"></script> -->
     <!-- 小朋友版 -->
     <script src="js/data/chapter1_child.js"></script>
-    <!-- <script src="js/data/chapter2_child.js"></script> -->
+    <script src="js/data/chapter2_child.js"></script>
     <!-- <script src="js/data/chapter3_child.js"></script> -->
+    <!-- 問答題庫 -->
+    <script src="js/data/quizQuestions.js"></script>
     
     <!-- 5. 小遊戲 -->
     <script src="js/minigames/MemoryGame.js"></script>

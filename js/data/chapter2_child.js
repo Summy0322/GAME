@@ -1,6 +1,6 @@
-// js/data/chapter2_teen.js
-const chapter2TeenData = {
-    id: 'chapter2_teen',
+// js/data/chapter2_child.js
+const chapter2ChildData = {
+    id: 'chapter2_child',
     background: 'assets/images/ch2/background.png',
     
     // ✅ 定義卡片圖庫資料（6張卡片）
@@ -10,48 +10,48 @@ const chapter2TeenData = {
                 thumb: "assets/images/memory/詹永豐米店.png",
                 fullImage: "assets/images/memory/詹永豐米店.png",
                 title: "詹永豐米店",
-                summary: "創立於日治時期、以試吃選米與職人精神聞名的百年米店。",
-                story: "詹永豐米店位於西門大榕樹旁，創立於日治時期，至今已傳承至第三代。早期店內設有大型碾米機，象徵著過去勞動密集的產業型態，後因環保法規拆除，改由外部碾米廠供應。儘管設備改變，店家仍堅持「實在、正直」的理念，透過親自試吃來挑選米種，強調米飯必須Q彈且冷食亦佳。第三代並創立品牌與展示模型，將家族記憶轉化為具體的文化呈現。"
+                summary: "大榕樹下，有一家會親自試吃米飯的老米店。",
+                story: "在大榕樹旁，有一家很老的米店，已經傳到第三代了。以前店裡有很大的碾米機，工作時會有很多灰塵，是長輩辛苦工作的地方。現在雖然沒有機器了，但老闆還是會自己試吃每一種米，確定米飯吃起來很Q、放冷也好吃才會賣。店裡還有一個小小的模型，把以前的米店樣子留下來。"
             },
             {
                 id: "card2",
                 thumb: "assets/images/memory/其實豆製所.png",
                 fullImage: "assets/images/memory/其實豆製所.png",
                 title: "其實豆製所",
-                summary: "以國產大豆為核心、重新活化紅磚市場的在地品牌。",
-                story: "其實豆製所創立於2016年，曾短暫停業，並於2023年與在地品牌合作後重新出發。店家堅持使用國產大豆製作豆漿與豆製品，強調傳統濃郁風味的再現。其選址於具有百年歷史的紅磚市場，不僅推廣在地農業，也賦予老市場新的功能與文化意義，使其成為地方飲食文化的延續據點。"
+                summary: "在紅磚市場裡，用台灣黃豆做豆漿的店。",
+                story: "紅磚市場裡有一家豆製所，會用台灣種的黃豆做出香香的豆漿、豆腐和豆花。這家店曾經休息過，後來又重新開張，讓市場變得更熱鬧，也讓大家重新認識豆子的味道。"
             },
             {
                 id: "card3",
                 thumb: "assets/images/memory/彰化北斗肉圓.png",
                 fullImage: "assets/images/memory/彰化北斗肉圓.png",
                 title: "彰化北斗肉圓",
-                summary: "以三角錐造型與先蒸後炸工法著稱的在地肉圓。",
-                story: "彰化北斗肉圓位於奠安宮周邊，其特色在於手工捏製的三角錐外型，與一般圓形肉圓有所區別。製作上採用先蒸再炸的傳統工序，使外皮呈現半透明狀，並保有高度的彈性與嚼勁。這種外型與口感的結合，成為當地極具代表性的飲食特色。"
+                summary: "這裡的肉圓是三角形，而且吃起來很Q。",
+                story: "一般的肉圓是圓形的，但這裡的肉圓是用手捏成三角形。做的時候會先蒸，再拿去炸，外皮會變得有點透明，吃起來很有彈性，很特別。"
             },
             {
                 id: "card4",
                 thumb: "assets/images/memory/正老店阿美.png",
                 fullImage: "assets/images/memory/正老店阿美.png",
                 title: "正老店阿美",
-                summary: "傳承三代、以濕潤口感與豬皮為特色的在地經典主食。",
-                story: "正老店阿美位於奠安宮周邊，營業超過50年，已傳承至第三代。其招牌高麗菜飯透過爆炒與慢火燉煮，使高麗菜釋放甜味並滲入米飯，形成微濕潤的口感。搭配滷製軟嫩的豬皮、肉燥與鴨蛋，構成層次豐富的風味組合。此種將湯汁與食材融合於米飯中的作法，反映北斗在地飲食的樸實與日常性。"
+                summary: "一碗加了高麗菜和軟軟豬皮的古早味飯。",
+                story: "這家店已經開了很久，很多人從小就吃這碗飯。高麗菜會先炒過，再慢慢煮到很入味，米飯會吸滿湯汁。上面還會放一片軟軟的豬皮、肉燥和鴨蛋，每一口都有不同的味道。"
             },
             {
                 id: "card5",
                 thumb: "assets/images/memory/阿在伯炸彈蔥油餅.png",
                 fullImage: "assets/images/memory/阿在伯炸彈蔥油餅.png",
                 title: "阿在伯炸彈蔥油餅",
-                summary: "以油炸膨脹效果為特色的廟口視覺型小吃。",
-                story: "阿在伯炸彈蔥油餅位於奠安宮美食廣場，其最大特色是在高溫油炸過程中，麵皮會迅速膨脹，形成如氣球般的外觀。外層經油炸後略帶酥脆，內部則保有柔軟口感並包覆青蔥香氣。此種強烈的視覺變化，使其成為具有辨識度的街邊小吃。"
+                summary: "放進油鍋後會膨起來的蔥油餅。",
+                story: "把麵團放進熱油裡後，餅會慢慢鼓起來，變得像氣球一樣大。外面炸得有點脆，裡面還有很多蔥，聞起來很香。"
             },
             {
                 id: "card6",
                 thumb: "assets/images/memory/奠安宮楊記炸物.png",
                 fullImage: "assets/images/memory/奠安宮楊記炸物.png",
                 title: "奠安宮楊記炸物",
-                summary: "以外酥內嫩對比口感為特色的傳統炸豆腐。",
-                story: "奠安宮楊記炸物位於廟口周邊，主打將白豆腐經高溫油炸，使外層形成酥脆的金黃色外皮，而內部仍保有原本的柔軟與水分。這種外酥內嫩的口感對比，是其吸引人的關鍵，也體現傳統街邊炸物的製作特色。"
+                summary: "外面酥酥、裡面軟軟的炸豆腐。",
+                story: "白色的豆腐放進油鍋後，外面會變成金黃色，吃起來脆脆的，但裡面還是軟軟又熱熱的，一口咬下去有兩種不同的感覺。"
             },
             {
                 id: "card7",
@@ -68,35 +68,21 @@ const chapter2TeenData = {
         {
             id: 'start',
             name: '旁白',  // 旁白沒有名字
-            text: '你走過紅磚市場的過去，\n從最早的臨時市場與牛墟，到火災帶來的轉折，再到被保存下來的今日樣貌。',
+            text: '你剛認識紅磚市場的故事。',
             characterImage: 'assets/images/characters/non_character.png',
             next: 'after_narrative_1'
         },
         {
             id: 'after_narrative_1',
             name: '阿斗仔',
-            text: '但這裡的故事，不只停在歷史。',
+            text: '現在，我們來看看這裡的食物吧！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'after_narrative_2'
         },
         {
             id: 'after_narrative_2',
             name: '旁白',  // 旁白
-            text: '攤位之間仍有人來人往，\n空氣裡混著米香、豆香與剛出鍋的熱氣。',
-            characterImage: 'assets/images/characters/non_character.png',
-            next: 'after_narrative_3'
-        },
-        {
-            id: 'after_narrative_3',
-            name: '阿斗仔',
-            text: '真正的故事，其實藏在這些食物裡。',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            next: 'after_narrative_4'
-        },
-        {
-            id: 'after_narrative_4',
-            name: '旁白',  // 旁白
-            text: '接下來，你將走進市場的每一個角落，\n從一間店、一種味道開始，認識這座市場現在正在發生的事。',
+            text: '跟著他走進市場，開始新的冒險。',
             characterImage: 'assets/images/characters/non_character.png',
             options: [
                 {
@@ -178,11 +164,11 @@ const chapter2TeenData = {
                     text: '開始挑戰',
                     action: 'minigame',
                     minigame: 'memory',
-                    cardCount: 14,
-                    gameMode: 'time',
-                    time: 60,  // 60秒
-                    lightMode: 'both',
-                    needMemorize: true,
+                    cardCount: 10,
+                    gameMode: 'attempts',
+                    lightMode: 'red',
+                    needMemorize: false,
+                    totalAttempts: 15,
                     returnTo: 'after_game_success'
                 }
             ]
@@ -199,11 +185,11 @@ const chapter2TeenData = {
                     text: '開始挑戰',
                     action: 'minigame',
                     minigame: 'memory',
-                    cardCount: 14,
-                    gameMode: 'time',
-                    time: 80,  // 60秒
-                    lightMode: 'both',
-                    needMemorize: true,
+                    cardCount: 10,
+                    gameMode: 'attempts',
+                    lightMode: 'red',
+                    needMemorize: false,
+                    totalAttempts: 30,  // 更多次數
                     returnTo: 'after_game_success'
                 }
             ]
@@ -249,21 +235,21 @@ const chapter2TeenData = {
 };
 
 // ✅ 在載入後動態填入 gallery 資料（避免引用錯誤）
-chapter2TeenData.dialogue.forEach(line => {
+chapter2ChildData.dialogue.forEach(line => {
     if (line.gallery === null) {
-        line.gallery = chapter2TeenData.cardGallery;
+        line.gallery = chapter2ChildData.cardGallery;
     }
     if (line.options) {
         line.options.forEach(opt => {
             if (opt.gallery === null) {
-                opt.gallery = chapter2TeenData.cardGallery;
+                opt.gallery = chapter2ChildData.cardGallery;
             }
         });
     }
 });
 
-// ✅ 同時設定兩個變數名稱，確保 main.js 能找到
-window.Chapter2_Teen = chapter2TeenData;
+// ✅ 設定變數名稱，確保 main.js 能找到
+window.Chapter2_Child = chapter2ChildData;
 
-console.log('✅ Chapter2 青少年版已載入（卡片介紹 → 問答 → 小遊戲）');
-console.log('📦 cardGallery 共有', chapter2TeenData.cardGallery.length, '張卡片');
+console.log('✅ Chapter2 兒童版已載入（記憶遊戲測試版 + 圖文展示測試）');
+console.log('📦 cardGallery 共有', chapter2ChildData.cardGallery.length, '張卡片');
