@@ -29,6 +29,8 @@ const MemoryGameV2 = {
     wrongStreak: 0,           // 連續失敗次數 (紅燈)
     rightStreak: 0,           // 連續成功次數 (綠燈)
     strikeLights: [],         // 燈光 DOM 元素
+    penaltyRedemption: 0,    // ✅ 懲罰減免次數（答對題數給的）
+    redeemedCount: 0,        // ✅ 已使用的減免次數
 
     // 模式設定
     gameMode: 'time',         // ✅ 'time' 限時模式 / 'attempts' 限次數模式
@@ -50,6 +52,12 @@ const MemoryGameV2 = {
     // 根據卡片數量自動計算最佳網格（確保不超出畫面，左右浪費最少）
     calculateGrid: function(cardCount) {
         const totalCards = cardCount;
+
+        // ✅ 特殊規則：10 張卡片（5對）固定使用 5x2 橫向排列
+        if (totalCards === 10) {
+            console.log(`📐 特殊規則：10 張卡片 → 5 列 x 2 行`);
+            return { cols: 5, rows: 2 };
+        }
         
         // 獲取螢幕/容器的寬高比
         const getContainerAspectRatio = () => {
@@ -115,6 +123,12 @@ const MemoryGameV2 = {
         
         this.gameActive = true;
         this.onCompleteCallback = options.onComplete;
+
+        // ✅ 讀取懲罰減免次數
+        this.penaltyRedemption = options.penaltyRedemption || 0;
+        this.redeemedCount = 0;
+        
+        console.log(`🎁 懲罰減免次數: ${this.penaltyRedemption}`);
         
         // ✅ 讀取模式設定
         this.gameMode = options.gameMode || 'time';      // 'time' 或 'attempts'
@@ -467,8 +481,36 @@ const MemoryGameV2 = {
         }
     },
 
-    // ✅ 限次數模式：扣次數特效
+    // ✅ 限次數模式：扣次數特效（有減免就不扣）
     triggerAttemptsPenaltyEffect: function() {
+        // ✅ 檢查是否有減免次數
+        if (this.penaltyRedemption > 0 && this.redeemedCount < this.penaltyRedemption) {
+            this.redeemedCount++;
+            console.log(`🎁 減免懲罰！已使用 ${this.redeemedCount}/${this.penaltyRedemption}`);
+            
+            // 顯示減免特效
+            const redemptionText = document.createElement('div');
+            redemptionText.textContent = '🛡️ 懲罰減免！';
+            redemptionText.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #00ccff;
+                font-size: 36px;
+                font-weight: bold;
+                text-shadow: 0 0 15px #00ccff;
+                z-index: 10000;
+                animation: penaltyFloat 0.8s ease-out forwards;
+                pointer-events: none;
+                white-space: nowrap;
+            `;
+            document.body.appendChild(redemptionText);
+            setTimeout(() => redemptionText.remove(), 800);
+            return; // ✅ 不扣次數，直接返回
+        }
+        
+        // 原本的扣次數邏輯
         const attemptsEl = document.getElementById('memory-attempts');
         if (attemptsEl) {
             attemptsEl.classList.add('penalty-flash');
@@ -543,8 +585,36 @@ const MemoryGameV2 = {
         setTimeout(() => bonusText.remove(), 800);
     },
 
-    // 觸發扣秒特效（限時模式）
+    // 觸發扣秒特效（限時模式）- 如果有減免次數就不扣
     triggerTimePenaltyEffect: function() {
+        // ✅ 檢查是否有減免次數
+        if (this.penaltyRedemption > 0 && this.redeemedCount < this.penaltyRedemption) {
+            this.redeemedCount++;
+            console.log(`🎁 減免懲罰！已使用 ${this.redeemedCount}/${this.penaltyRedemption}`);
+            
+            // 顯示減免特效
+            const redemptionText = document.createElement('div');
+            redemptionText.textContent = '🛡️ 懲罰減免！';
+            redemptionText.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #00ccff;
+                font-size: 36px;
+                font-weight: bold;
+                text-shadow: 0 0 15px #00ccff;
+                z-index: 10000;
+                animation: penaltyFloat 0.8s ease-out forwards;
+                pointer-events: none;
+                white-space: nowrap;
+            `;
+            document.body.appendChild(redemptionText);
+            setTimeout(() => redemptionText.remove(), 800);
+            return; // ✅ 不扣秒，直接返回
+        }
+        
+        // 原本的扣秒邏輯
         const timerEl = document.getElementById('memory-timer');
         if (timerEl) {
             timerEl.classList.add('penalty-flash');
@@ -1038,6 +1108,9 @@ const MemoryGameV2 = {
     endGame: function(isWin) {
         this.gameActive = false;
         this.canFlip = false;
+        
+        // ✅ 儲存遊戲結果到全域變數，供 DialogueSystem 使用
+        window.lastGameSuccess = isWin;
         
         // 清理 resize 監聽
         if (this.handleResize) {

@@ -63,13 +63,28 @@ const chapter2TeenData = {
             }
         ],
     
+    // ✅ 儲存問答分數（用於減免次數）
+    quizScore: 0,
+    
+    // ✅ 設定減免次數的方法
+    setQuizScore: function(score) {
+        this.quizScore = score;
+        console.log(`📝 問答分數已儲存: ${score} 分，獲得 ${score} 次減免機會`);
+    },
+    
+    // ✅ 獲取減免次數的方法
+    getPenaltyRedemption: function() {
+        // 答對 1 題 → 1 次減免，答對 2 題 → 2 次減免
+        return this.quizScore;
+    },
+    
     dialogue: [
         // ========== 開場 ==========
         {
             id: 'start',
             type: 'narration',
             text: '你走過紅磚市場的過去，從最早的臨時市場與牛墟，到火災帶來的轉折，再到被保存下來的今日樣貌。\n阿斗仔停下腳步，看向市場深處： \n「但這裡的故事，不只停在歷史。」\n攤位之間仍有人來人往， 空氣裡混著米香、豆香與剛出鍋的熱氣。',
-            speed: 60,                   // 可選：打字速度（毫秒/字），預設 50
+            speed: 60,
             next: 'after_narration_1'
         },
         {
@@ -116,135 +131,124 @@ const chapter2TeenData = {
         {
             id: 'show_gallery_intro',
             name: '阿斗仔',
-            text: '這些圖案都記住了嗎？在開始遊戲之前，先來回答幾個問題吧！',
+            text: '這些圖案都記住了嗎？在開始遊戲之前，先來回答幾個問題吧！\n答對越多題，遊戲中的懲罰減免次數越多喔！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
                     text: '好的，來回答問題！',
-                    action: 'goto',
-                    target: 'quiz_start'
+                    action: 'quiz',
+                    questionRange: { start: 1, end: 8 },
+                    questionCount: 2,
+                    returnTo: 'quiz_result_menu'
                 },
                 {
                     text: '再看一次',
                     action: 'goto',
                     target: 'show_gallery_intro',
                     gallery: null,
-                }
-            ]
-        },
-        
-        // ========== 問答測驗（答對1題以上才能玩遊戲）==========
-        {
-            id: 'quiz_start',
-            name: '阿斗仔',
-            text: '來考考你剛剛看到的卡片內容！答對一題以上才能玩遊戲喔！',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            options: [
+                },
                 {
-                    text: '開始測驗',
-                    action: 'quiz',
-                    questionRange: { start: 1, end: 8 },
-                    questionCount: 2,  // 隨機抽 2 題
-                    // ✅ 根據答對題數（0、1、2）跳轉到不同節點
-                    scoreTargets: {
-                        0: 'quiz_failed',      // 答對 0 題 → 無法玩遊戲
-                        1: 'quiz_passed',      // 答對 1 題 → 可以玩遊戲（普通）
-                        2: 'quiz_perfect'      // 答對 2 題 → 可以玩遊戲（獎勵）
+                    text: '直接遊玩小遊戲',
+                    action: 'minigame',
+                    minigame: 'memory',
+                    cardCount: 14,
+                    gameMode: 'time',
+                    time: 60,
+                    lightMode: 'both',
+                    needMemorize: true,
+                    penaltyRedemption: 0,
+                    returnTo: {
+                        success: 'success_ending',
+                        fail: 'fail_options'
                     }
                 }
             ]
         },
         
-        // ❌ 答對 0 題：失敗，無法玩遊戲
+        // ========== 問答結果選擇畫面 ==========
         {
-            id: 'quiz_failed',
+            id: 'quiz_result_menu',
             name: '阿斗仔',
-            text: '哎呀！你沒有通過測驗，這樣不能玩遊戲喔！再回去複習一下卡片內容吧！',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            options: [
-                {
-                    text: '回去複習卡片',
-                    action: 'goto',
-                    target: 'show_gallery_intro',
-                    gallery: null
+            get text() {
+                const score = window.Chapter2_Teen?.quizScore || 0;
+                if (score === 0) {
+                    return '很可惜，你沒有答對任何題目。沒有減免機會，但還是可以挑戰遊戲喔！要再試一次嗎？';
+                } else if (score === 1) {
+                    return '你答對了 1 題！獲得 1 次懲罰減免機會！要再回答一次爭取更多減免，還是直接開始遊戲？';
+                } else {
+                    return '太厲害了！你答對了 2 題！獲得 2 次懲罰減免機會！要再回答一次爭取更多減免，還是直接開始遊戲？';
                 }
-            ]
-        },
-        
-        // ✅ 答對 1 題：可以玩遊戲（普通難度）
-        {
-            id: 'quiz_passed',
-            name: '阿斗仔',
-            text: '恭喜你通過測驗！來挑戰記憶遊戲吧！',
-            characterImage: 'assets/images/characters/阿斗仔.png',
+            },
             options: [
                 {
-                    text: '開始挑戰',
-                    action: 'minigame',
-                    minigame: 'memory',
-                    cardCount: 14,
-                    gameMode: 'time',
-                    time: 60,  // 60秒
-                    lightMode: 'both',
-                    needMemorize: true,
-                    returnTo: 'after_game_success'
-                }
-            ]
-        },
-        
-        // 🌟 答對 2 題（滿分）：可以玩遊戲（獎勵難度）
-        {
-            id: 'quiz_perfect',
-            name: '阿斗仔',
-            text: '太厲害了！你全部答對了！給你一個獎勵，遊戲會比較簡單喔！',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            options: [
-                {
-                    text: '開始挑戰',
-                    action: 'minigame',
-                    minigame: 'memory',
-                    cardCount: 14,
-                    gameMode: 'time',
-                    time: 80,  // 60秒
-                    lightMode: 'both',
-                    needMemorize: true,
-                    returnTo: 'after_game_success'
-                }
-            ]
-        },
-        
-        // ========== 遊戲完成後 ==========
-        {
-            id: 'after_game_success',
-            name: '阿斗仔',
-            text: '太厲害了！你的記憶力真好！🎉 要不要看看你剛剛記住了哪些圖案？',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            options: [
-                {
-                    text: '看看卡片圖案',
-                    action: 'goto',
-                    target: 'show_gallery_success',
-                    gallery: null
+                    text: '再回答一次',
+                    action: 'quiz',
+                    questionRange: { start: 1, end: 8 },
+                    questionCount: 2,
+                    returnTo: 'quiz_result_menu'
                 },
                 {
-                    text: '繼續前進',
-                    action: 'goto',
-                    target: 'ending'
+                    text: '開始遊戲',
+                    action: 'minigame',
+                    minigame: 'memory',
+                    cardCount: 14,
+                    gameMode: 'time',
+                    time: 60,
+                    lightMode: 'both',
+                    needMemorize: true,
+                    get penaltyRedemption() {
+                        return window.Chapter2_Teen?.getPenaltyRedemption() || 0;
+                    },
+                    returnTo: {
+                        success: 'success_ending',
+                        fail: 'fail_options'
+                    }
                 }
             ]
         },
         
+        // ========== 成功結局 ==========
         {
-            id: 'show_gallery_success',
+            id: 'success_ending',
             name: '阿斗仔',
-            text: '這些就是剛剛出現過的卡片圖案，你都記住了嗎？',
+            text: '你把這些記憶一一找回來了，這就是屬於你的老街故事。',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            next: 'ending'
+            next: 'final_message'
         },
         
-        // ========== 結束 ==========
+        // ========== 失敗選項 ==========
         {
-            id: 'ending',
+            id: 'fail_options',
+            name: '阿斗仔',
+            text: '好可惜，要再挑戰一次嗎?',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            options: [
+                {
+                    text: '重來一次',
+                    action: 'goto',
+                    target: 'show_gallery_intro'
+                },
+                {
+                    text: '結束旅程',
+                    action: 'goto',
+                    target: 'fail_ending'
+                }
+            ]
+        },
+        
+        // ========== 失敗結局 ==========
+        {
+            id: 'fail_ending',
+            name: '阿斗仔',
+            text: '沒關係，記憶不會消失，歡迎下次再來尋找。',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            next: 'final_message'
+        },
+        
+        // ========== 最終訊息 ==========
+        {
+            id: 'final_message',
             name: '阿斗仔',
             text: '第二章完成了！繼續往下探索吧～',
             characterImage: 'assets/images/characters/阿斗仔.png'
@@ -269,5 +273,5 @@ chapter2TeenData.dialogue.forEach(line => {
 // ✅ 同時設定兩個變數名稱，確保 main.js 能找到
 window.Chapter2_Teen = chapter2TeenData;
 
-console.log('✅ Chapter2 青少年版已載入（卡片介紹 → 問答 → 小遊戲）');
+console.log('✅ Chapter2 青少年版已載入（卡片介紹 → 問答 → 選擇畫面 → 小遊戲）');
 console.log('📦 cardGallery 共有', chapter2TeenData.cardGallery.length, '張卡片');

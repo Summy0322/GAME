@@ -14,6 +14,11 @@ const DialogueSystem = {
     gameContainer: null,
     gameCanvas: null,
     gameBackground: null,
+
+    // ✅ 旁白打字計時器
+    narrationTimer: null,
+    narrationContainer: null,
+    narrationText: null,
     
     init: function() {
         console.log('🔧 DialogueSystem 初始化');
@@ -55,6 +60,18 @@ const DialogueSystem = {
     
     loadChapter: function(chapterData) {
         console.log('📖 載入章節:', chapterData);
+
+        // ✅ 重置旁白相關變數
+        if (this.narrationTimer) {
+            clearTimeout(this.narrationTimer);
+            this.narrationTimer = null;
+        }
+        if (this.narrationContainer) {
+            if (this.narrationText) {
+                this.narrationText.textContent = '';
+            }
+            this.narrationContainer.style.display = 'none';
+        }
         
         if (!chapterData) {
             console.error('❌ 章節資料為空');
@@ -98,7 +115,7 @@ const DialogueSystem = {
         }
         
         if (this.currentIndex >= this.currentDialogue.length) {
-            this.endDialogue();
+            this.endDialogue(false);  // ✅ 自然結束，不是手動退出
             return;
         }
         
@@ -212,6 +229,16 @@ const DialogueSystem = {
             
             // 取得打字速度（預設 50ms，可透過 line.speed 調整）
             const typingSpeed = line.speed || 50;
+
+            // ✅ 儲存引用，方便清理
+            this.narrationContainer = narrationContainer;
+            this.narrationText = narrationText;
+            
+            // 清除之前的計時器
+            if (this.narrationTimer) {
+                clearTimeout(this.narrationTimer);
+                this.narrationTimer = null;
+            }
             
             // 打字機效果
             let charIndex = 0;
@@ -222,14 +249,14 @@ const DialogueSystem = {
                 if (charIndex < fullText.length) {
                     narrationText.textContent += fullText[charIndex];
                     charIndex++;
-                    setTimeout(typeNextChar, typingSpeed);
+                    this.narrationTimer = setTimeout(typeNextChar, typingSpeed);  // ✅ 儲存
                 } else {
-                    // 打字完成後的處理
+                    this.narrationTimer = null;  // ✅ 完成後清除
+                    // 打字完成後的處理...
                     if (line.next) {
                         if (this.gameContainer) {
                             this.gameContainer.onclick = () => {
                                 narrationContainer.style.display = 'none';
-                                // 恢復對話相關元素
                                 if (this.dialogBox) this.dialogBox.style.display = 'block';
                                 if (this.characterImage && line.nextCharacterImage !== false) {
                                     this.characterImage.style.display = 'block';
@@ -238,7 +265,6 @@ const DialogueSystem = {
                             };
                         }
                     } else {
-                        // 沒有 next，自動繼續下一句
                         this.currentIndex++;
                         this.showDialogue();
                     }
@@ -423,27 +449,23 @@ const DialogueSystem = {
                 this.gameContainer.onclick = null;
             }
             
-            // 開始問答
+            // 在 startQuiz 的 onComplete 回調中，加入儲存分數的邏輯
             this.startQuiz(
                 option.questionRange,
                 option.questionCount,
                 (score) => {
                     console.log(`🎯 問答完成，答對 ${score} 題`);
                     
-                    // 將分數儲存到全域
-                    window.lastQuizScore = score;
-                    
-                    // ✅ 根據實際答對題數決定跳轉節點（方法一：精確分數映射）
-                    let targetNode = null;
-                    
-                    if (option.scoreTargets && option.scoreTargets[score] !== undefined) {
-                        targetNode = option.scoreTargets[score];
-                    } else if (option.returnTo) {
-                        targetNode = option.returnTo;
+                    // ✅ 儲存分數到章節資料
+                    if (this.currentChapter && this.currentChapter.setQuizScore) {
+                        this.currentChapter.setQuizScore(score);
                     }
                     
-                    if (targetNode) {
-                        this.goToNode(targetNode);
+                    // ✅ 根據 returnTo 跳轉（現在是 quiz_result_menu）
+                    if (option.returnTo) {
+                        this.goToNode(option.returnTo);
+                    } else if (option.scoreTargets && option.scoreTargets[score] !== undefined) {
+                        this.goToNode(option.scoreTargets[score]);
                     } else {
                         console.error('❌ 無法決定跳轉節點，score:', score);
                         this.currentIndex++;
@@ -779,8 +801,23 @@ const DialogueSystem = {
         this.showDialogue();
     },
     
-    endDialogue: function() {
-        console.log('🔚 對話結束');
+    endDialogue: function(isManualExit = false) {
+        console.log('🔚 對話結束, isManualExit:', isManualExit);
+
+        // ✅ 清除旁白打字計時器
+        if (this.narrationTimer) {
+            clearTimeout(this.narrationTimer);
+            this.narrationTimer = null;
+        }
+        
+        // ✅ 清理旁白容器（重建或清空內容）
+        if (this.narrationContainer) {
+            if (this.narrationText) {
+                this.narrationText.textContent = '';  // 清空文字
+            }
+            // 隱藏容器（下次會重新建立或重用）
+            this.narrationContainer.style.display = 'none';
+        }
         
         if (this.typewriter) {
             this.typewriter.clear();
@@ -805,14 +842,14 @@ const DialogueSystem = {
             }
         }
         
-        // ✅ 新增：如果是一般章節結束，觸發完成回調
-        if (this.currentChapter && (this.currentChapter.id === 'chapter1_child' || this.currentChapter.id === 'chapter1_teen' || 
+        // ✅ 修改：只有當不是手動退出時，才觸發完成回調
+        if (!isManualExit && this.currentChapter && (this.currentChapter.id === 'chapter1_child' || this.currentChapter.id === 'chapter1_teen' || 
             this.currentChapter.id === 'chapter2_child' || this.currentChapter.id === 'chapter2_teen' ||
             this.currentChapter.id === 'chapter3_child' || this.currentChapter.id === 'chapter3_teen')) {
             
-            console.log('🎬 章節結束，觸發完成回調');
+            console.log('🎬 章節對話結束，觸發完成回調');
             
-            // 觸發完成回調
+            // 觸發完成回調（這裡才會真正鎖定關卡）
             if (this.onChapterComplete) {
                 this.onChapterComplete();
                 this.onChapterComplete = null;
