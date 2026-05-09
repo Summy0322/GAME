@@ -325,9 +325,13 @@ function loadChapter(chapterId) {
                 DialogueSystem.isIntro = false;
                 DialogueSystem.loadChapter(chapterData);
                 
-                // ✅ 設定章節完成回調
+                // ✅ 設定章節完成回調（在整個對話結束後觸發）
                 DialogueSystem.onChapterComplete = function() {
-                    completeChapter(chapterId);
+                    // ✅ 只有在關卡還是 'open' 狀態時才設定為 'completed'
+                    if (chapterStatus[chapterId] === 'open') {
+                        setChapterStatus(chapterId, 'completed');
+                        console.log(`🎉 完成關卡: ${chapterId}，已鎖定`);
+                    }
                 };
             }
         });
@@ -417,7 +421,8 @@ function setupBackButton() {
                     }
                     
                     if (typeof DialogueSystem !== 'undefined') {
-                        DialogueSystem.endDialogue();
+                        // ✅ 傳入 true 表示是手動退出，不觸發關卡完成
+                        DialogueSystem.endDialogue(true);
                     }
                     
                     showScene('level-select');
