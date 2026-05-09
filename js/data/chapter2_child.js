@@ -169,7 +169,7 @@ const chapter2ChildData = {
                 } else if (score === 1) {
                     return '你答對了 1 題！獲得 1 次懲罰減免機會！要再回答一次爭取更多減免，還是直接開始遊戲？';
                 } else {
-                    return '太厲害了！你答對了 2 題！獲得 2 次懲罰減免機會！要再回答一次爭取更多減免，還是直接開始遊戲？';
+                    return '太厲害了！你答對了 2 題！獲得 2 次懲罰減免機會！直接開始遊戲吧!';
                 }
             },
             options: [
@@ -188,7 +188,7 @@ const chapter2ChildData = {
                     gameMode: 'attempts',
                     lightMode: 'red',
                     needMemorize: false,
-                    totalAttempts: 15,
+                    totalAttempts: 20,
                     get penaltyRedemption() {
                         return window.Chapter2_Child?.getPenaltyRedemption() || 0;
                     },
