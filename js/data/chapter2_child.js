@@ -68,7 +68,7 @@ const chapter2ChildData = {
         {
             id: 'start',
             type: 'narration',
-            text: '你剛認識紅磚市場的故事。\n 阿斗仔說：「現在，我們\n來看看這裡的食物吧！」\n跟著他走進市場，\n開始新的冒險。',
+            text: '你剛認識紅磚市場的故事。阿斗仔說：「現在，我們來看看這裡的食物吧！」\n跟著他走進市場，\n開始新的冒險。',
             speed: 60,                   // 可選：打字速度（毫秒/字），預設 50
             next: 'show_options'
         },

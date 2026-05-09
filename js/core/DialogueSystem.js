@@ -154,7 +154,7 @@ const DialogueSystem = {
                     align-items: center;
                     z-index: 25;
                     pointer-events: auto;
-                    background: rgba(0, 0, 0, 0.6);  /* ✅ 遮罩填滿整個畫面 */
+                    background: rgba(0, 0, 0, 0.6);
                 `;
                 this.gameContainer.appendChild(narrationContainer);
             }
@@ -166,15 +166,18 @@ const DialogueSystem = {
                 narrationText.id = 'narration-text';
                 narrationText.style.cssText = `
                     max-width: 80%;
+                    width: 80%;
                     padding: 20px 40px;
-                    background: transparent;  /* ✅ 文字背景透明，讓遮罩統一 */
+                    background: transparent;
                     color: #fff;
-                    font-size: clamp(18px, 3vw, 28px);
-                    line-height: 1.6;
                     text-align: center;
                     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
                     font-family: inherit;
-                    white-space: pre-wrap;  /* ✅ 加上這一行 */
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
                 `;
                 narrationContainer.appendChild(narrationText);
             }
@@ -189,16 +192,21 @@ const DialogueSystem = {
                 }
             }
             
-            // ✅ 根據模式設定字型
+            // ✅ 只設定字型家族和行高
             if (currentMode === 'child') {
                 narrationText.style.fontFamily = 'BpmfZihiKai, 標楷體, 微軟正黑體, sans-serif';
-                narrationText.style.lineHeight = '1.8';
-                narrationText.style.fontSize = 'clamp(20px, 4vw, 32px)';
+                narrationText.style.lineHeight = '1.6';
+                // 兒童模式：8vh = 螢幕高度的 8%，292px * 0.08 = 23px
+                narrationText.style.fontSize = 'clamp(20px, 8vh, 36px)';
             } else {
                 narrationText.style.fontFamily = 'LXGW WenKai TC, DFKai-SB, Kaiti TC, 標楷體, 微軟正黑體, sans-serif';
-                narrationText.style.lineHeight = '1.6';
-                narrationText.style.fontSize = 'clamp(18px, 3vw, 28px)';
+                narrationText.style.lineHeight = '1.5';
+                // 成人模式：7vh = 螢幕高度的 7%，292px * 0.07 = 20px
+                narrationText.style.fontSize = 'clamp(18px, 7vh, 32px)';
             }
+            
+            // ✅ 刪除這整段手動計算的程式碼
+            // const screenHeight = ... 等全部刪掉
             
             narrationContainer.style.display = 'flex';
             
