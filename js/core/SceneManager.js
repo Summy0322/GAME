@@ -3,16 +3,16 @@ const SceneManager = {
     scenes: {},
     
     init: function() {
-        console.log('SceneManager 初始化');
+        if (window.Logger) window.Logger.info('SceneManager 初始化');
         // 收集所有場景
         document.querySelectorAll('.scene').forEach(scene => {
             this.scenes[scene.id] = scene;
-            console.log('找到場景:', scene.id);
+            if (window.Logger) window.Logger.debug('找到場景:', scene.id);
         });
     },
     
     show: function(sceneId) {
-        console.log('SceneManager 顯示場景:', sceneId);
+        if (window.Logger) window.Logger.info('SceneManager 顯示場景:', sceneId);
         
         // 隱藏所有場景
         Object.values(this.scenes).forEach(scene => {
@@ -25,9 +25,9 @@ const SceneManager = {
         const target = this.scenes[sceneId];
         if (target) {
             target.style.display = 'flex';
-            console.log('已顯示場景:', sceneId);
+            if (window.Logger) window.Logger.debug('已顯示場景:', sceneId);
         } else {
-            console.error('找不到場景:', sceneId);
+            if (window.Logger) window.Logger.error('找不到場景:', sceneId);
             // 備用：直接透過 ID 找
             const fallback = document.getElementById(sceneId);
             if (fallback) {

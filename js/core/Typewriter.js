@@ -42,6 +42,24 @@ const Typewriter = {
         return new Promise((resolve) => {
             console.log('📢 Typewriter 顯示對話:', { name, namePosition, textClass });
             
+            // ✅ 新增：處理函數類型的 text
+            let finalText = text;
+            if (typeof finalText === 'function') {
+                finalText = finalText();
+                console.log('✅ text 是函數，執行後得到:', finalText);
+            }
+            
+            // ✅ 新增：處理函數類型的 name
+            let finalName = name;
+            if (typeof finalName === 'function') {
+                finalName = finalName();
+                console.log('✅ name 是函數，執行後得到:', finalName);
+            }
+            
+            // 確保是字串
+            finalText = finalText || '';
+            finalName = finalName || '';
+
             // 清除舊的完成指示器
             const oldIndicator = document.getElementById('typing-complete-indicator');
             if (oldIndicator) oldIndicator.remove();

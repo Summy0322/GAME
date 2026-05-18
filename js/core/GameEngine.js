@@ -7,81 +7,30 @@ const GameEngine = {
     
     // 收集小遊戲需要的資源
     collectMinigameAssets: function(minigameName, options) {
-        const assets = [];
-        
-        // 記憶遊戲：收集卡片圖片
-        if (minigameName === 'memory') {
-            const cardImages = [
-                'assets/images/memory/詹永豐米店.png',
-                'assets/images/memory/其實豆製所.png',
-                'assets/images/memory/彰化北斗肉圓.png',
-                'assets/images/memory/正老店阿美.png',
-                'assets/images/memory/阿在伯炸彈蔥油餅.png',
-                'assets/images/memory/奠安宮楊記炸物.png',
-                'assets/images/memory/碗粿.png'
-            ];
-            assets.push(...cardImages);
+        if (window.MinigameAssets) {
+            if (minigameName === 'memory') {
+                return [...new Set(MinigameAssets.getMemoryPreloadUrls())];
+            }
+            if (minigameName === 'defense') {
+                const urls = MinigameAssets.getDefensePreloadUrls();
+                if (window.Logger) window.Logger.info(`📦 防禦遊戲預載入 ${urls.length} 張圖片`);
+                return [...new Set(urls)];
+            }
         }
-        
-        // 防禦遊戲：收集防禦遊戲的圖片
-        if (minigameName === 'defense') {
-            const level = options.level || 1;
-            
-            // ✅ 根據關卡編號收集對應的圖片
-            const levelAssets = [
-                // Level 1 圖片
-                `assets/images/defense/level1/bg.png`,
-                `assets/images/defense/level1/player.png`,
-                `assets/images/defense/level1/enemy.png`,
-                `assets/images/defense/level1/stone.png`,
-                `assets/images/defense/level1/projectile.png`,
-                `assets/images/defense/level1/projectile_hit.png`,
-                `assets/images/defense/level1/shield.png`,
-                `assets/images/defense/level1/aoe_line.png`,
-                
-                // Level 2 圖片
-                `assets/images/defense/level2/bg.png`,
-                `assets/images/defense/level2/player.png`,
-                `assets/images/defense/level2/enemy.png`,
-                `assets/images/defense/level2/stone.png`,
-                `assets/images/defense/level2/projectile.png`,
-                `assets/images/defense/level2/projectile_hit.png`,
-                `assets/images/defense/level2/shield.png`,
-                `assets/images/defense/level2/aoe_line.png`,
-                `assets/images/defense/level2/heavy_enemy.png`,
-                
-                // Level 3 圖片
-                `assets/images/defense/level3/bg.png`,
-                `assets/images/defense/level3/player.png`,
-                `assets/images/defense/level3/enemy.png`,
-                `assets/images/defense/level3/stone.png`,
-                `assets/images/defense/level3/projectile.png`,
-                `assets/images/defense/level3/projectile_hit.png`,
-                `assets/images/defense/level3/shield.png`,
-                `assets/images/defense/level3/aoe_line.png`,
-                `assets/images/defense/level3/heavy_enemy.png`
-            ];
-            
-            // ✅ 全部加入（Layer 會根據實際需要載入，不影響效能）
-            assets.push(...levelAssets);
-            
-            console.log(`📦 防禦遊戲預載入 ${levelAssets.length} 張圖片`);
-        }
-        
-        // 去重
-        return [...new Set(assets)];
+
+        return [];
     },
     
     // 啟動小遊戲
     startMinigame: function(minigameName, options) {
-        console.log('🎮 GameEngine 啟動小遊戲:', minigameName);
+        if (window.Logger) window.Logger.info('🎮 GameEngine 啟動小遊戲:', minigameName);
         
         // ✅ 收集需要的資源
         const assets = this.collectMinigameAssets(minigameName, options);
         
         if (assets.length > 0 && typeof LoadingManager !== 'undefined') {
             // 顯示 Loading 並預載入資源
-            console.log(`📦 預載入 ${assets.length} 個小遊戲資源`);
+            if (window.Logger) window.Logger.info(`📦 預載入 ${assets.length} 個小遊戲資源`);
             LoadingManager.showAndLoad(assets, () => {
                 this._startMinigameImmediately(minigameName, options);
             });
@@ -92,6 +41,18 @@ const GameEngine = {
     },
     
     _startMinigameImmediately: function(minigameName, options) {
+        if (window.MemoryGameV2 && typeof MemoryGameV2.stop === 'function') {
+            MemoryGameV2.stop();
+        }
+        if (window.DefenseGameV2 && typeof DefenseGameV2.stop === 'function') {
+            DefenseGameV2.stop();
+        }
+
+        const gameMode =
+            typeof window !== 'undefined' && window.gameMode
+                ? window.gameMode
+                : 'adult';
+
         // 顯示畫布
         const canvas = document.getElementById('gameCanvas');
         if (canvas) {
@@ -113,6 +74,10 @@ const GameEngine = {
             this.currentMinigame = minigameName;
             Minigame.start({
                 ...options,
+                gameMode:
+                    options && (options.gameMode === 'child' || options.gameMode === 'adult')
+                        ? options.gameMode
+                        : gameMode,
                 onComplete: (success) => {
                     // 小遊戲結束後隱藏畫布
                     if (canvas) {
@@ -129,7 +94,7 @@ const GameEngine = {
                 level: options.level || 1
             });
         } else {
-            console.error('❌ 找不到小遊戲:', minigameName);
+            if (window.Logger) window.Logger.error('❌ 找不到小遊戲:', minigameName);
             setTimeout(() => {
                 if (canvas) {
                     canvas.style.display = 'none';

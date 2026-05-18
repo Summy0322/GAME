@@ -55,7 +55,7 @@ const MemoryGameV2 = {
 
         // ✅ 特殊規則：10 張卡片（5對）固定使用 5x2 橫向排列
         if (totalCards === 10) {
-            console.log(`📐 特殊規則：10 張卡片 → 5 列 x 2 行`);
+            if (window.Logger) window.Logger.debug('📐 特殊規則：10 張卡片 → 5 列 x 2 行');
             return { cols: 5, rows: 2 };
         }
         
@@ -102,7 +102,9 @@ const MemoryGameV2 = {
                 
                 const score = ratioDiff * 10 + wastePenalty + rowBonus + colPenalty;
                 
-                console.log(`嘗試 ${cols}x${rows}: 浪費=${waste}, 所需比例=${requiredRatio.toFixed(3)}, 容器比例=${containerRatio.toFixed(3)}, 差異=${ratioDiff.toFixed(3)}, 總分=${score.toFixed(1)}`);
+                if (window.DEBUG_MEMORY_GRID && window.Logger) {
+                    window.Logger.debug(`嘗試 ${cols}x${rows}: 浪費=${waste}, 所需比例=${requiredRatio.toFixed(3)}, 容器比例=${containerRatio.toFixed(3)}, 差異=${ratioDiff.toFixed(3)}, 總分=${score.toFixed(1)}`);
+                }
                 
                 if (score < bestScore) {
                     bestScore = score;
@@ -112,7 +114,7 @@ const MemoryGameV2 = {
             }
         }
         
-        console.log(`📐 卡片數量 ${totalCards} → ${bestCols} 列 x ${bestRows} 行 (容器比例 ${containerRatio.toFixed(3)})`);
+        if (window.Logger) window.Logger.debug(`📐 卡片數量 ${totalCards} → ${bestCols} 列 x ${bestRows} 行 (容器比例 ${containerRatio.toFixed(3)})`);
         
         return { cols: bestCols, rows: bestRows };
     },
@@ -131,7 +133,7 @@ const MemoryGameV2 = {
         console.log(`🎁 懲罰減免次數: ${this.penaltyRedemption}`);
         
         // ✅ 讀取模式設定
-        this.gameMode = options.gameMode || 'time';      // 'time' 或 'attempts'
+        this.gameMode = options.gameType || 'time';      // 'time' 或 'attempts'
         this.lightMode = options.lightMode || 'both';   // 'none', 'red', 'both'
         
         // ✅ 讀取是否要記憶階段（預設 true）
@@ -404,15 +406,18 @@ const MemoryGameV2 = {
         const totalCardsNeeded = this.cardSymbols.length;
         
         // 有圖片的符號對應表
-        const imageMap = {
-            '🫘': 'assets/images/memory/詹永豐米店.png',
-            '🥛': 'assets/images/memory/其實豆製所.png',
-            '🍮': 'assets/images/memory/彰化北斗肉圓.png',
-            '🧈': 'assets/images/memory/正老店阿美.png',
-            '🥢': 'assets/images/memory/阿在伯炸彈蔥油餅.png',
-            '🍜': 'assets/images/memory/奠安宮楊記炸物.png',
-            '🌱': 'assets/images/memory/碗粿.png'
-        };
+        const imageMap =
+            window.MinigameAssets && window.MinigameAssets.memoryEmojiToImageUrl
+                ? window.MinigameAssets.memoryEmojiToImageUrl
+                : {
+                      '🫘': 'assets/images/memory/詹永豐米店.png',
+                      '🥛': 'assets/images/memory/其實豆製所.png',
+                      '🍮': 'assets/images/memory/彰化北斗肉圓.png',
+                      '🧈': 'assets/images/memory/正老店阿美.png',
+                      '🥢': 'assets/images/memory/阿在伯炸彈蔥油餅.png',
+                      '🍜': 'assets/images/memory/奠安宮楊記炸物.png',
+                      '🌱': 'assets/images/memory/碗粿.png'
+                  };
         
         for (let i = 0; i < cards.length; i++) {
             if (i < totalCardsNeeded) {
@@ -1102,6 +1107,25 @@ const MemoryGameV2 = {
                 AudioManager.playSFX('assets/sounds/fail.mp3', 0.5);
             }
         }
+    },
+
+    /**
+     * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
+     */
+    stop: function () {
+        this.gameActive = false;
+        if (this.handleResize) {
+            window.removeEventListener('resize', this.handleResize);
+            this.handleResize = null;
+        }
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        if (this.container && this.container.parentNode) {
+            this.container.remove();
+        }
+        this.container = null;
     },
 
     // 結束遊戲

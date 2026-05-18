@@ -21,7 +21,7 @@ const DialogueSystem = {
     narrationText: null,
     
     init: function() {
-        console.log('🔧 DialogueSystem 初始化');
+        if (window.Logger) window.Logger.info('🔧 DialogueSystem 初始化');
         
         // 獲取所有需要的 DOM 元素
         this.dialogBox = document.getElementById('dialog-box');
@@ -34,7 +34,7 @@ const DialogueSystem = {
         this.gameBackground = document.getElementById('game-background');
         
         // 檢查是否成功獲取
-        console.log('📋 DOM 元素檢查:', {
+        if (window.Logger) window.Logger.debug('📋 DOM 元素檢查:', {
             dialogBox: !!this.dialogBox,
             npcName: !!this.npcName,
             dialogueText: !!this.dialogueText,
@@ -47,11 +47,11 @@ const DialogueSystem = {
         
         // 如果缺少必要元素，顯示錯誤
         if (!this.optionsContainer) {
-            console.error('❌ 找不到 options-container 元素！');
+            if (window.Logger) window.Logger.error('❌ 找不到 options-container 元素！');
         }
         
         if (!this.dialogBox) {
-            console.error('❌ 找不到 dialog-box 元素！');
+            if (window.Logger) window.Logger.error('❌ 找不到 dialog-box 元素！');
         }
         
         // 設定 Typewriter
@@ -59,7 +59,7 @@ const DialogueSystem = {
     },
     
     loadChapter: function(chapterData) {
-        console.log('📖 載入章節:', chapterData);
+        if (window.Logger) window.Logger.info('📖 載入章節:', chapterData?.id || chapterData);
 
         // ✅ 重置旁白相關變數
         if (this.narrationTimer) {
@@ -74,12 +74,12 @@ const DialogueSystem = {
         }
         
         if (!chapterData) {
-            console.error('❌ 章節資料為空');
+            if (window.Logger) window.Logger.error('❌ 章節資料為空');
             return;
         }
         
         if (!chapterData.dialogue) {
-            console.error('❌ 章節資料缺少 dialogue 屬性:', chapterData);
+            if (window.Logger) window.Logger.error('❌ 章節資料缺少 dialogue 屬性:', chapterData);
             return;
         }
         
@@ -88,7 +88,7 @@ const DialogueSystem = {
         this.currentIndex = 0;
         this.returnToNode = null;
         
-        console.log('✅ 已載入對話數量:', this.currentDialogue.length);
+        if (window.Logger) window.Logger.info('✅ 已載入對話數量:', this.currentDialogue.length);
         
         // 設定背景音樂
         if (chapterData.bgm && AudioManager) {
@@ -106,11 +106,11 @@ const DialogueSystem = {
     },
     
     showDialogue: async function() {
-        console.log('💬 顯示對話，索引:', this.currentIndex, '總長度:', this.currentDialogue.length);
+        if (window.Logger) window.Logger.debug('💬 顯示對話，索引:', this.currentIndex, '總長度:', this.currentDialogue.length);
         
         // 檢查對話陣列
         if (!this.currentDialogue || this.currentDialogue.length === 0) {
-            console.error('❌ currentDialogue 為空');
+            if (window.Logger) window.Logger.error('❌ currentDialogue 為空');
             return;
         }
         
@@ -141,6 +141,112 @@ const DialogueSystem = {
             this.gameContainer.onclick = null;
         }
         
+        // ========== 命名畫面模式 ==========
+        if (line.type === 'naming') {
+            console.log('📝 命名畫面模式:', line.title);
+            
+            // 隱藏對話相關元素
+            if (this.dialogBox) this.dialogBox.style.display = 'none';
+            if (this.characterImage) this.characterImage.style.display = 'none';
+            if (this.npcName) this.npcName.style.display = 'none';
+            if (this.optionsContainer) this.optionsContainer.style.display = 'none';
+            
+            // 隱藏打字完成指示器
+            const indicator = document.getElementById('typing-complete-indicator');
+            if (indicator) indicator.style.display = 'none';
+            
+            // 建立命名畫面
+            let namingContainer = document.getElementById('naming-container');
+            if (!namingContainer) {
+                namingContainer = document.createElement('div');
+                namingContainer.id = 'naming-container';
+                namingContainer.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 30;
+                    background: rgba(0, 0, 0, 0.85);
+                `;
+                this.gameContainer.appendChild(namingContainer);
+            }
+            
+            // 建立命名面板
+            namingContainer.innerHTML = `
+                <div style="background: linear-gradient(145deg, #2c1810, #1a0f0a); border: 3px solid #e67e22; border-radius: 20px; padding: 40px; text-align: center; max-width: 400px;">
+                    <div style="color: #ffd700; font-size: 24px; margin-bottom: 20px;">${line.title}</div>
+                    <div style="margin-bottom: 20px;">
+                        <img src="${line.characterImage || ''}" style="width: 100px; height: 100px; object-fit: contain; border-radius: 50%;" onerror="this.style.display='none'">
+                    </div>
+                    <input type="text" id="player-name-input" placeholder="輸入你的名字" maxlength="12" style="
+                        width: 100%;
+                        padding: 12px;
+                        font-size: 18px;
+                        background: #3d2a1f;
+                        border: 2px solid #e67e22;
+                        border-radius: 10px;
+                        color: white;
+                        text-align: center;
+                        margin-bottom: 20px;
+                    ">
+                    <button id="naming-confirm-btn" style="
+                        background: linear-gradient(145deg, #e67e22, #d35400);
+                        color: white;
+                        border: none;
+                        padding: 10px 30px;
+                        font-size: 18px;
+                        border-radius: 30px;
+                        cursor: pointer;
+                        font-weight: bold;
+                    ">就是我！</button>
+                </div>
+            `;
+            
+            namingContainer.style.display = 'flex';
+            
+            const input = document.getElementById('player-name-input');
+            const confirmBtn = document.getElementById('naming-confirm-btn');
+            
+            const confirmName = () => {
+                let playerName = input.value.trim();
+                if (playerName === '') {
+                    playerName = '小旅人';
+                }
+                
+                // 儲存名稱
+                if (this.currentChapter && this.currentChapter.setPlayerName) {
+                    this.currentChapter.setPlayerName(playerName);
+                }
+                
+                // 關閉命名畫面
+                namingContainer.style.display = 'none';
+                
+                // 恢復對話框顯示
+                if (this.dialogBox) this.dialogBox.style.display = 'block';
+                if (this.characterImage && line.nextCharacterImage !== false) {
+                    this.characterImage.style.display = 'block';
+                }
+                
+                // 前往下一節點
+                if (line.next) {
+                    this.goToNode(line.next);
+                } else {
+                    this.currentIndex++;
+                    this.showDialogue();
+                }
+            };
+            
+            confirmBtn.onclick = confirmName;
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') confirmName();
+            };
+            
+            return;
+        }
         // ========== ✅ 新增：旁白模式（無對話框、無角色、文字置中）==========
         if (line.type === 'narration') {
             console.log('📖 旁白模式:', line.text);
@@ -308,8 +414,20 @@ const DialogueSystem = {
                 console.log('預設為 adult');
             }
         }
-        
+
+        // ✅ 獲取顯示文字（支援函數）
         let displayText = line.text || '...';
+        if (typeof displayText === 'function') {
+            displayText = displayText();
+            console.log('✅ displayText 是函數，執行後得到:', displayText);
+        }
+
+        // ✅ 獲取名稱（支援函數）
+        let lineName = line.name || '未知';
+        if (typeof lineName === 'function') {
+            lineName = lineName();
+            console.log('✅ lineName 是函數，執行後得到:', lineName);
+        }
         
         // 直接設定字型
         if (currentMode === 'child') {
@@ -340,9 +458,9 @@ const DialogueSystem = {
             console.log('✅ 已設定字型');
         }
         
-        // 顯示對話
+        // ✅ 顯示對話（使用處理後的 lineName 和 displayText）
         await this.typewriter.showDialogue(
-            line.name || '未知',
+            lineName,
             displayText,
             line.characterImage,
             line.voice,
@@ -473,6 +591,27 @@ const DialogueSystem = {
                     }
                 }
             );
+        }
+        else if (option.action === 'collection') {
+            console.log('🗺️ 啟動蒐集模式');
+            
+            if (this.gameContainer) {
+                this.gameContainer.onclick = null;
+            }
+            
+            if (typeof CollectionSystem !== 'undefined') {
+                CollectionSystem.open(option.collectionConfig, () => {
+                    console.log('✅ 蒐集模式完成');
+                    if (option.returnTo) {
+                        this.goToNode(option.returnTo);
+                    }
+                });
+            } else {
+                console.error('❌ CollectionSystem 未定義');
+                if (option.returnTo) {
+                    this.goToNode(option.returnTo);
+                }
+            }
         }
         else if (option.action === 'goto') {
             console.log('➡️ 跳轉到節點:', option.target);

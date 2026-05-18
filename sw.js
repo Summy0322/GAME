@@ -1,6 +1,6 @@
 // sw.js - Service Worker
 // 快取名稱（更新版本時記得修改）
-const CACHE_NAME = 'game-v2';
+const CACHE_NAME = 'game-v3';
 
 // 需要快取的檔案列表（您的遊戲所有核心檔案）
 const urlsToCache = [
@@ -8,6 +8,7 @@ const urlsToCache = [
   '/GAME/index.html',
   '/GAME/style.css',
   '/GAME/css/defense-game.css',
+  '/GAME/css/memory-game.css',
   '/GAME/js/main.js',
   '/GAME/js/core/LoadingManager.js',
   '/GAME/js/core/GameEngine.js',
@@ -15,17 +16,28 @@ const urlsToCache = [
   '/GAME/js/core/SceneManager.js',
   '/GAME/js/core/Typewriter.js',
   '/GAME/js/core/DialogueSystem.js',
+  '/GAME/js/core/GallerySystem.js',
+  '/GAME/js/core/CollectionSystem.js',
   '/GAME/js/data/intro.js',
   '/GAME/js/data/chapter1_teen.js',
   '/GAME/js/data/chapter1_child.js',
+  '/GAME/js/data/chapter2_teen.js',
+  '/GAME/js/data/chapter2_child.js',
+  '/GAME/js/data/quizQuestions.js',
   '/GAME/js/minigames/DefenseLevels.js',
   '/GAME/js/minigames/DefenseGameV2.js',
+  '/GAME/js/minigames/MemoryGameV2.js',
 
   // 如果有圖片資源（可選）
   '/GAME/assets/images/title2.png',
   '/GAME/assets/images/intro/封面.jpg',
   '/GAME/assets/images/ch1/background.png',
   '/GAME/assets/images/characters/阿斗仔.png',
+  '/GAME/assets/images/ch2/background.png',
+  '/GAME/assets/images/ch2/bg.png',
+  '/GAME/assets/images/ch2/面板.png',
+  '/GAME/assets/images/ch2/資訊欄.png',
+  '/GAME/assets/images/ch2/卡背.png',
 
   // Level 1 需要的圖片
 '/GAME/assets/images/defense/level1/bg.png',
@@ -58,6 +70,15 @@ const urlsToCache = [
 '/GAME/assets/images/defense/level3/shield.png',
 '/GAME/assets/images/defense/level3/aoe_line.png',
 '/GAME/assets/images/defense/level3/heavy_enemy.png',
+  
+  // chapter2 - 記憶遊戲需要的圖片
+  '/GAME/assets/images/memory/詹永豐米店.png',
+  '/GAME/assets/images/memory/其實豆製所.png',
+  '/GAME/assets/images/memory/彰化北斗肉圓.png',
+  '/GAME/assets/images/memory/正老店阿美.png',
+  '/GAME/assets/images/memory/阿在伯炸彈蔥油餅.png',
+  '/GAME/assets/images/memory/奠安宮楊記炸物.png',
+  '/GAME/assets/images/memory/碗粿.png',
 
 ];
 

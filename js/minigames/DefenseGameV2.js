@@ -90,25 +90,27 @@ const DefenseGameV2 = {
         shieldVertical: { width: 175, height: 632 }
     },
     
-    // 分數權重
-    scoreWeights: {
-        NORMAL: 100,        // 一般攻擊成功 +100
-        MULTI: 50,          // 多重攻擊每個正確方向 +50
-        HEAVY: 150,         // 重擊成功 +150
-        AOE: 200,           // AOE 成功 +200
-        DECOY_SUCCESS: 50,  // DECOY 成功閃避（沒滑） +50
-        DECOY_FAIL: -50,    // DECOY 滑到石頭 -50
-        DECOY_MISS: -20,    // DECOY 滑到空白處 -20
-        MIXED_CORRECT: 50,  // MULTI_MIXED 正確方向 +50
-        MIXED_WRONG: -30,   // MULTI_MIXED 錯誤方向（滑到石頭） -30
-        MIXED_AVOID: 50 ,    // MULTI_MIXED 成功閃避石頭（沒滑） +50
-        TIME_OUT_PENALTY: -10,  // ✅ 新增：超時未處理敵人，每個 -10
+    // 分數（與節奏分離，方便調平衡）
+    scoreTable: {
+        NORMAL: 100,
+        MULTI: 50,
+        HEAVY: 150,
+        AOE: 200,
+        DECOY_SUCCESS: 50,
+        DECOY_FAIL: -50,
+        DECOY_MISS: -20,
+        MIXED_CORRECT: 50,
+        MIXED_WRONG: -30,
+        MIXED_AVOID: 50,
+        TIME_OUT_PENALTY: -10
+    },
 
-        // ✅ 速度控制
-        BASE_GAP: 800,           // 基礎間隔（毫秒）
-        MIN_GAP: 300,            // 最小間隔（毫秒）
-        SPEED_SCALE: 0.95,       // 每 100 分減少 5% 間隔
-        SPEED_CHECK_SCORE: 100,  // 每多少分檢查一次速度
+    // 攻擊節奏／速度曲線
+    pace: {
+        BASE_GAP: 800,
+        MIN_GAP: 300,
+        SPEED_SCALE: 0.95,
+        SPEED_CHECK_SCORE: 100
     },
     
     // ========== 軌跡特效屬性 ==========
@@ -120,10 +122,17 @@ const DefenseGameV2 = {
     lastTrailY: null,          // 上一個軌跡點 Y
     trailMinDistance: 12,      // 最小距離（像素），每隔這段距離產生一個點
     
-    // 獲取當前年齡模式
-    getGameMode: function() {
-        // 優先使用 window.gameMode，再來是全域 gameMode
-        return window.gameMode || gameMode || 'adult';
+    /**
+     * 年齡模式：優先本局 options.gameMode（由 GameEngine 注入），其次 window.gameMode
+     */
+    getGameMode: function () {
+        if (this.runtimeGameMode === 'child' || this.runtimeGameMode === 'adult') {
+            return this.runtimeGameMode;
+        }
+        if (typeof window !== 'undefined' && window.gameMode) {
+            return window.gameMode;
+        }
+        return 'adult';
     },
     
     // 根據模式取得關卡設定
@@ -177,15 +186,14 @@ const DefenseGameV2 = {
 
     // 計算當前攻擊間隔（根據分數動態調整）
     getCurrentGap: function() {
-        let gap = this.scoreWeights.BASE_GAP;
-        
-        // 根據分數減少間隔（分數越高越快）
-        const speedLevel = Math.floor(this.score / this.scoreWeights.SPEED_CHECK_SCORE);
+        let gap = this.pace.BASE_GAP;
+
+        const speedLevel = Math.floor(this.score / this.pace.SPEED_CHECK_SCORE);
         if (speedLevel > 0) {
-            const multiplier = Math.pow(this.scoreWeights.SPEED_SCALE, speedLevel);
-            gap = Math.max(this.scoreWeights.MIN_GAP, gap * multiplier);
+            const multiplier = Math.pow(this.pace.SPEED_SCALE, speedLevel);
+            gap = Math.max(this.pace.MIN_GAP, gap * multiplier);
         }
-        
+
         return Math.floor(gap);
     },
     
@@ -262,6 +270,13 @@ const DefenseGameV2 = {
         this.trailPoints = [];
         this.lastTrailX = null;
         this.lastTrailY = null;
+
+        this.runtimeGameMode =
+            options && (options.gameMode === 'child' || options.gameMode === 'adult')
+                ? options.gameMode
+                : typeof window !== 'undefined' && window.gameMode
+                  ? window.gameMode
+                  : 'adult';
         
         // ========== 正常啟動 ==========
         const mode = this.getGameMode();
@@ -295,6 +310,55 @@ const DefenseGameV2 = {
         this.setState(this.states.IDLE);
         setTimeout(() => this.startAttackSequence(), 1000);
     },
+
+    /**
+     * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
+     */
+    stop: function () {
+        this.sessionId = Date.now();
+        this.gameActive = false;
+        this.runtimeGameMode = null;
+
+        if (this.zingRegion && this.container) {
+            try {
+                this.zingRegion.unbind(this.container);
+            } catch (e) { /* ignore */ }
+            this.zingRegion = null;
+        }
+        if (this.timers) {
+            this.timers.forEach((t) => {
+                if (t) clearTimeout(t);
+            });
+            this.timers = [];
+        }
+        if (this.aoeTimers) {
+            this.aoeTimers.forEach((t) => {
+                if (t && t.id) clearInterval(t.id);
+                if (t && t.id) clearTimeout(t.id);
+            });
+            this.aoeTimers = [];
+        }
+        if (this.lightIntervals) {
+            ['up', 'down', 'left', 'right'].forEach((dir) => {
+                if (this.lightIntervals[dir]) {
+                    clearInterval(this.lightIntervals[dir]);
+                    this.lightIntervals[dir] = null;
+                }
+            });
+        }
+        if (this.trailInterval) {
+            clearInterval(this.trailInterval);
+            this.trailInterval = null;
+        }
+        if (this.currentAnimationId) {
+            cancelAnimationFrame(this.currentAnimationId);
+            this.currentAnimationId = null;
+        }
+        if (this.container && this.container.parentNode) {
+            this.container.remove();
+            this.container = null;
+        }
+    },
     
     calculateMaxScore: function() {
         if (!this.levelConfig || !this.levelConfig.attackPatterns) return 0;
@@ -303,27 +367,27 @@ const DefenseGameV2 = {
         for (const attack of patterns) {
             switch (attack.type) {
                 case 'NORMAL':
-                    max += this.scoreWeights.NORMAL;
+                    max += this.scoreTable.NORMAL;
                     break;
                 case 'MULTI':
-                    max += this.scoreWeights.MULTI * attack.dirs.length;
+                    max += this.scoreTable.MULTI * attack.dirs.length;
                     break;
                 case 'HEAVY':
-                    max += this.scoreWeights.HEAVY;
+                    max += this.scoreTable.HEAVY;
                     break;
                 case 'AOE':
-                    max += this.scoreWeights.AOE;
+                    max += this.scoreTable.AOE;
                     break;
                 case 'DECOY':
                     // 成功閃避得 DECOY_SUCCESS 分
-                    max += this.scoreWeights.DECOY_SUCCESS;
+                    max += this.scoreTable.DECOY_SUCCESS;
                     break;
                 case 'MULTI_MIXED':
                     // 正確方向每個 +MIXED_CORRECT，錯誤方向每個成功閃避 +MIXED_AVOID
                     const correctCount = attack.correctDirs?.length || 0;
                     const wrongCount = attack.wrongDirs?.length || 0;
-                    max += (correctCount * this.scoreWeights.MIXED_CORRECT) + 
-                        (wrongCount * this.scoreWeights.MIXED_AVOID);
+                    max += (correctCount * this.scoreTable.MIXED_CORRECT) + 
+                        (wrongCount * this.scoreTable.MIXED_AVOID);
                     break;
                 default:
                     console.warn('未知攻擊類型:', attack.type);
@@ -463,497 +527,6 @@ const DefenseGameV2 = {
         console.log('✅ 遊戲 UI 創建完成，stage 父元素:', this.stage?.parentElement?.id);
     },
 
-    // ========== 軌跡特效方法 ==========
-    
-    // 初始化軌跡畫布
-    initTrailCanvas: function() {
-        this.trailCanvas = document.getElementById('trail-canvas');
-        if (!this.trailCanvas) return;
-        
-        this.trailCanvas.width = this.stage.clientWidth;
-        this.trailCanvas.height = this.stage.clientHeight;
-        this.trailCtx = this.trailCanvas.getContext('2d');
-        this.trailPoints = [];
-        
-        // 設置畫布樣式
-        this.trailCanvas.style.width = '100%';
-        this.trailCanvas.style.height = '100%';
-    },
-    
-    // 新增軌跡點
-    addTrailPoint: function(x, y) {
-        if (!this.trailCtx) return;
-        
-        this.trailPoints.push({
-            x: x,
-            y: y,
-            life: 1.0,        // 生命值，從 1 開始慢慢減少
-            createdAt: Date.now()
-        });
-        
-        // 限制軌跡點數量，避免太多
-        if (this.trailPoints.length > 100) {
-            this.trailPoints.shift();
-        }
-        
-        this.drawTrail();
-    },
-    
-    // 繪製所有軌跡（線條風格）
-    drawTrail: function() {
-        if (!this.trailCtx || this.trailPoints.length < 2) return;
-        
-        // 清空畫布
-        this.trailCtx.clearRect(0, 0, this.trailCanvas.width, this.trailCanvas.height);
-        
-        // 繪製軌跡線條
-        for (let i = 0; i < this.trailPoints.length - 1; i++) {
-            const p1 = this.trailPoints[i];
-            const p2 = this.trailPoints[i + 1];
-            
-            // 根據生命值計算透明度（越舊的點越透明）
-            const alpha = p1.life * 0.7;
-            
-            this.trailCtx.beginPath();
-            this.trailCtx.moveTo(p1.x, p1.y);
-            this.trailCtx.lineTo(p2.x, p2.y);
-            this.trailCtx.lineWidth = 12;  // 粗細 12px
-            this.trailCtx.lineCap = 'round';
-            this.trailCtx.lineJoin = 'round';
-            this.trailCtx.strokeStyle = `rgba(192, 248, 250, ${alpha})`;  // 淡藍色半透明
-            this.trailCtx.stroke();
-            
-            // 內層更亮的效果
-            this.trailCtx.beginPath();
-            this.trailCtx.moveTo(p1.x, p1.y);
-            this.trailCtx.lineTo(p2.x, p2.y);
-            this.trailCtx.lineWidth = 5;
-            this.trailCtx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-            this.trailCtx.stroke();
-        }
-    },
-    
-    // 更新軌跡（每幀減少生命值，0.3秒後消失）
-    updateTrail: function() {
-        if (!this.trailCtx) return;
-        
-        const now = Date.now();
-        const duration = 100; // 0.3 秒
-        
-        let changed = false;
-        for (let i = this.trailPoints.length - 1; i >= 0; i--) {
-            const point = this.trailPoints[i];
-            const elapsed = now - point.createdAt;
-            
-            if (elapsed >= duration) {
-                this.trailPoints.splice(i, 1);
-                changed = true;
-            } else {
-                // 根據時間計算生命值（線性衰減）
-                point.life = 1 - (elapsed / duration);
-            }
-        }
-        
-        if (changed) {
-            this.drawTrail();
-        }
-    },
-    
-    // 清除所有軌跡
-    clearTrail: function() {
-        if (this.trailCtx) {
-            this.trailCtx.clearRect(0, 0, this.trailCanvas.width, this.trailCanvas.height);
-        }
-        this.trailPoints = [];
-        this.lastTrailX = null;
-        this.lastTrailY = null;
-    },
-    
-    initEventListeners: function() {
-        // ✅ touchstart 記錄起始點
-        this.container.addEventListener('touchstart', (e) => {
-            this.touchStart.x = e.touches[0].clientX;
-            this.touchStart.y = e.touches[0].clientY;
-            
-            // 重置軌跡距離計數
-            const rect = this.stage.getBoundingClientRect();
-            this.lastTrailX = e.touches[0].clientX - rect.left;
-            this.lastTrailY = e.touches[0].clientY - rect.top;
-            
-            // 立即添加起始點
-            this.addTrailPoint(this.lastTrailX, this.lastTrailY);
-        });
-        
-        // ✅ touchmove 記錄軌跡點
-        this.container.addEventListener('touchmove', (e) => {
-            if (!this.gameActive) return;
-            
-            const rect = this.stage.getBoundingClientRect();
-            const x = e.touches[0].clientX - rect.left;
-            const y = e.touches[0].clientY - rect.top;
-            
-            // 檢查距離，避免太密集
-            if (this.lastTrailX !== null && this.lastTrailY !== null) {
-                const dx = x - this.lastTrailX;
-                const dy = y - this.lastTrailY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance >= this.trailMinDistance) {
-                    // 在兩點之間插值，確保軌跡連續
-                    const steps = Math.ceil(distance / this.trailMinDistance);
-                    for (let i = 1; i <= steps; i++) {
-                        const t = i / steps;
-                        const ix = this.lastTrailX + dx * t;
-                        const iy = this.lastTrailY + dy * t;
-                        this.addTrailPoint(ix, iy);
-                    }
-                    this.lastTrailX = x;
-                    this.lastTrailY = y;
-                }
-            } else {
-                this.addTrailPoint(x, y);
-                this.lastTrailX = x;
-                this.lastTrailY = y;
-            }
-        });
-        
-        // ✅ touchend 重置
-        this.container.addEventListener('touchend', (e) => {
-            this.lastTrailX = null;
-            this.lastTrailY = null;
-        });
-        
-        this.container.addEventListener('touchend', (e) => {
-            if (e.changedTouches.length === 0) return;
-            const dx = e.changedTouches[0].clientX - this.touchStart.x;
-            const dy = e.changedTouches[0].clientY - this.touchStart.y;
-            let swipe = null;
-            if (Math.abs(dx) > Math.abs(dy)) {
-                if (Math.abs(dx) > 30) swipe = dx > 0 ? 'right' : 'left';
-            } else {
-                if (Math.abs(dy) > 30) swipe = dy > 0 ? 'down' : 'up';
-            }
-            if (swipe && this.gameActive) this.handleSwipe(swipe);
-        });
-        
-        if (window.ZingTouch) {
-            this.zingRegion = new ZingTouch.Region(this.container);
-            this.zingRegion.bind(this.container, 'rotate', (e) => this.handleRotate(e));
-        }
-    },
-    
-    // ========== 攻擊序列 ==========
-    startAttackSequence: function() {
-        if (!this.gameActive) return;
-        // ✅ 深拷貝，避免污染原始設定
-        this.attackQueue = this.levelConfig.attackPatterns.map(attack => {
-            const copy = { ...attack };
-            if (attack.dirs) copy.dirs = [...attack.dirs];
-            if (attack.correctDirs) copy.correctDirs = [...attack.correctDirs];
-            if (attack.wrongDirs) copy.wrongDirs = [...attack.wrongDirs];
-            copy.resolved = false;
-            return copy;
-        });
-        this.processNextAttack();
-    },
-    
-    processNextAttack: function() {
-        console.log('processNextAttack 被呼叫, 當前狀態:', this.state);
-        
-        if (!this.gameActive || this.attackQueue.length === 0) {
-            if (this.attackQueue.length === 0 && this.state !== this.states.RESULT) {
-                this.setState(this.states.RESULT);
-                this.showFinalResult();
-            }
-            return;
-        }
-        
-        if (this.state !== this.states.IDLE) {
-            console.log(`狀態不是 IDLE (${this.state})，等待...`);
-            const session = this.sessionId;
-            setTimeout(() => {
-                if (session !== this.sessionId) return;
-                this.processNextAttack();
-            }, 100);
-            return;
-        }
-        
-        const attack = this.attackQueue.shift();
-        this.currentAttack = attack;
-        
-        this.setState(this.states.PREPARING);
-        this.msg.innerText = attack.text;
-        
-        // ✅ 準備時間也可以動態調整
-        const prepareTime = Math.max(300, Math.min(800, this.getCurrentGap() / 2));
-        
-        const session = this.sessionId;
-        setTimeout(() => {
-            if (session !== this.sessionId) return;
-            this.executeAttack(attack);
-        }, prepareTime);
-    },
-    
-    executeAttack: function(attack) {
-        console.log('executeAttack 開始，類型:', attack.type);
-
-        // ✅ 加入這行
-        const currentSession = this.sessionId;
-        
-        // ✅ 清除所有舊的 timer（關鍵！防止舊 timer 殺掉新攻擊）
-        this.clearAllTimers();
-        
-        // 清理殘留物件
-        this.clearHeavySequence();
-        this.clearHeavyProjectiles();
-        this.clearEnemies();
-        this.clearProjectiles();
-        
-        switch (attack.type) {
-            case 'END':
-                console.log('遊戲結束，準備結算');
-                this.setState(this.states.RESULT);
-                setTimeout(() => {
-                    this.showFinalResult();
-                }, 500);
-                break;
-                
-            case 'NORMAL':
-                this.setState(this.states.NORMAL);
-                this.spawnEnemy(attack.dir);
-                
-                const normalTimer = setTimeout(() => {
-                    if (this.sessionId !== currentSession) return;  // ✅ 加這行
-                    if (this.state === this.states.NORMAL && this.currentAttack && !this.currentAttack.resolved) {
-                        console.log(`⏰ NORMAL 攻擊超時！方向: ${attack.dir}`);
-                        
-                        // ✅ 使用權重
-                        this.addScore(this.scoreWeights.TIME_OUT_PENALTY);
-                        console.log(`❌ 未接住敵人，扣 ${Math.abs(this.scoreWeights.TIME_OUT_PENALTY)} 分`);
-                        
-                        this.missAttack('時間到！未接住敵人');
-                        this.finishAttack();
-                    }
-                }, attack.wait);
-                this.timers.push(normalTimer);
-                this.currentAttack.timer = normalTimer;
-                break;
-                
-            case 'MULTI':
-                this.setState(this.states.MULTI);
-                this.currentAttack.hits = 0;
-                this.currentAttack.swipedDirs = [];
-                this.currentAttack.totalDirs = attack.dirs.length;
-                attack.dirs.forEach(dir => this.spawnEnemy(dir));
-                
-                this.currentAttack.multiTimeout = setTimeout(() => {
-                    if (this.state === this.states.MULTI && this.currentAttack && !this.currentAttack.resolved) {
-                        const notSwiped = this.currentAttack.dirs.filter(d => 
-                            !this.currentAttack.swipedDirs.includes(d)
-                        );
-                        console.log(`⏰ 超時！未滑動方向: ${notSwiped.join(', ')}`);
-                        
-                        const remainingCount = notSwiped.length;
-                        if (remainingCount > 0) {
-                            // ✅ 使用權重
-                            const penalty = remainingCount * Math.abs(this.scoreWeights.TIME_OUT_PENALTY);
-                            this.addScore(-penalty);
-                            console.log(`❌ 剩餘 ${remainingCount} 個敵人未處理，扣 ${penalty} 分`);
-                        }
-                        
-                        this.missAttack(`未完成所有方向！遺漏: ${notSwiped.join(', ')}`);
-                        this.finishAttack();
-                    }
-                }, attack.wait);
-                this.timers.push(this.currentAttack.multiTimeout);
-                break;
-                
-            case 'HEAVY':
-                this.setState(this.states.HEAVY_CHARGING);
-                this.spawnHeavySequence(attack.dir);
-                // 重擊不需要 setAttackTimer，由點亮完成後觸發
-                break;
-                
-            case 'AOE':
-                this.setState(this.states.AOE_ACTIVE);
-                this.startAOE(attack.wait);
-                break;
-
-            // ✅ 新增：陷阱（純誤導）
-            case 'DECOY':
-                this.setState(this.states.DECOY);
-                this.spawnEnemy(attack.dir, true, false);  // isDecoy=true, isWrong=false
-                
-                // DECOY 超時成功（沒滑動）
-                this.currentAttack.decoyTimeout = setTimeout(() => {
-                    if (this.state === this.states.DECOY && this.currentAttack && !this.currentAttack.resolved) {
-                        console.log('✅ DECOY 成功！沒有滑動石頭');
-                        this.currentAttack.resolved = true;
-                        // ✅ 使用權重：成功閃避加分
-                        this.addScore(this.scoreWeights.DECOY_SUCCESS);
-                        this.finishAttack();
-                    }
-                }, attack.wait);
-                this.timers.push(this.currentAttack.decoyTimeout);
-                break;
-            
-            // ✅ 新增：混合多重攻擊
-            case 'MULTI_MIXED':
-                this.setState(this.states.MULTI_MIXED);
-                this.currentAttack.hits = 0;
-                this.currentAttack.swipedDirs = [];
-                this.currentAttack.correctDirs = attack.correctDirs || [];
-                this.currentAttack.wrongDirsList = attack.wrongDirs || [];
-                this.currentAttack.totalDirs = attack.dirs.length;
-                
-                this.currentAttack.wrongHandled = [];
-                
-                attack.dirs.forEach(dir => {
-                    const isWrong = this.currentAttack.wrongDirsList.includes(dir);
-                    this.spawnEnemy(dir, false, isWrong);  // isDecoy=false, isWrong=是否為錯誤方向
-                });
-                
-                this.currentAttack.multiTimeout = setTimeout(() => {
-                    if (this.state === this.states.MULTI_MIXED && this.currentAttack && !this.currentAttack.resolved) {
-                        const notSwipedCorrect = this.currentAttack.correctDirs.filter(d => 
-                            !this.currentAttack.swipedDirs.includes(d)
-                        );
-                        
-                        const notSwipedWrong = this.currentAttack.wrongDirsList.filter(d => 
-                            !this.currentAttack.swipedDirs.includes(d)
-                        );
-                        
-                        console.log(`⏰ 超時！未滑到的正確方向: ${notSwipedCorrect.join(', ')}`);
-                        console.log(`✅ 成功閃避的錯誤方向: ${notSwipedWrong.join(', ')}`);
-                        
-                        if (notSwipedWrong.length > 0) {
-                            const bonusScore = notSwipedWrong.length * this.scoreWeights.MIXED_AVOID;
-                            this.addScore(bonusScore);
-                            console.log(`✨ 成功閃避 ${notSwipedWrong.length} 個石頭，獲得 ${bonusScore} 分！`);
-                        }
-                        
-                        if (notSwipedCorrect.length > 0) {
-                            const penalty = notSwipedCorrect.length * Math.abs(this.scoreWeights.TIME_OUT_PENALTY);
-                            this.addScore(-penalty);
-                            console.log(`❌ 剩餘 ${notSwipedCorrect.length} 個敵人未處理，扣 ${penalty} 分`);
-                            this.missAttack(`未完成所有正確方向！遺漏: ${notSwipedCorrect.join(', ')}`);
-                        }
-                        
-                        // ✅ 清除所有殘留的敵人（包括石頭）
-                        this.clearEnemies();
-                        
-                        this.currentAttack.resolved = true;
-                        this.finishAttack();
-                    }
-                }, attack.wait);
-                this.timers.push(this.currentAttack.multiTimeout);
-                break;
-                
-            default:
-                console.error('未知攻擊類型:', attack.type);
-                this.finishAttack();
-        }
-    },
-    
-    setAttackTimer: function(wait, attack) {
-        if (!wait || wait <= 0) {
-            console.warn('無效的等待時間:', wait);
-            return;
-        }
-        
-        console.log(`設定攻擊計時器，等待 ${wait}ms`);
-        const timer = setTimeout(() => {
-            // 只有當攻擊還沒完成時才觸發 miss
-            if ((this.state === this.states.NORMAL || this.state === this.states.MULTI) && 
-                this.currentAttack && !this.currentAttack.resolved) {
-                console.log(`計時器觸發：${attack.type} 攻擊時間到`);
-                this.missAttack('時間到！');
-                this.finishAttack();
-            }
-        }, wait);
-        this.timers.push(timer);
-        if (this.currentAttack) this.currentAttack.timer = timer;
-    },
-    
-    // ========== 攻擊結束 ==========
-    finishAttack: function() {
-        console.log('✅ 攻擊結束, 當前狀態:', this.state);
-
-        // ✅ 清理重擊格擋狀態
-        this.heavyBlockReady = false;
-        if (this.heavyBlockTimeout) {
-            clearTimeout(this.heavyBlockTimeout);
-            this.heavyBlockTimeout = null;
-        }
-        
-        // ✅ 清理盾牌狀態（攻擊結束，重置 CD）
-        this.isShieldActive = false;
-        this.shieldEndTime = 0;
-        
-        // ✅ 清除多重攻擊的超時計時器
-        if (this.currentAttack && this.currentAttack.multiTimeout) {
-            clearTimeout(this.currentAttack.multiTimeout);
-            this.currentAttack.multiTimeout = null;
-        }
-        
-        // ✅ 清除軌跡
-        this.clearTrail();
-        
-        // ✅ 停止所有敵人的跳動動畫
-        this.stopAllEnemiesBounce();
-
-        // ✅ 清除 AOE 專用計時器
-        if (this.aoeTimers) {
-            this.aoeTimers.forEach(t => {
-                if (t) clearTimeout(t);
-                if (t) clearInterval(t);
-            });
-            this.aoeTimers = [];
-        }
-        // ✅ 清除當前攻擊的 timer（關鍵！防止殘留 timer）
-        if (this.currentAttack && this.currentAttack.timer) {
-            clearTimeout(this.currentAttack.timer);
-            this.currentAttack.timer = null;
-        }
-        
-        // 清除所有殘留
-        this.clearEnemies();
-        this.clearProjectiles();
-        this.clearHeavySequence();
-        this.clearHeavyProjectiles();
-        
-        // 清除點亮間隔
-        ['up', 'down', 'left', 'right'].forEach(dir => {
-            if (this.lightIntervals[dir]) {
-                clearInterval(this.lightIntervals[dir]);
-                this.lightIntervals[dir] = null;
-            }
-        });
-        
-        // 清除 AOE 線條
-        this.aoeLines.forEach(dir => {
-            const line = document.getElementById(`aoe-${dir}`);
-            if (line) {
-                line.style.opacity = '0';
-                line.style.transform = 'translate(0,0)';
-                line.style.display = 'none';           // ✅ 新增
-                line.style.pointerEvents = 'none';     // ✅ 新增
-            }
-        });
-        
-        this.setState(this.states.IDLE);
-        
-        // ✅ 使用動態計算的間隔
-        const gap = this.getCurrentGap();
-        console.log(`⏱️ 下一攻擊將在 ${gap}ms 後開始`);
-        
-        const session = this.sessionId;
-        setTimeout(() => {
-            if (session !== this.sessionId) return;
-            this.processNextAttack();
-        }, gap);
-    },
-    
     // ========== 普通/多重/誤導攻擊 ==========
     spawnEnemy: function(dir, isDecoy = false, isWrong = false) {
         const cfg = this.levelConfig;
@@ -1183,7 +756,7 @@ const DefenseGameV2 = {
                 if (this.currentAttack.dir === dir) {
                     // ✅ 格擋成功
                     console.log(`✨ 重擊格擋成功！方向: ${dir}`);
-                    this.addScore(this.currentAttack.points || this.scoreWeights.HEAVY);
+                    this.addScore(this.currentAttack.points || this.scoreTable.HEAVY);
                     
                     // ✅ 顯示格擋成功文字（使用現有動畫）
                     const successText = document.createElement('div');
@@ -1267,7 +840,7 @@ const DefenseGameV2 = {
                         // ✅ 檢查是否已經加過分
                         if (!this.currentAttack.scored) {
                             // 立即加分
-                            this.addScore(this.currentAttack.points || this.scoreWeights.NORMAL, dir);
+                            this.addScore(this.currentAttack.points || this.scoreTable.NORMAL, dir);
                             console.log('✅ 正確方向，+100分');
                             this.currentAttack.scored = true;  // 標記已加分
 
@@ -1304,7 +877,7 @@ const DefenseGameV2 = {
                             // 正確方向：記錄並加分
                             this.currentAttack.swipedDirs.push(dir);
                             this.currentAttack.hits++;
-                            this.addScore(this.currentAttack.points || this.scoreWeights.MULTI, dir);
+                            this.addScore(this.currentAttack.points || this.scoreTable.MULTI, dir);
                             
                             // 創建投射物並發射
                             const projectile = this.createProjectileAtPlayer(dir);
@@ -1359,7 +932,7 @@ const DefenseGameV2 = {
             //     setTimeout(() => { this.shieldCooldown[dir] = false; }, 1500);
                 
             //     if (this.currentAttack && this.currentAttack.dir === dir) {
-            //         this.addScore(this.currentAttack.points || this.scoreWeights.HEAVY);
+            //         this.addScore(this.currentAttack.points || this.scoreTable.HEAVY);
             //         console.log('✨ 完美格擋！');
             //         // 清除飛行中的方塊
             //         this.heavyProjectiles.forEach(p => p?.remove());
@@ -1388,7 +961,7 @@ const DefenseGameV2 = {
                             this.updateScoreDisplay();
                             this.showWarning('💥 那是石頭！不能滑！');
                             // ✅ 使用權重
-                            this.addScore(this.scoreWeights.DECOY_FAIL, dir);
+                            this.addScore(this.scoreTable.DECOY_FAIL, dir);
                             
                             // 像一般攻擊一樣立即射出子彈
                             this.launchProjectile(dir, () => {
@@ -1408,7 +981,7 @@ const DefenseGameV2 = {
                             this.mistakes++;
                             this.updateScoreDisplay();
                             // ✅ 使用權重
-                            this.addScore(this.scoreWeights.DECOY_MISS, dir);
+                            this.addScore(this.scoreTable.DECOY_MISS, dir);
                             
                             // 像一般攻擊一樣立即射出子彈
                             this.launchProjectile(dir, () => {
@@ -1437,16 +1010,16 @@ const DefenseGameV2 = {
                             if (isCorrect) {
                                 this.currentAttack.hits++;
                                 // ✅ 使用權重：正確方向加分
-                                this.addScore(this.scoreWeights.MIXED_CORRECT, dir);
-                                console.log(`✅ 正確！滑動 ${dir}，+${this.scoreWeights.MIXED_CORRECT}分`);
+                                this.addScore(this.scoreTable.MIXED_CORRECT, dir);
+                                console.log(`✅ 正確！滑動 ${dir}，+${this.scoreTable.MIXED_CORRECT}分`);
                             } else if (isWrong) {
                                 // ❌ 錯誤方向：滑到石頭扣分
                                 this.mistakes++;
                                 this.updateScoreDisplay();
                                 this.showWarning(`❌ 那是石頭！不能滑 ${dir} 方向！`);
                                 // ✅ 使用權重：錯誤方向扣分
-                                this.addScore(this.scoreWeights.MIXED_WRONG, dir);
-                                console.log(`❌ 錯誤！滑了 ${dir}，這是石頭！${this.scoreWeights.MIXED_WRONG}分`);
+                                this.addScore(this.scoreTable.MIXED_WRONG, dir);
+                                console.log(`❌ 錯誤！滑了 ${dir}，這是石頭！${this.scoreTable.MIXED_WRONG}分`);
                                 
                                 // 視覺回饋：石頭變紅
                                 const targetEnemy = this.enemies.find(e => e.dir === dir);
@@ -1470,7 +1043,7 @@ const DefenseGameV2 = {
                                 );
                                 if (notSwipedWrong.length > 0) {
                                     // ✅ 使用權重：成功閃避石頭加分
-                                    const bonusScore = notSwipedWrong.length * this.scoreWeights.MIXED_AVOID;
+                                    const bonusScore = notSwipedWrong.length * this.scoreTable.MIXED_AVOID;
                                     this.addScore(bonusScore);  // 沒有特定方向，用隨機位置
                                     console.log(`✨ 提前完成！成功閃避 ${notSwipedWrong.length} 個石頭，獲得 ${bonusScore} 分！`);
                                 }
@@ -2270,7 +1843,7 @@ const DefenseGameV2 = {
             if (animationId) cancelAnimationFrame(animationId);
             console.log('✨ AOE 防禦成功！');
             if (this.state === this.states.AOE_ACTIVE) {
-                this.addScore(this.scoreWeights.AOE);
+                this.addScore(this.scoreTable.AOE);
                 this.finishAttack();
             }
         };
@@ -2714,5 +2287,12 @@ const DefenseGameV2 = {
         this.isProcessing = false;
     }
 };
+
+Object.assign(
+    DefenseGameV2,
+    window.DefenseTrailMixin || {},
+    window.DefenseInputMixin || {},
+    window.DefenseAttackRunnerMixin || {}
+);
 
 window.DefenseGameV2 = DefenseGameV2;

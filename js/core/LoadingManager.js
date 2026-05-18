@@ -4,7 +4,7 @@ const LoadingManager = {
     progressText: null,
     
     init: function() {
-        console.log('🔧 LoadingManager 初始化');
+        if (window.Logger) window.Logger.info('🔧 LoadingManager 初始化');
         
         // 獲取元素並檢查是否存在
         this.loadingScreen = document.getElementById('loading-screen');
@@ -12,15 +12,15 @@ const LoadingManager = {
         
         // ==== 加入安全檢查 ====
         if (!this.loadingScreen) {
-            console.error('❌ 找不到 loading-screen 元素！請確認 HTML 中有加入');
+            if (window.Logger) window.Logger.error('❌ 找不到 loading-screen 元素！請確認 HTML 中有加入');
             // 如果找不到，建立一個備用的（可選）
             this.createFallbackLoadingScreen();
         } else {
-            console.log('✅ 找到 loading-screen');
+            if (window.Logger) window.Logger.info('✅ 找到 loading-screen');
         }
         
         if (!this.progressText) {
-            console.error('❌ 找不到 loading-progress 元素');
+            if (window.Logger) window.Logger.error('❌ 找不到 loading-progress 元素');
         }
     },
     
@@ -56,13 +56,13 @@ const LoadingManager = {
         wrapper.appendChild(loadingDiv);
         this.loadingScreen = loadingDiv;
         this.progressText = document.getElementById('loading-progress');
-        console.log('✅ 已建立備用 Loading 畫面');
+        if (window.Logger) window.Logger.info('✅ 已建立備用 Loading 畫面');
     },
     
     // 顯示 Loading 並載入資源
     showAndLoad: function(assets, onComplete) {
         if (!this.loadingScreen) {
-            console.error('❌ loadingScreen 不存在');
+            if (window.Logger) window.Logger.error('❌ loadingScreen 不存在');
             if (onComplete) onComplete();
             return;
         }
@@ -124,7 +124,7 @@ const LoadingManager = {
         const img = new Image();
         img.onload = callback;
         img.onerror = () => {
-            console.warn('⚠️ 圖片載入失敗:', src);
+            if (window.Logger) window.Logger.warn('⚠️ 圖片載入失敗:', src);
             callback(); // 即使失敗也繼續
         };
         img.src = src;
@@ -135,7 +135,7 @@ const LoadingManager = {
         video.preload = 'auto';
         video.oncanplaythrough = callback;
         video.onerror = () => {
-            console.warn('⚠️ 影片載入失敗:', src);
+            if (window.Logger) window.Logger.warn('⚠️ 影片載入失敗:', src);
             callback();
         };
         video.src = src;
@@ -149,10 +149,10 @@ const LoadingManager = {
             const font = new FontFace(family, `url(${url})`);
             font.load().then(() => {
                 document.fonts.add(font);
-                console.log(`✅ 字型載入完成: ${family}`);
+                if (window.Logger) window.Logger.info(`✅ 字型載入完成: ${family}`);
                 callback();
             }).catch(err => {
-                console.warn(`⚠️ 字型載入失敗: ${family}`, err);
+                if (window.Logger) window.Logger.warn(`⚠️ 字型載入失敗: ${family}`, err);
                 callback(); // 失敗也繼續
             });
         } else {

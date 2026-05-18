@@ -1,0 +1,825 @@
+// js/core/CollectionSystem.js
+// 地圖蒐集系統 - 地圖與對話分開進行，右上角框框始終顯示
+
+const CollectionSystem = {
+    // 狀態
+    isActive: false,
+    isAnimating: false,
+    collectedItems: [],
+    totalItems: 0,
+    onCompleteCallback: null,
+    currentCollectingIndex: null,
+    
+    // DOM 元素
+    overlay: null,
+    mapContainer: null,
+    hotspotsContainer: null,
+    itemsDisplayContainer: null,
+    completeBtn: null,
+    backgroundDiv: null,
+    dialogueOverlay: null,
+    
+    // 物品資料
+    items: [],
+    
+    // 初始化
+    init: function() {
+        console.log('🗺️ CollectionSystem 初始化');
+        this.createDOM();
+        this.initMoneyListener();
+    },
+    
+    // 建立 DOM 結構
+    createDOM: function() {
+        // 避免重複建立
+        if (document.querySelector('.collection-overlay')) {
+            const existingOverlay = document.querySelector('.collection-overlay');
+            if (existingOverlay && existingOverlay.parentNode) {
+                existingOverlay.parentNode.removeChild(existingOverlay);
+            }
+        }
+        
+        const gameWrapper = document.getElementById('game-wrapper');
+        if (!gameWrapper) {
+            console.error('❌ 找不到 #game-wrapper');
+            return;
+        }
+        
+        // 主容器
+        this.overlay = document.createElement('div');
+        this.overlay.className = 'collection-overlay';
+        this.overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3000;
+            display: none;
+        `;
+        
+        // 地圖層
+        this.mapContainer = document.createElement('div');
+        this.mapContainer.className = 'collection-map-container';
+        this.mapContainer.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+        `;
+        this.mapContainer.innerHTML = `
+            <div class="collection-background" style="width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative;"></div>
+            <div class="collection-hotspots" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
+        `;
+        
+        // 右上角物品框
+        this.itemsDisplayContainer = document.createElement('div');
+        this.itemsDisplayContainer.className = 'collection-items-bar';
+        this.itemsDisplayContainer.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 12px;
+            z-index: 3050;
+        `;
+
+        // ✅ 錢袋顯示區域
+        this.moneyDisplay = document.createElement('div');
+        this.moneyDisplay.className = 'collection-money-display';
+        this.moneyDisplay.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 200px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 30px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 3050;
+            border: 1px solid #ffd700;
+        `;
+        this.moneyDisplay.innerHTML = `
+            <span style="font-size: 20px;">💰</span>
+            <span id="collection-money-amount" style="color: #ffd700; font-size: 18px; font-weight: bold;">20</span>
+            <span style="color: white; font-size: 14px;">枚</span>
+        `;
+        
+        // 完成按鈕
+        this.completeBtn = document.createElement('button');
+        this.completeBtn.className = 'collection-complete-btn';
+        this.completeBtn.style.cssText = `
+            display: none;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            background: linear-gradient(145deg, #e67e22, #d35400);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 3050;
+        `;
+        this.completeBtn.textContent = '完成蒐集';
+        this.completeBtn.onclick = () => this.onComplete();
+        
+        // 對話層
+        this.dialogueOverlay = document.createElement('div');
+        this.dialogueOverlay.className = 'collection-dialogue-overlay';
+        this.dialogueOverlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 3020;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        `;
+        
+        // 組合 DOM
+        this.overlay.appendChild(this.mapContainer);
+        this.overlay.appendChild(this.itemsDisplayContainer);
+        this.overlay.appendChild(this.moneyDisplay);
+        this.overlay.appendChild(this.completeBtn);
+        this.overlay.appendChild(this.dialogueOverlay);
+        gameWrapper.appendChild(this.overlay);
+        
+        // 獲取元素引用
+        this.backgroundDiv = this.mapContainer.querySelector('.collection-background');
+        this.hotspotsContainer = this.mapContainer.querySelector('.collection-hotspots');
+        
+        console.log('✅ CollectionSystem DOM 建立完成');
+    },
+    
+    // ✅ 獲取當前章節的錢袋數量（支援 Teen 和 Child）
+    getCurrentMoney: function() {
+        // 優先檢查 Teen 版
+        if (window.Chapter3_Teen && typeof window.Chapter3_Teen.getMoney === 'function') {
+            return window.Chapter3_Teen.getMoney();
+        }
+        // 檢查 Child 版（預留）
+        if (window.Chapter3_Child && typeof window.Chapter3_Child.getMoney === 'function') {
+            return window.Chapter3_Child.getMoney();
+        }
+        return 20;
+    },
+    
+    // ✅ 更新錢袋顯示
+    updateMoneyDisplay: function() {
+        if (!this.moneyDisplay) return;
+        
+        const money = this.getCurrentMoney();
+        const moneySpan = this.moneyDisplay.querySelector('#collection-money-amount');
+        
+        if (moneySpan) {
+            moneySpan.textContent = money;
+            // 銅板不足時變紅色
+            if (money < 5) {
+                moneySpan.style.color = '#ff6666';
+            } else {
+                moneySpan.style.color = '#ffd700';
+            }
+        }
+        
+        console.log(`💰 錢袋更新: ${money} 枚`);
+    },
+
+    // 監聽銅板更新事件
+    initMoneyListener: function() {
+        window.addEventListener('moneyUpdate', (e) => {
+            if (this.isActive) {
+                this.updateMoneyDisplay();
+            }
+        });
+    },
+    
+    // 開啟蒐集模式
+    open: function(config, onComplete) {
+        console.log('🗺️ 開啟蒐集模式:', config);
+        
+        // 確保 DOM 已建立
+        if (!this.mapContainer) {
+            console.log('⚠️ DOM 未建立，重新建立');
+            this.createDOM();
+        }
+        
+        if (!this.mapContainer) {
+            console.error('❌ mapContainer 仍為 null');
+            return;
+        }
+        
+        this.items = config.items;
+        this.totalItems = this.items.length;
+        this.collectedItems = new Array(this.totalItems).fill(false);
+        this.onCompleteCallback = onComplete;
+        this.isActive = true;
+
+        // ✅ 更新錢袋顯示
+        this.updateMoneyDisplay();
+        
+        // 設定地圖背景
+        if (this.backgroundDiv) {
+            this.backgroundDiv.style.backgroundImage = `url('${config.background}')`;
+            this.backgroundDiv.style.backgroundSize = 'cover';
+            this.backgroundDiv.style.backgroundPosition = 'center';
+        }
+        
+        // 建立右上角物品框
+        this.buildItemsDisplay();
+        
+        // 建立定位點
+        this.buildHotspots(config.hotspots);
+        
+        // 顯示主畫面（地圖模式）
+        this.showMapMode();
+        
+        // 顯示前言劇情（如果有）
+        if (config.introDialogue) {
+            this.showIntroDialogue(config.introDialogue);
+        }
+        
+        // 暫停對話系統點擊
+        if (window.DialogueSystem && window.DialogueSystem.gameContainer) {
+            this.savedGameClickHandler = window.DialogueSystem.gameContainer.onclick;
+            window.DialogueSystem.gameContainer.onclick = null;
+        }
+    },
+    
+    // 顯示地圖模式
+    showMapMode: function() {
+        if (this.mapContainer) {
+            this.mapContainer.style.display = 'block';
+        }
+        if (this.dialogueOverlay) {
+            this.dialogueOverlay.style.display = 'none';
+        }
+        if (this.overlay) {
+            this.overlay.style.display = 'block';
+        }
+        if (this.hotspotsContainer) {
+            this.hotspotsContainer.style.pointerEvents = 'auto';
+        }
+        if (this.itemsDisplayContainer) {
+            this.itemsDisplayContainer.style.display = 'flex';
+        }
+    },
+    
+    // 顯示對話模式
+    showDialogueMode: function() {
+        if (this.mapContainer) {
+            this.mapContainer.style.display = 'none';
+        }
+        if (this.dialogueOverlay) {
+            this.dialogueOverlay.style.display = 'flex';
+        }
+        if (this.overlay) {
+            this.overlay.style.display = 'block';
+        }
+        if (this.itemsDisplayContainer) {
+            this.itemsDisplayContainer.style.display = 'flex';
+        }
+    },
+    
+    // 小遊戲模式
+    showGameMode: function() {
+        if (this.mapContainer) {
+            this.mapContainer.style.display = 'none';
+        }
+        if (this.dialogueOverlay) {
+            this.dialogueOverlay.style.display = 'none';
+        }
+        if (this.overlay) {
+            this.overlay.style.display = 'block';
+        }
+        if (this.itemsDisplayContainer) {
+            this.itemsDisplayContainer.style.display = 'none';
+        }
+    },
+    
+    // 建立右上角物品顯示區
+    buildItemsDisplay: function() {
+        if (!this.itemsDisplayContainer) return;
+        
+        this.itemsDisplayContainer.innerHTML = '';
+        
+        this.items.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `collection-item-slot item-${index}`;
+            itemDiv.style.cssText = `
+                width: 50px;
+                height: 50px;
+                position: relative;
+                cursor: default;
+            `;
+            
+            const shadowImg = document.createElement('img');
+            shadowImg.src = item.shadowImage;
+            shadowImg.style.cssText = `
+                width: 50px;
+                height: 50px;
+                object-fit: contain;
+                filter: brightness(0) invert(0.3);
+                opacity: 0.7;
+                display: block;
+            `;
+            shadowImg.id = `item-shadow-${index}`;
+            
+            const colorImg = document.createElement('img');
+            colorImg.src = item.colorImage;
+            colorImg.style.cssText = `
+                width: 50px;
+                height: 50px;
+                object-fit: contain;
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+            `;
+            colorImg.id = `item-color-${index}`;
+            
+            itemDiv.appendChild(shadowImg);
+            itemDiv.appendChild(colorImg);
+            this.itemsDisplayContainer.appendChild(itemDiv);
+        });
+    },
+    
+    // 建立定位點
+    buildHotspots: function(hotspots) {
+        if (!this.hotspotsContainer) return;
+        
+        this.hotspotsContainer.innerHTML = '';
+        
+        hotspots.forEach((hotspot, index) => {
+            const hotspotDiv = document.createElement('div');
+            hotspotDiv.className = `collection-hotspot hotspot-${index}`;
+            hotspotDiv.style.cssText = `
+                position: absolute;
+                left: ${hotspot.x}%;
+                top: ${hotspot.y}%;
+                width: 50px;
+                height: 50px;
+                transform: translate(-50%, -50%);
+                cursor: pointer;
+                background: rgba(230,126,34,0.7);
+                border: 3px solid #e67e22;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+                animation: pulse 1.5s infinite;
+            `;
+            hotspotDiv.innerHTML = '<span style="color: white; font-size: 24px;">📍</span>';
+            hotspotDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.isAnimating) return;
+                if (!this.collectedItems[index]) {
+                    this.onHotspotClick(index, hotspot);
+                } else {
+                    this.showMessage('已經蒐集過了！', '#ffd700');
+                }
+            });
+            this.hotspotsContainer.appendChild(hotspotDiv);
+        });
+    },
+    
+    // 點擊定位點
+    onHotspotClick: function(itemIndex, hotspot) {
+        console.log(`📍 點擊定位點 ${itemIndex + 1}`);
+        this.currentCollectingIndex = itemIndex;
+        
+        this.showDialogueMode();
+        
+        // ✅ 檢查對話是否有選項
+        if (hotspot.dialogue && hotspot.dialogue.options && hotspot.dialogue.options.length > 0) {
+            this.showDialogueWithOptions(hotspot.dialogue, () => {
+                this.startGameThenCollect(itemIndex, hotspot);
+            });
+        } else if (hotspot.gameConfig) {
+            this.showItemDialogue(hotspot.dialogue, () => {
+                this.startGameThenCollect(itemIndex, hotspot);
+            });
+        } else if (hotspot.dialogue) {
+            this.showItemDialogue(hotspot.dialogue, () => {
+                this.collectItem(itemIndex);
+            });
+        } else {
+            this.collectItem(itemIndex);
+        }
+    },
+
+    // 顯示有選項的對話（防止重複觸發）
+    showDialogueWithOptions: function(dialogue, onStartGame) {
+        let gameStarted = false;
+        
+        if (typeof Typewriter !== 'undefined') {
+            // 顯示對話
+            Typewriter.showDialogue(
+                dialogue.name || '老闆',
+                dialogue.text,
+                dialogue.characterImage,
+                null,
+                'left',
+                ''
+            );
+            
+            const startGame = () => {
+                if (gameStarted) return;
+                gameStarted = true;
+                console.log('進入遊戲');
+                if (onStartGame) onStartGame();
+            };
+            
+            // 監聽對話層點擊
+            if (this.dialogueOverlay) {
+                const onClick = () => {
+                    this.dialogueOverlay.removeEventListener('click', onClick);
+                    clearTimeout(timeoutId);
+                    startGame();
+                };
+                this.dialogueOverlay.addEventListener('click', onClick);
+                
+                // 超時備用（30秒）
+                const timeoutId = setTimeout(() => {
+                    this.dialogueOverlay.removeEventListener('click', onClick);
+                    console.log('超時，強制進入遊戲');
+                    startGame();
+                }, 30000);
+            } else {
+                setTimeout(() => startGame(), 500);
+            }
+        } else {
+            if (onStartGame) onStartGame();
+        }
+    },
+
+    // 啟動遊戲，完成後蒐集物品
+    startGameThenCollect: function(itemIndex, hotspot) {
+        console.log(`🎮 啟動遊戲: ${hotspot.shopName}`);
+        
+        const gameConfig = hotspot.gameConfig;
+        
+        if (typeof InteractSystem === 'undefined') {
+            console.error('❌ InteractSystem 未載入');
+            this.collectItem(itemIndex);
+            return;
+        }
+        
+        this.showGameMode();
+        
+        InteractSystem.start(gameConfig, (success) => {
+            console.log(`遊戲結果: ${success ? '成功' : '失敗'}`);
+            
+            if (success) {
+                // ✅ 扣款
+                let canComplete = false;
+                
+                // 優先使用 Teen 版
+                if (window.Chapter3_Teen && window.Chapter3_Teen.markShopComplete) {
+                    canComplete = window.Chapter3_Teen.markShopComplete(hotspot.shopId);
+                }
+                // 預留 Child 版
+                else if (window.Chapter3_Child && window.Chapter3_Child.markShopComplete) {
+                    canComplete = window.Chapter3_Child.markShopComplete(hotspot.shopId);
+                }
+                
+                if (!canComplete && (window.Chapter3_Teen || window.Chapter3_Child)) {
+                    this.showMessage('銅板不足！', '#ff6666');
+                    this.showMapMode();
+                    return;
+                }
+                
+                // ✅ 扣款後立即更新畫面
+                this.updateMoneyDisplay();
+                
+                this.showDialogueMode();
+                
+                if (hotspot.successDialogue) {
+                    Typewriter.showDialogue(
+                        hotspot.successDialogue.name || '阿斗仔',
+                        hotspot.successDialogue.text,
+                        hotspot.successDialogue.characterImage,
+                        null,
+                        'left',
+                        ''
+                    ).then(() => {
+                        this.collectItemWithKeepDialogue(itemIndex);
+                    });
+                } else {
+                    this.collectItemWithKeepDialogue(itemIndex);
+                }
+            } else {
+                this.showMessage('再試一次吧！', '#ff6666');
+                this.showMapMode();
+            }
+        });
+    },
+    
+    // 蒐集物品但保持對話模式
+    collectItemWithKeepDialogue: function(itemIndex) {
+        if (this.collectedItems[itemIndex]) return;
+        
+        console.log(`🎁 蒐集物品 ${itemIndex + 1}（保持對話模式）`);
+        this.collectedItems[itemIndex] = true;
+        this.playCollectionAnimationKeepDialogue(itemIndex);
+    },
+    
+    // 播放蒐集動畫
+    playCollectionAnimationKeepDialogue: function(itemIndex) {
+        this.isAnimating = true;
+        const item = this.items[itemIndex];
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            background: rgba(0,0,0,0.9);
+            border: 3px solid #e67e22;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: popupAppear 0.3s ease-out;
+            cursor: pointer;
+        `;
+        popup.innerHTML = `
+            <img src="${item.colorImage}" style="width: 90px; height: 90px; object-fit: contain;">
+            <div style="color: #ffd700; margin-top: 8px; font-size: 14px;">獲得 ${item.name}</div>
+        `;
+        document.body.appendChild(popup);
+        
+        const onPopupClick = () => {
+            const targetSlot = this.itemsDisplayContainer.querySelector(`.item-${itemIndex}`);
+            if (!targetSlot) {
+                popup.remove();
+                this.isAnimating = false;
+                this.afterCollectionComplete(itemIndex);
+                return;
+            }
+            
+            const targetRect = targetSlot.getBoundingClientRect();
+            const startRect = popup.getBoundingClientRect();
+            
+            const flyingImg = document.createElement('img');
+            flyingImg.src = item.colorImage;
+            flyingImg.style.cssText = `
+                position: fixed;
+                top: ${startRect.top}px;
+                left: ${startRect.left}px;
+                width: ${startRect.width}px;
+                height: ${startRect.height}px;
+                z-index: 10001;
+                transition: all 0.5s ease-in-out;
+                object-fit: contain;
+            `;
+            document.body.appendChild(flyingImg);
+            popup.remove();
+            
+            requestAnimationFrame(() => {
+                flyingImg.style.top = `${targetRect.top}px`;
+                flyingImg.style.left = `${targetRect.left}px`;
+                flyingImg.style.width = '50px';
+                flyingImg.style.height = '50px';
+            });
+            
+            setTimeout(() => {
+                flyingImg.remove();
+                
+                const shadowImg = document.getElementById(`item-shadow-${itemIndex}`);
+                const colorImg = document.getElementById(`item-color-${itemIndex}`);
+                if (shadowImg) shadowImg.style.display = 'none';
+                if (colorImg) colorImg.style.display = 'block';
+                
+                this.isAnimating = false;
+                this.checkAllCollected();
+                
+                if (typeof AudioManager !== 'undefined') {
+                    AudioManager.playSFX('assets/sounds/collect.mp3', 0.5);
+                }
+                
+                this.afterCollectionComplete(itemIndex);
+            }, 500);
+        };
+        
+        popup.addEventListener('click', onPopupClick);
+    },
+
+    // 蒐集完成後的處理
+    afterCollectionComplete: function(itemIndex) {
+        console.log(`✅ 蒐集完成，物品 ${itemIndex + 1}，準備繼續對話`);
+        
+        const hasMoreItems = this.collectedItems.some(collected => collected === false);
+        
+        if (!hasMoreItems && this.completeBtn) {
+            this.completeBtn.style.display = 'block';
+        }
+        
+        this.showMapMode();
+        
+        if (this.pendingCallback) {
+            const callback = this.pendingCallback;
+            this.pendingCallback = null;
+            callback();
+        }
+    },
+    
+    // 檢查是否全部蒐集完畢
+    checkAllCollected: function() {
+        const allCollected = this.collectedItems.every(collected => collected === true);
+        if (allCollected && this.completeBtn) {
+            this.completeBtn.style.display = 'block';
+        }
+    },
+    
+    // 完成蒐集
+    onComplete: function() {
+        console.log('✅ 完成蒐集，結束蒐集模式');
+        this.playCompletionAnimation();
+    },
+    
+    // 播放完成動畫
+    playCompletionAnimation: function() {
+        const slots = this.itemsDisplayContainer.querySelectorAll('.collection-item-slot');
+        slots.forEach((slot) => {
+            slot.style.animation = 'completeFlash 0.5s ease-in-out';
+            setTimeout(() => {
+                slot.style.opacity = '0';
+            }, 500);
+        });
+        
+        setTimeout(() => {
+            this.close();
+            if (this.onCompleteCallback) {
+                this.onCompleteCallback();
+            }
+        }, 1000);
+    },
+    
+    // 顯示前言劇情（使用 DialogueSystem 的對話機制）
+    showIntroDialogue: function(dialogue) {
+        if (this.hotspotsContainer) {
+            this.hotspotsContainer.style.pointerEvents = 'none';
+        }
+        
+        this.showDialogueMode();
+        
+        const onComplete = () => {
+            this.showMapMode();
+            if (this.hotspotsContainer) {
+                this.hotspotsContainer.style.pointerEvents = 'auto';
+            }
+        };
+        
+        if (window.DialogueSystem && window.DialogueSystem.typewriter) {
+            window.DialogueSystem.typewriter.showDialogue(
+                dialogue.name || '阿斗仔',
+                dialogue.text,
+                dialogue.characterImage,
+                null,
+                'left',
+                ''
+            ).then(() => {
+                // 等待點擊
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer) {
+                    const onClick = () => {
+                        gameContainer.removeEventListener('click', onClick);
+                        onComplete();
+                    };
+                    gameContainer.addEventListener('click', onClick);
+                    setTimeout(() => {
+                        gameContainer.removeEventListener('click', onClick);
+                        onComplete();
+                    }, 10000);
+                } else {
+                    onComplete();
+                }
+            });
+        } else {
+            onComplete();
+        }
+    },
+    
+    // 顯示物品對話劇情（等待玩家點擊才繼續）
+    showItemDialogue: function(dialogue, onComplete) {
+        if (typeof Typewriter !== 'undefined') {
+            // 顯示對話
+            Typewriter.showDialogue(
+                dialogue.name || '阿斗仔',
+                dialogue.text,
+                dialogue.characterImage,
+                null,
+                'left',
+                ''
+            );
+            
+            // ✅ 使用 MutationObserver 監聽對話框是否被隱藏（玩家點擊後對話框會隱藏）
+            const dialogBox = document.getElementById('dialog-box');
+            if (dialogBox) {
+                const observer = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            if (dialogBox.style.display === 'none') {
+                                observer.disconnect();
+                                console.log('對話框已關閉，繼續流程');
+                                if (onComplete) onComplete();
+                            }
+                        }
+                    }
+                });
+                observer.observe(dialogBox, { attributes: true });
+                
+                // 超時備用（15秒）
+                setTimeout(() => {
+                    observer.disconnect();
+                    console.log('超時，強制繼續');
+                    if (onComplete) onComplete();
+                }, 15000);
+            } else {
+                // 找不到對話框，延遲後繼續
+                setTimeout(() => {
+                    if (onComplete) onComplete();
+                }, 500);
+            }
+        } else {
+            if (onComplete) onComplete();
+        }
+    },
+    
+    // 顯示訊息
+    showMessage: function(msg, color) {
+        const msgDiv = document.createElement('div');
+        msgDiv.textContent = msg;
+        msgDiv.style.cssText = `
+            position: fixed;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: ${color};
+            padding: 8px 16px;
+            border-radius: 30px;
+            z-index: 10000;
+            animation: fadeOut 1.5s ease-out forwards;
+            font-size: 14px;
+        `;
+        document.body.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 1500);
+    },
+    
+    // 關閉蒐集系統
+    close: function() {
+        console.log('🗺️ 關閉蒐集模式');
+        
+        this.isActive = false;
+        if (this.overlay) {
+            this.overlay.style.display = 'none';
+        }
+        
+        if (window.DialogueSystem && window.DialogueSystem.gameContainer) {
+            window.DialogueSystem.gameContainer.onclick = this.savedGameClickHandler;
+        }
+    }
+};
+
+// CSS 動畫
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+        50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+    }
+    @keyframes popupAppear {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    @keyframes completeFlash {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); background: #ffd700; }
+        100% { transform: scale(1); opacity: 0; }
+    }
+    @keyframes fadeOut {
+        0% { opacity: 1; }
+        70% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+window.CollectionSystem = CollectionSystem;

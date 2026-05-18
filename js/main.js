@@ -55,7 +55,7 @@ function showAgeSelect() {
 
 // ===== 場景切換函數（全域）=====
 function showScene(sceneId) {
-    console.log('切換場景到:', sceneId);
+    if (window.Logger) window.Logger.info('切換場景到:', sceneId);
     
     if (typeof SceneManager !== 'undefined' && SceneManager.show) {
         SceneManager.show(sceneId);
@@ -71,7 +71,7 @@ function showScene(sceneId) {
     if (target) {
         target.style.display = 'flex';
     } else {
-        console.error('找不到場景:', sceneId);
+        if (window.Logger) window.Logger.error('找不到場景:', sceneId);
     }
 }
 
@@ -80,7 +80,7 @@ function getChapterByMode(chapterId) {
     const mode = gameMode || window.gameMode || 'adult';
     const isChildMode = (mode === 'child');
     
-    console.log(`📖 根據模式 ${isChildMode ? '小朋友版' : '一般版'} 載入章節:`, chapterId);
+    if (window.Logger) window.Logger.info(`📖 根據模式 ${isChildMode ? '小朋友版' : '一般版'} 載入章節:`, chapterId);
     
     // 章節映射表（開場不分版本，只有關卡章節分版本）
     const chapterMapping = {
@@ -97,17 +97,17 @@ function getChapterByMode(chapterId) {
     const chapterData = chapterMapping[chapterId];
     
     if (!chapterData) {
-        console.error(`❌ 找不到章節: ${chapterId} (模式: ${isChildMode ? 'child' : 'adult'})`);
+        if (window.Logger) window.Logger.error(`❌ 找不到章節: ${chapterId} (模式: ${isChildMode ? 'child' : 'adult'})`);
         return null;
     }
     
-    console.log(`✅ 成功載入 ${chapterId} (${isChildMode ? '小朋友版' : '一般版'})`);
+    if (window.Logger) window.Logger.info(`✅ 成功載入 ${chapterId} (${isChildMode ? '小朋友版' : '一般版'})`);
     return chapterData;
 }
 
 // 預載入開場所需的所有資源（影片 + 字型 + 開場介紹圖片）
 function preloadIntroAssets(onComplete) {
-    console.log('📦 開始預載入開場資源...');
+    if (window.Logger) window.Logger.info('📦 開始預載入開場資源...');
     
     // 收集需要預載入的資源
     const assetsToPreload = [];
@@ -125,7 +125,7 @@ function preloadIntroAssets(onComplete) {
     if (gameMode === 'child') {
         const fontUrl = './assets/fonts/BpmfZihiKaiStd-Regular.ttf';
         assetsToPreload.push(fontUrl);
-        console.log('📦 小朋友模式，加入注音字型預載入');
+        if (window.Logger) window.Logger.info('📦 小朋友模式，加入注音字型預載入');
     }
     
     // 3. 收集 IntroChapter 中的所有圖片資源（開場不分版本，使用原本的 IntroChapter）
@@ -156,12 +156,12 @@ function preloadIntroAssets(onComplete) {
     
     // 去重
     const uniqueAssets = [...new Set(assetsToPreload)];
-    console.log(`📦 需要預載入 ${uniqueAssets.length} 個資源:`, uniqueAssets);
+    if (window.Logger) window.Logger.debug(`📦 需要預載入 ${uniqueAssets.length} 個資源:`, uniqueAssets);
     
     // 使用 LoadingManager 載入資源
     if (typeof LoadingManager !== 'undefined' && LoadingManager.showAndLoad) {
         LoadingManager.showAndLoad(uniqueAssets, () => {
-            console.log('✅ 開場資源預載入完成');
+            if (window.Logger) window.Logger.info('✅ 開場資源預載入完成');
             
             if (gameMode === 'child') {
                 setTimeout(() => {
@@ -175,14 +175,14 @@ function preloadIntroAssets(onComplete) {
             if (onComplete) onComplete();
         });
     } else {
-        console.warn('⚠️ LoadingManager 未定義，跳過預載入');
+        if (window.Logger) window.Logger.warn('⚠️ LoadingManager 未定義，跳過預載入');
         if (onComplete) onComplete();
     }
 }
 
 // 播放開場影片
 function playIntroVideo() {
-    console.log('🎬 播放開場影片');
+    if (window.Logger) window.Logger.info('🎬 播放開場影片');
     
     const videoScene = document.getElementById('video-scene');
     const video = document.getElementById('intro-video');
@@ -195,18 +195,18 @@ function playIntroVideo() {
     
     if (playPromise !== undefined) {
         playPromise.catch(error => {
-            console.log('⚠️ 影片自動播放失敗，可能需要用戶互動:', error);
+            if (window.Logger) window.Logger.warn('⚠️ 影片自動播放失敗，可能需要用戶互動:', error);
         });
     }
     
     video.onended = () => {
-        console.log('📽️ 影片播放結束');
+        if (window.Logger) window.Logger.info('📽️ 影片播放結束');
         video.pause();
         showIntro();
     };
     
     skipBtn.onclick = () => {
-        console.log('⏭️ 跳過影片');
+        if (window.Logger) window.Logger.info('⏭️ 跳過影片');
         video.pause();
         video.currentTime = 0;
         showIntro();
@@ -219,9 +219,10 @@ function showIntro() {
     if (backBtn) backBtn.style.display = 'none';
 
     console.log('🎬 播放開場介紹');
+    if (window.Logger) window.Logger.info('🎬 播放開場介紹');
     
     if (typeof IntroChapter === 'undefined') {
-        console.error('❌ 找不到 IntroChapter 資料');
+        if (window.Logger) window.Logger.error('❌ 找不到 IntroChapter 資料');
         showScene('level-select');
         return;
     }
@@ -232,14 +233,14 @@ function showIntro() {
         DialogueSystem.isIntro = true;
         DialogueSystem.loadChapter(IntroChapter);
     } else {
-        console.error('❌ DialogueSystem 未定義');
+        if (window.Logger) window.Logger.error('❌ DialogueSystem 未定義');
         showScene('level-select');
     }
 }
 
 // DOM 載入完成後初始化
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('📌 DOM 載入完成');
+    if (window.Logger) window.Logger.info('📌 DOM 載入完成');
 
     // ✅ 載入關卡狀態
     loadChapterStatus();
@@ -256,11 +257,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     const selectedMode = await showAgeSelect();
     console.log('選擇的模式:', selectedMode);
+    if (window.Logger) window.Logger.info('選擇的模式:', selectedMode);
     
     const startBtn = document.getElementById('startBtn');
     if (startBtn) {
         startBtn.addEventListener('click', () => {
-            console.log('👉 點擊開始遊戲');
+            if (window.Logger) window.Logger.info('👉 點擊開始遊戲');
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
@@ -305,7 +307,7 @@ function loadChapter(chapterId) {
     const backBtn = document.querySelector('#game-container .back-btn');
     if (backBtn) backBtn.style.display = 'block';
 
-    console.log('📖 載入章節:', chapterId);
+    if (window.Logger) window.Logger.info('📖 載入章節:', chapterId);
     
     if (typeof AudioManager !== 'undefined') {
         AudioManager.playSFX('assets/sounds/click.mp3');
@@ -314,7 +316,7 @@ function loadChapter(chapterId) {
     const chapterData = getChapterByMode(chapterId);
     
     if (chapterData) {
-        console.log('✅ 找到章節資料');
+        if (window.Logger) window.Logger.info('✅ 找到章節資料');
 
         const assets = collectChapterAssets(chapterData);
         
@@ -336,7 +338,7 @@ function loadChapter(chapterId) {
             }
         });
     } else {
-        console.error('❌ 找不到章節資料:', chapterId);
+        if (window.Logger) window.Logger.error('❌ 找不到章節資料:', chapterId);
         alert('章節資料載入失敗，請檢查 console');
     }
 }
@@ -439,13 +441,13 @@ function setupBackButton() {
 const chapterStatus = {
     chapter1: 'open',      // 第一章預設開放
     chapter2: 'open',    // 第二章預設鎖定
-    chapter3: 'locked'     // 第三章預設鎖定
+    chapter3: 'open'     // 第三章預設鎖定
 };
 
 // 儲存到 localStorage
 function saveChapterStatus() {
     localStorage.setItem('chapterStatus', JSON.stringify(chapterStatus));
-    console.log('💾 關卡狀態已儲存:', chapterStatus);
+    if (window.Logger) window.Logger.debug('💾 關卡狀態已儲存:', chapterStatus);
 }
 
 // 是否在重整時清除進度（設為 true 則每次重整都重設）
@@ -457,16 +459,16 @@ function loadChapterStatus() {
         // ✅ 每次都重設，不讀取儲存
         chapterStatus.chapter1 = 'open';
         chapterStatus.chapter2 = 'open';
-        chapterStatus.chapter3 = 'locked';
+        chapterStatus.chapter3 = 'open';
         localStorage.removeItem('chapterStatus');
-        console.log('📀 重整模式：關卡狀態已重設為預設值');
+        if (window.Logger) window.Logger.info('📀 重整模式：關卡狀態已重設為預設值');
     } else {
         // 從 localStorage 讀取
         const saved = localStorage.getItem('chapterStatus');
         if (saved) {
             const loaded = JSON.parse(saved);
             Object.assign(chapterStatus, loaded);
-            console.log('📀 載入關卡狀態:', chapterStatus);
+            if (window.Logger) window.Logger.info('📀 載入關卡狀態:', chapterStatus);
         }
     }
     updateChapterButtons();
@@ -506,20 +508,20 @@ function setChapterStatus(chapterId, status) {
         chapterStatus[chapterId] = status;
         saveChapterStatus();
         updateChapterButtons();
-        console.log(`🔧 設定 ${chapterId} 狀態為: ${status}`);
+        if (window.Logger) window.Logger.info(`🔧 設定 ${chapterId} 狀態為: ${status}`);
     }
 }
 
 // 完成關卡（遊玩後鎖定）
 function completeChapter(chapterId) {
-    console.log(`🔍 completeChapter 被呼叫: ${chapterId}`);
-    console.log(`🔍 當前狀態: ${chapterStatus[chapterId]}`);
+    if (window.Logger) window.Logger.debug(`🔍 completeChapter 被呼叫: ${chapterId}`);
+    if (window.Logger) window.Logger.debug(`🔍 當前狀態: ${chapterStatus[chapterId]}`);
     
     if (chapterStatus[chapterId] === 'open') {
         setChapterStatus(chapterId, 'completed');
-        console.log(`🎉 完成關卡: ${chapterId}，已鎖定`);
+        if (window.Logger) window.Logger.info(`🎉 完成關卡: ${chapterId}，已鎖定`);
     } else {
-        console.log(`⚠️ 無法完成 ${chapterId}，當前狀態不是 open: ${chapterStatus[chapterId]}`);
+        if (window.Logger) window.Logger.warn(`⚠️ 無法完成 ${chapterId}，當前狀態不是 open: ${chapterStatus[chapterId]}`);
     }
 }
 
@@ -540,5 +542,5 @@ function resetAllChapters() {
     chapterStatus.chapter3 = 'locked';
     saveChapterStatus();
     updateChapterButtons();
-    console.log('🔄 所有關卡已重設');
+    if (window.Logger) window.Logger.info('🔄 所有關卡已重設');
 }
