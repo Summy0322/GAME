@@ -6,6 +6,7 @@ const CollectionSystem = {
     isActive: false,
     isAnimating: false,
     isGameStarting: false,
+    isProcessingShop: false,  // ✅ 新增：標記是否正在處理店家點擊
     collectedItems: [],
     totalItems: 0,
     onCompleteCallback: null,
@@ -599,13 +600,29 @@ const CollectionSystem = {
     
     // 點擊定位點
     onHotspotClick: function(itemIndex, hotspot) {
+        // ✅ 如果正在處理店家點擊，忽略新的點擊
+        if (this.isProcessingShop) {
+            console.log('⚠️ 正在處理店家點擊，請稍後再試');
+            this.showMessage('請稍後再試...', '#ffaa00');
+            return;
+        }
+        
+        // ✅ 如果已經蒐集過了，忽略點擊
+        if (this.collectedItems[itemIndex]) {
+            this.showMessage('已經蒐集過了！', '#ffd700');
+            return;
+        }
+        
         console.log(`📍 點擊定位點 ${itemIndex + 1}`);
         this.currentCollectingIndex = itemIndex;
         
-        // ✅ 改為：顯示 loading 遮罩在地圖上
+        // ✅ 標記開始處理
+        this.isProcessingShop = true;
+        
+        // 顯示 loading 遮罩在地圖上
         this.showShopLoading();
         
-        // ✅ 檢查對話是否有選項
+        // 檢查對話是否有選項
         if (hotspot.dialogue && hotspot.dialogue.options && hotspot.dialogue.options.length > 0) {
             this.showDialogueWithOptions(hotspot.dialogue, () => {
                 this.startGameThenCollect(itemIndex, hotspot);
@@ -784,9 +801,11 @@ const CollectionSystem = {
                             this.showDialogueSequence(dialogues, () => {
                                 console.log('📖 所有成功對話完成，開始蒐集物品');
                                 this.collectItemWithKeepDialogue(itemIndex);
+                                this.isProcessingShop = false;
                             });
                         } else {
                             this.collectItemWithKeepDialogue(itemIndex);
+                            this.isProcessingShop = false;
                         }
                     } else {
                         this.showMessage('再試一次吧！', '#ff6666');
