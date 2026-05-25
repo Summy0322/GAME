@@ -5,6 +5,7 @@ const CollectionSystem = {
     // 狀態
     isActive: false,
     isAnimating: false,
+    isGameStarting: false,
     collectedItems: [],
     totalItems: 0,
     onCompleteCallback: null,
@@ -469,63 +470,74 @@ const CollectionSystem = {
         
         const gameConfig = hotspot.gameConfig;
         
-        if (typeof InteractSystem === 'undefined') {
-            console.error('❌ InteractSystem 未載入');
-            this.collectItem(itemIndex);
+        if (this.isGameStarting) {
+            console.log('⚠️ 遊戲正在啟動中，請稍候');
             return;
         }
         
-        this.showGameMode();
+        this.isGameStarting = true;
         
-        InteractSystem.start(gameConfig, (success) => {
-            console.log(`遊戲結果: ${success ? '成功' : '失敗'}`);
+        if (typeof GameEngine !== 'undefined') {
+            this.showGameMode();
             
-            if (success) {
-                // ✅ 根據目前模式選擇正確的章節資料
-                let chapterData = null;
-                if (window.gameMode === 'child') {
-                    chapterData = window.Chapter3_Child;
-                    console.log('👶 使用兒童版章節資料');
-                } else {
-                    chapterData = window.Chapter3_Teen;
-                    console.log('👨 使用青少年版章節資料');
+            const gameConfigCopy = JSON.parse(JSON.stringify(gameConfig));
+            
+            GameEngine.startMinigame('interact', {
+                ...gameConfigCopy,
+                onComplete: (success) => {
+                    console.log(`🎮 遊戲結果回调: ${success ? '成功' : '失敗'}`);
+                    this.isGameStarting = false;
+                    
+                    if (success) {
+                        let chapterData = null;
+                        if (window.gameMode === 'child') {
+                            chapterData = window.Chapter3_Child;
+                        } else {
+                            chapterData = window.Chapter3_Teen;
+                        }
+                        
+                        let canComplete = false;
+                        if (chapterData && chapterData.markShopComplete) {
+                            canComplete = chapterData.markShopComplete(hotspot.shopId);
+                            console.log(`💰 扣款結果: ${canComplete ? '成功' : '失敗'}`);
+                        }
+                        
+                        if (!canComplete) {
+                            this.showMessage('銅板不足！', '#ff6666');
+                            this.showMapMode();
+                            return;
+                        }
+                        
+                        this.updateMoneyDisplay();
+                        this.showDialogueMode();
+                        
+                        if (hotspot.successDialogue) {
+                            // 把 successDialogue 統一轉成陣列處理
+                            let dialogues = hotspot.successDialogue;
+                            if (!Array.isArray(dialogues)) {
+                                dialogues = [dialogues];
+                            }
+                            
+                            // 依序顯示對話
+                            this.showDialogueSequence(dialogues, () => {
+                                console.log('📖 所有成功對話完成，開始蒐集物品');
+                                this.collectItemWithKeepDialogue(itemIndex);
+                            });
+                        } else {
+                            this.collectItemWithKeepDialogue(itemIndex);
+                        }
+                    } else {
+                        this.showMessage('再試一次吧！', '#ff6666');
+                        this.showMapMode();
+                    }
                 }
-                
-                let canComplete = false;
-                if (chapterData && chapterData.markShopComplete) {
-                    canComplete = chapterData.markShopComplete(hotspot.shopId);
-                }
-                
-                if (!canComplete) {
-                    this.showMessage('銅板不足！', '#ff6666');
-                    this.showMapMode();
-                    return;
-                }
-                
-                // ✅ 扣款後立即更新畫面
-                this.updateMoneyDisplay();
-                
-                this.showDialogueMode();
-                
-                if (hotspot.successDialogue) {
-                    Typewriter.showDialogue(
-                        hotspot.successDialogue.name || '阿斗仔',
-                        hotspot.successDialogue.text,
-                        hotspot.successDialogue.characterImage,
-                        null,
-                        'left',
-                        ''
-                    ).then(() => {
-                        this.collectItemWithKeepDialogue(itemIndex);
-                    });
-                } else {
-                    this.collectItemWithKeepDialogue(itemIndex);
-                }
-            } else {
-                this.showMessage('再試一次吧！', '#ff6666');
-                this.showMapMode();
-            }
-        });
+            });
+        } else {
+            // 備用方案...
+            console.error('❌ GameEngine 未定義');
+            this.isGameStarting = false;
+            this.collectItem(itemIndex);
+        }
     },
     
     // 蒐集物品但保持對話模式
@@ -535,6 +547,33 @@ const CollectionSystem = {
         console.log(`🎁 蒐集物品 ${itemIndex + 1}（保持對話模式）`);
         this.collectedItems[itemIndex] = true;
         this.playCollectionAnimationKeepDialogue(itemIndex);
+    },
+
+    // 依序顯示對話（每句都會等玩家點擊）
+    showDialogueSequence: async function(dialogues, onComplete) {
+        for (let i = 0; i < dialogues.length; i++) {
+            const dialogue = dialogues[i];
+            
+            // 顯示對話
+            await Typewriter.showDialogue(
+                dialogue.name || '阿斗仔',
+                dialogue.text,
+                dialogue.characterImage || null,
+                null,
+                'left',
+                ''
+            );
+            
+            // ✅ 手動等待玩家點擊
+            await new Promise((resolve) => {
+                const onClick = () => {
+                    document.removeEventListener('click', onClick);
+                    resolve();
+                };
+                document.addEventListener('click', onClick);
+            });
+        }
+        if (onComplete) onComplete();
     },
     
     // 播放蒐集動畫

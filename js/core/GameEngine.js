@@ -1,11 +1,7 @@
 // js/core/GameEngine.js
-// 專門處理小遊戲和 Loading 的引擎
-
 const GameEngine = {
-    // 目前執行中的小遊戲
     currentMinigame: null,
     
-    // 收集小遊戲需要的資源
     collectMinigameAssets: function(minigameName, options) {
         if (window.MinigameAssets) {
             if (minigameName === 'memory') {
@@ -17,43 +13,63 @@ const GameEngine = {
                 return [...new Set(urls)];
             }
         }
-
+        
+        // ✅ 為 interact 遊戲收集所有圖片資源
+        if (minigameName === 'interact' && options && options.items) {
+            const imageUrls = [];
+            
+            // 收集遊戲物件的圖片
+            options.items.forEach(item => {
+                if (item.image) {
+                    imageUrls.push(item.image);
+                }
+            });
+            
+            // 收集放置區的圖片（如果有）
+            if (options.zones) {
+                options.zones.forEach(zone => {
+                    if (zone.image) {
+                        imageUrls.push(zone.image);
+                    }
+                });
+            }
+            
+            if (window.Logger) window.Logger.info(`📦 互動遊戲預載入 ${imageUrls.length} 張圖片`);
+            return [...new Set(imageUrls)];
+        }
+        
         return [];
     },
     
-    // 啟動小遊戲
     startMinigame: function(minigameName, options) {
         if (window.Logger) window.Logger.info('🎮 GameEngine 啟動小遊戲:', minigameName);
         
-        // ✅ 收集需要的資源
         const assets = this.collectMinigameAssets(minigameName, options);
         
         if (assets.length > 0 && typeof LoadingManager !== 'undefined') {
-            // 顯示 Loading 並預載入資源
             if (window.Logger) window.Logger.info(`📦 預載入 ${assets.length} 個小遊戲資源`);
             LoadingManager.showAndLoad(assets, () => {
                 this._startMinigameImmediately(minigameName, options);
             });
         } else {
-            // 沒有資源需要預載入，直接開始
             this._startMinigameImmediately(minigameName, options);
         }
     },
     
     _startMinigameImmediately: function(minigameName, options) {
-        if (window.MemoryGameV2 && typeof MemoryGameV2.stop === 'function') {
-            MemoryGameV2.stop();
+        // 清理之前的遊戲
+        if (window.MemoryGameV2 && typeof window.MemoryGameV2.stop === 'function') {
+            window.MemoryGameV2.stop();
         }
-        if (window.DefenseGameV2 && typeof DefenseGameV2.stop === 'function') {
-            DefenseGameV2.stop();
+        if (window.DefenseGameV2 && typeof window.DefenseGameV2.stop === 'function') {
+            window.DefenseGameV2.stop();
+        }
+        if (window.InteractSystem && typeof window.InteractSystem.close === 'function') {
+            window.InteractSystem.close();
         }
 
-        const gameMode =
-            typeof window !== 'undefined' && window.gameMode
-                ? window.gameMode
-                : 'adult';
+        const gameMode = typeof window !== 'undefined' && window.gameMode ? window.gameMode : 'adult';
 
-        // 顯示畫布
         const canvas = document.getElementById('gameCanvas');
         if (canvas) {
             canvas.style.display = 'block';
@@ -61,38 +77,46 @@ const GameEngine = {
             canvas.classList.add('minigame-active');
         }
         
-        // 小遊戲映射表
         const minigameMap = {
             'finding': window.FindingGame,
             'puzzle': window.PuzzleGame,
             'defense': window.DefenseGameV2,
             'memory': window.MemoryGameV2,
+            'interact': window.InteractSystem,
         };
         
         const Minigame = minigameMap[minigameName];
         if (Minigame && Minigame.start) {
             this.currentMinigame = minigameName;
-            Minigame.start({
+            
+            // ✅ 保存 onComplete 回調
+            const onCompleteCallback = options.onComplete;
+            
+            // ✅ 確保 onComplete 被傳入
+            const startOptions = {
                 ...options,
-                gameMode:
-                    options && (options.gameMode === 'child' || options.gameMode === 'adult')
-                        ? options.gameMode
-                        : gameMode,
+                gameMode: options && (options.gameMode === 'child' || options.gameMode === 'adult') ? options.gameMode : gameMode,
                 onComplete: (success) => {
-                    // 小遊戲結束後隱藏畫布
+                    console.log('🎮 GameEngine 內部 onComplete, success:', success);
                     if (canvas) {
                         canvas.style.display = 'none';
                         canvas.classList.remove('minigame-active');
                     }
                     this.currentMinigame = null;
                     
-                    // 執行完成回調
-                    if (options && options.onComplete) {
-                        options.onComplete(success);
+                    // ✅ 呼叫保存的回調
+                    if (onCompleteCallback) {
+                        console.log('🎮 呼叫外部 onComplete');
+                        onCompleteCallback(success);
+                    } else {
+                        console.log('🎮 警告: 沒有外部 onComplete');
                     }
                 },
                 level: options.level || 1
-            });
+            };
+            
+            console.log('🎮 啟動小遊戲，onComplete 是否存在:', typeof startOptions.onComplete === 'function');
+            Minigame.start(startOptions);
         } else {
             if (window.Logger) window.Logger.error('❌ 找不到小遊戲:', minigameName);
             setTimeout(() => {
@@ -107,17 +131,14 @@ const GameEngine = {
         }
     },
     
-    // 簡單的 Loading 功能（如果需要）
     showLoading: function(message = '載入中...') {
         const canvas = document.getElementById('gameCanvas');
         if (!canvas) return;
-        
         canvas.style.display = 'block';
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, 1280, 720);
         ctx.fillStyle = '#333';
         ctx.fillRect(0, 0, 1280, 720);
-        
         ctx.fillStyle = '#e67e22';
         ctx.font = '36px Arial';
         ctx.fillText(message, 500, 360);
@@ -130,13 +151,8 @@ const GameEngine = {
         }
     },
 
-    // 在 GameEngine.js 中加入動態載入功能
     loadMinigameCSS: function() {
-        // 檢查是否已載入
-        if (document.querySelector('link[href="css/minigame.css"]')) {
-            return;
-        }
-        
+        if (document.querySelector('link[href="css/minigame.css"]')) return;
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = 'css/minigame.css';
@@ -144,5 +160,4 @@ const GameEngine = {
     }
 };
 
-// 確保全域可用
 window.GameEngine = GameEngine;

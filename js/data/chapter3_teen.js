@@ -191,11 +191,23 @@ const chapter3TeenData = {
                                         }
                                     ]
                                 },
-                                successDialogue: {
-                                    name: '中藥行老闆',
-                                    text: '找對了！你媽媽有福氣，孩子這麼懂事。去吧！',
-                                    characterImage: 'assets/images/characters/herbal_owner.png'
-                                },
+                                successDialogue: [
+                                    {
+                                        name: '中藥行老闆',
+                                        text: '找對了！你好厲害！',
+                                        characterImage: 'assets/images/characters/herbal_owner.png'
+                                    },
+                                    {
+                                        name: '中藥行老闆',
+                                        text: '八角是星形的，黑胡椒是小黑粒，下次就知道怎麼分辨啦！',
+                                        characterImage: 'assets/images/characters/herbal_owner.png'
+                                    },
+                                    {
+                                        name: '中藥行老闆',
+                                        text: '拿回去給你媽媽，她一定會很開心的！',
+                                        characterImage: 'assets/images/characters/herbal_owner.png'
+                                    }
+                                ],
                                 gameConfig: {
                                     mode: 'matching',
                                     title: '🏮 中藥行 · 找香料',
@@ -278,11 +290,23 @@ const chapter3TeenData = {
                                         }
                                     ]
                                 },
-                                successDialogue: {
-                                    name: '刀行師傅',
-                                    text: '好了，磨利了！利刀才安全，半年來磨一次！',
-                                    characterImage: 'assets/images/characters/knife_smith.png'
-                                },
+                                successDialogue: [
+                                    {
+                                        name: '刀行師傅',
+                                        text: '好了，磨利了！利刀才安全，半年來磨一次！',
+                                        characterImage: 'assets/images/characters/knife_smith.png'
+                                    },
+                                    {
+                                        name: '刀行師傅',
+                                        text: '粗磨石整平缺口，細磨石打磨鋒利，最後用報紙驗刀，記住這個順序！',
+                                        characterImage: 'assets/images/characters/knife_smith.png'
+                                    },
+                                    {
+                                        name: '刀行師傅',
+                                        text: '刀磨得利，切菜才順手，也比較安全喔！',
+                                        characterImage: 'assets/images/characters/knife_smith.png'
+                                    }
+                                ],
                                 gameConfig: {
                                     mode: 'sorting',
                                     title: '🔪 刀行 · 磨刀順序',
@@ -363,11 +387,23 @@ const chapter3TeenData = {
                                         }
                                     ]
                                 },
-                                successDialogue: {
-                                    name: '雜貨店老闆娘',
-                                    text: '分得正確！你很懂香菇嘛！好，幫你包好了！辦桌那天有空來吃一桌～',
-                                    characterImage: 'assets/images/characters/grocery_owner.png'
-                                },
+                                successDialogue: [
+                                    {
+                                        name: '雜貨店老闆娘',
+                                        text: '分得正確！你很懂香菇嘛！',
+                                        characterImage: 'assets/images/characters/grocery_owner.png'
+                                    },
+                                    {
+                                        name: '雜貨店老闆娘',
+                                        text: '厚菇適合煮湯，久燉不爛湯頭鮮甜；薄菇和香菇碎適合煮飯，容易入味！',
+                                        characterImage: 'assets/images/characters/grocery_owner.png'
+                                    },
+                                    {
+                                        name: '雜貨店老闆娘',
+                                        text: '好，幫你包好了！辦桌那天有空來吃一桌～',
+                                        characterImage: 'assets/images/characters/grocery_owner.png'
+                                    }
+                                ],
                                 gameConfig: {
                                     mode: 'classifying',
                                     title: '🍄 雜貨店 · 香菇分類',

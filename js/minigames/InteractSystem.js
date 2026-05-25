@@ -4,6 +4,7 @@
 const InteractSystem = {
     // 狀態
     isActive: false,
+    _isCompleting: false,
     currentMode: 'matching',
     currentGameMode: 'adult',  // 儲存當前模式
     currentShop: null,
@@ -77,30 +78,46 @@ const InteractSystem = {
     
     // 開始遊戲
     start: function(config, onComplete) {
-        console.log('🎮 啟動互動系統:', config);
+        // ✅ 處理兩種呼叫方式：
+        // 方式1: start(config, onComplete)
+        // 方式2: start({ ...config, onComplete: fn })
+        let finalConfig = config;
+        let finalOnComplete = onComplete;
+        
+        // 如果第一個參數是物件且包含 onComplete 屬性，則從中提取
+        if (config && typeof config === 'object' && config.onComplete) {
+            finalOnComplete = config.onComplete;
+            finalConfig = { ...config };
+            delete finalConfig.onComplete;
+            console.log('📦 從 config 物件中提取 onComplete');
+        }
+        
+        console.log('🎮 啟動互動系統:', finalConfig);
+        console.log('🎮 onComplete 是否存在:', typeof finalOnComplete === 'function');
         
         this.currentGameMode = window.gameMode || 'adult';
-        this.currentMode = config.mode;
-        this.currentShop = config.shopName;
-        this.onComplete = onComplete;
+        this.currentMode = finalConfig.mode;
+        this.currentShop = finalConfig.shopName;
+        this.onComplete = finalOnComplete;
         this.isActive = true;
         this.matchedItems = [];
         this.progress = 0;
         this.currentMaxZIndex = 1000;
+        this._isCompleting = false;
         
-        this.items = config.items || [];
-        this.zones = config.zones || [];
-        this.totalMatches = config.totalMatches || this.items.length;
+        this.items = finalConfig.items || [];
+        this.zones = finalConfig.zones || [];
+        this.totalMatches = finalConfig.totalMatches || this.items.length;
         
         if (this.currentMode === 'sorting') {
-            this.sortingOrder = config.correctOrder || [];
+            this.sortingOrder = finalConfig.correctOrder || [];
             console.log('📋 排序模式正確順序:', this.sortingOrder);
         }
         
-        this.createUI(config);
+        this.createUI(finalConfig);
         this.createDragItems();
         this.createDropZones();
-        this.showHint(config.hint);
+        this.showHint(finalConfig.hint);
         
         window.addEventListener('resize', () => this.handleResize());
         this.handleResize();
@@ -582,6 +599,9 @@ const InteractSystem = {
             this.dragLabel.remove();
         }
         this.dragLabel = null;
+
+        const allLabels = document.querySelectorAll('.interact-drag-label');
+        allLabels.forEach(label => label.remove());
     },
     
     bringToFront: function(element) {
@@ -737,6 +757,7 @@ const InteractSystem = {
     
     // 重置到 gameArea 內的初始位置
     resetToGameArea: function(element) {
+        this.removeDragLabel();
         if (!this.gameAreaBounds) return;
         
         const sortedUnmatched = [];
@@ -771,6 +792,7 @@ const InteractSystem = {
     },
     
     onCorrectDrop: function(zoneEl, element, itemData) {
+        this.removeDragLabel();
         const cfg = this.layoutConfig;
         const zoneId = zoneEl.getAttribute('data-zone-id');
         
@@ -921,11 +943,16 @@ const InteractSystem = {
         setTimeout(() => hintDiv.remove(), 4000);
     },
     
-    // 完成遊戲（不要自動關閉，等待用戶點擊繼續）
+    // 完成遊戲
     completeGame: function() {
         console.log('🎉 遊戲完成！');
         this.isActive = false;
         
+        // 防止重複呼叫
+        if (this._isCompleting) return;
+        this._isCompleting = true;
+        
+        // 顯示完成訊息
         const completeMsg = document.createElement('div');
         completeMsg.textContent = '✨ 任務完成！ ✨';
         completeMsg.style.cssText = `
@@ -935,26 +962,38 @@ const InteractSystem = {
             transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.9);
             color: #ffd700;
-            padding: 25px 50px;
+            padding: 20px 40px;
             border-radius: 30px;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             z-index: 10000;
             border: 3px solid #e67e22;
             animation: popupAppear 0.3s ease-out;
             cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
         `;
         document.body.appendChild(completeMsg);
         
-        // ✅ 點擊完成訊息後才關閉並呼叫 onComplete
-        completeMsg.onclick = () => {
-            completeMsg.remove();
+        const finishGame = () => {
+            if (completeMsg && completeMsg.parentNode) completeMsg.remove();
             this.close();
             if (this.onComplete) {
                 console.log('📞 呼叫 onComplete(true)');
                 this.onComplete(true);
             }
+            this._isCompleting = false;
         };
+        
+        completeMsg.onclick = finishGame;
+        
+        // 2秒後自動關閉
+        setTimeout(() => {
+            if (completeMsg && completeMsg.parentNode) {
+                console.log('⏰ 自動關閉');
+                finishGame();
+            }
+        }, 2000);
     },
     
     // 關閉遊戲（修正：移除錯誤的方法呼叫）
