@@ -579,13 +579,54 @@ const CollectionSystem = {
         let gameStarted = false;
         
         if (typeof Typewriter !== 'undefined') {
-            // 預載角色圖片（如果需要）
+            // ✅ 需要載入的圖片清單
+            const imagesToLoad = [];
+            
+            // 角色圖片
+            if (dialogue.characterImage) {
+                imagesToLoad.push(dialogue.characterImage);
+            }
+            
+            // 背景圖片
+            if (dialogue.background) {
+                imagesToLoad.push(dialogue.background);
+            }
+            
+            const loadAllImages = () => {
+                if (imagesToLoad.length === 0) {
+                    // 沒有需要載入的圖片，直接顯示
+                    showDialogue();
+                    return;
+                }
+                
+                let loadedCount = 0;
+                const totalCount = imagesToLoad.length;
+                
+                imagesToLoad.forEach(src => {
+                    const img = new Image();
+                    img.onload = () => {
+                        loadedCount++;
+                        if (loadedCount >= totalCount) {
+                            // 所有圖片都載入完成，才顯示對話
+                            showDialogue();
+                        }
+                    };
+                    img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount >= totalCount) {
+                            showDialogue();
+                        }
+                    };
+                    img.src = src;
+                });
+            };
+            
             const showDialogue = () => {
                 // ✅ 圖片載入完成後，才切換到對話模式
                 this.showDialogueMode();
                 this.hideShopLoading();
                 
-                // ✅ 先切換背景（如果有設定）
+                // 切換背景
                 if (dialogue.background && window.DialogueSystem.gameBackground) {
                     window.DialogueSystem.gameBackground.style.backgroundImage = `url('${dialogue.background}')`;
                     window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
@@ -628,15 +669,9 @@ const CollectionSystem = {
                 }
             };
             
-            // 如果有角色圖片，先載入
-            if (dialogue.characterImage) {
-                const img = new Image();
-                img.onload = showDialogue;
-                img.onerror = showDialogue;
-                img.src = dialogue.characterImage;
-            } else {
-                showDialogue();
-            }
+            // 開始載入所有圖片
+            loadAllImages();
+            
         } else {
             if (onStartGame) onStartGame();
         }
@@ -955,13 +990,52 @@ const CollectionSystem = {
     // 顯示物品對話劇情（等待玩家點擊才繼續）
     showItemDialogue: function(dialogue, onComplete) {
         if (typeof Typewriter !== 'undefined') {
-            // 預載角色圖片（如果需要）
+            // ✅ 需要載入的圖片清單
+            const imagesToLoad = [];
+            
+            // 角色圖片
+            if (dialogue.characterImage) {
+                imagesToLoad.push(dialogue.characterImage);
+            }
+            
+            // 背景圖片
+            if (dialogue.background) {
+                imagesToLoad.push(dialogue.background);
+            }
+            
+            const loadAllImages = () => {
+                if (imagesToLoad.length === 0) {
+                    showDialogue();
+                    return;
+                }
+                
+                let loadedCount = 0;
+                const totalCount = imagesToLoad.length;
+                
+                imagesToLoad.forEach(src => {
+                    const img = new Image();
+                    img.onload = () => {
+                        loadedCount++;
+                        if (loadedCount >= totalCount) {
+                            showDialogue();
+                        }
+                    };
+                    img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount >= totalCount) {
+                            showDialogue();
+                        }
+                    };
+                    img.src = src;
+                });
+            };
+            
             const showDialogue = () => {
                 // ✅ 圖片載入完成後，才切換到對話模式
                 this.showDialogueMode();
                 this.hideShopLoading();
                 
-                // ✅ 先切換背景（如果有設定）
+                // 切換背景
                 if (dialogue.background && window.DialogueSystem.gameBackground) {
                     window.DialogueSystem.gameBackground.style.backgroundImage = `url('${dialogue.background}')`;
                     window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
@@ -1006,15 +1080,9 @@ const CollectionSystem = {
                 }
             };
             
-            // 如果有角色圖片，先載入
-            if (dialogue.characterImage) {
-                const img = new Image();
-                img.onload = showDialogue;
-                img.onerror = showDialogue;
-                img.src = dialogue.characterImage;
-            } else {
-                showDialogue();
-            }
+            // 開始載入所有圖片
+            loadAllImages();
+            
         } else {
             if (onComplete) onComplete();
         }
