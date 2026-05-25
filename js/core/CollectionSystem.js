@@ -23,6 +23,10 @@ const CollectionSystem = {
     // 物品資料
     items: [],
     
+    // Loading 相關
+    simpleLoading: null,
+    shopLoading: null,
+    
     // 初始化
     init: function() {
         console.log('🗺️ CollectionSystem 初始化');
@@ -204,6 +208,136 @@ const CollectionSystem = {
         });
     },
     
+    // ✅ 收集所有需要預載的圖片
+    collectImagesToPreload: function(config) {
+        const imagesToPreload = [];
+        
+        // 1. 地圖背景
+        if (config.background) {
+            imagesToPreload.push(config.background);
+        }
+        
+        // 2. 物品圖片（彩色和陰影）
+        if (config.items) {
+            config.items.forEach(item => {
+                if (item.colorImage) imagesToPreload.push(item.colorImage);
+                if (item.shadowImage) imagesToPreload.push(item.shadowImage);
+            });
+        }
+        
+        // 3. 店家對話圖片（dialogue 中的 characterImage）
+        if (config.hotspots) {
+            config.hotspots.forEach(hotspot => {
+                if (hotspot.dialogue && hotspot.dialogue.characterImage) {
+                    imagesToPreload.push(hotspot.dialogue.characterImage);
+                }
+                if (hotspot.successDialogue) {
+                    let dialogues = hotspot.successDialogue;
+                    if (!Array.isArray(dialogues)) dialogues = [dialogues];
+                    dialogues.forEach(d => {
+                        if (d.characterImage) imagesToPreload.push(d.characterImage);
+                    });
+                }
+            });
+        }
+        
+        // 去重
+        return [...new Set(imagesToPreload)];
+    },
+    
+    // ✅ 顯示簡單的 loading 提示
+    showSimpleLoading: function() {
+        if (this.simpleLoading) return;
+        
+        this.simpleLoading = document.createElement('div');
+        this.simpleLoading.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffd700;
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-size: 20px;
+            z-index: 3100;
+            text-align: center;
+            border: 2px solid #e67e22;
+            font-family: 'LXGW WenKai TC', '標楷體', sans-serif;
+        `;
+        this.simpleLoading.innerHTML = '🎮 載入中，請稍候...';
+        this.overlay.appendChild(this.simpleLoading);
+    },
+    
+    // ✅ 隱藏簡單的 loading 提示
+    hideSimpleLoading: function() {
+        if (this.simpleLoading) {
+            this.simpleLoading.remove();
+            this.simpleLoading = null;
+        }
+    },
+
+    // ✅ 顯示店家 loading（地圖變暗 + 右下角跳動文字）- 不切換畫面
+    showShopLoading: function() {
+        if (this.shopLoading) return;
+        
+        // 建立 loading 容器
+        this.shopLoading = document.createElement('div');
+        this.shopLoading.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3040;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            pointer-events: none;  /* 讓點擊穿透，但其實 loading 期間不應該有點擊 */
+        `;
+        
+        // 建立跳動文字
+        const loadingText = document.createElement('div');
+        loadingText.textContent = 'Loading...';
+        loadingText.style.cssText = `
+            color: #ffd700;
+            font-size: 18px;
+            font-family: 'LXGW WenKai TC', '標楷體', monospace;
+            margin: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 30px;
+            border: 1px solid #e67e22;
+            animation: loadingJump 0.8s ease-in-out infinite;
+            letter-spacing: 2px;
+        `;
+        
+        this.shopLoading.appendChild(loadingText);
+        this.overlay.appendChild(this.shopLoading);
+        
+        // 加入跳動動畫（如果還沒有）
+        if (!document.getElementById('loading-jump-style')) {
+            const jumpStyle = document.createElement('style');
+            jumpStyle.id = 'loading-jump-style';
+            jumpStyle.textContent = `
+                @keyframes loadingJump {
+                    0%, 100% { transform: translateY(0); opacity: 0.7; }
+                    50% { transform: translateY(-8px); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(jumpStyle);
+        }
+    },
+
+    // ✅ 新增：隱藏店家 loading
+    hideShopLoading: function() {
+        if (this.shopLoading) {
+            this.shopLoading.remove();
+            this.shopLoading = null;
+        }
+    },
+    
     // 開啟蒐集模式
     open: function(config, onComplete) {
         console.log('🗺️ 開啟蒐集模式:', config);
@@ -225,7 +359,7 @@ const CollectionSystem = {
         this.onCompleteCallback = onComplete;
         this.isActive = true;
 
-        // ✅ 更新錢袋顯示
+        // 更新錢袋顯示
         this.updateMoneyDisplay();
         
         // 設定地圖背景
@@ -241,12 +375,32 @@ const CollectionSystem = {
         // 建立定位點
         this.buildHotspots(config.hotspots);
         
-        // 顯示主畫面（地圖模式）
-        this.showMapMode();
+        // 顯示 overlay（先顯示 loading）
+        this.overlay.style.display = 'block';
         
-        // 顯示前言劇情（如果有）
-        if (config.introDialogue) {
-            this.showIntroDialogue(config.introDialogue);
+        // ✅ 收集所有需要預載的圖片
+        const imagesToPreload = this.collectImagesToPreload(config);
+        console.log(`📦 需要預載入 ${imagesToPreload.length} 張圖片`);
+        
+        if (typeof LoadingManager !== 'undefined' && imagesToPreload.length > 0) {
+            // 顯示 loading 提示
+            this.showSimpleLoading();
+            
+            // 使用 LoadingManager 預載入所有圖片
+            LoadingManager.showAndLoad(imagesToPreload, () => {
+                console.log('✅ 所有圖片預載完成');
+                this.hideSimpleLoading();
+                this.showMapMode();
+                if (config.introDialogue) {
+                    this.showIntroDialogue(config.introDialogue);
+                }
+            });
+        } else {
+            // 沒有需要預載的圖片，直接顯示
+            this.showMapMode();
+            if (config.introDialogue) {
+                this.showIntroDialogue(config.introDialogue);
+            }
         }
         
         // 暫停對話系統點擊
@@ -399,7 +553,8 @@ const CollectionSystem = {
         console.log(`📍 點擊定位點 ${itemIndex + 1}`);
         this.currentCollectingIndex = itemIndex;
         
-        this.showDialogueMode();
+        // ✅ 改為：顯示 loading 遮罩在地圖上
+        this.showShopLoading();
         
         // ✅ 檢查對話是否有選項
         if (hotspot.dialogue && hotspot.dialogue.options && hotspot.dialogue.options.length > 0) {
@@ -424,40 +579,63 @@ const CollectionSystem = {
         let gameStarted = false;
         
         if (typeof Typewriter !== 'undefined') {
-            // 顯示對話
-            Typewriter.showDialogue(
-                dialogue.name || '老闆',
-                dialogue.text,
-                dialogue.characterImage,
-                null,
-                'left',
-                ''
-            );
-            
-            const startGame = () => {
-                if (gameStarted) return;
-                gameStarted = true;
-                console.log('進入遊戲');
-                if (onStartGame) onStartGame();
+            // 預載角色圖片（如果需要）
+            const showDialogue = () => {
+                // ✅ 圖片載入完成後，才切換到對話模式
+                this.showDialogueMode();
+                this.hideShopLoading();
+                
+                // ✅ 先切換背景（如果有設定）
+                if (dialogue.background && window.DialogueSystem.gameBackground) {
+                    window.DialogueSystem.gameBackground.style.backgroundImage = `url('${dialogue.background}')`;
+                    window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
+                    window.DialogueSystem.gameBackground.style.backgroundPosition = 'center';
+                }
+                
+                // 顯示對話
+                Typewriter.showDialogue(
+                    dialogue.name || '老闆',
+                    dialogue.text,
+                    dialogue.characterImage,
+                    null,
+                    'left',
+                    ''
+                );
+                
+                const startGame = () => {
+                    if (gameStarted) return;
+                    gameStarted = true;
+                    console.log('進入遊戲');
+                    if (onStartGame) onStartGame();
+                };
+                
+                // 監聽對話層點擊
+                if (this.dialogueOverlay) {
+                    const onClick = () => {
+                        this.dialogueOverlay.removeEventListener('click', onClick);
+                        clearTimeout(timeoutId);
+                        startGame();
+                    };
+                    this.dialogueOverlay.addEventListener('click', onClick);
+                    
+                    const timeoutId = setTimeout(() => {
+                        this.dialogueOverlay.removeEventListener('click', onClick);
+                        console.log('超時，強制進入遊戲');
+                        startGame();
+                    }, 30000);
+                } else {
+                    setTimeout(() => startGame(), 500);
+                }
             };
             
-            // 監聽對話層點擊
-            if (this.dialogueOverlay) {
-                const onClick = () => {
-                    this.dialogueOverlay.removeEventListener('click', onClick);
-                    clearTimeout(timeoutId);
-                    startGame();
-                };
-                this.dialogueOverlay.addEventListener('click', onClick);
-                
-                // 超時備用（30秒）
-                const timeoutId = setTimeout(() => {
-                    this.dialogueOverlay.removeEventListener('click', onClick);
-                    console.log('超時，強制進入遊戲');
-                    startGame();
-                }, 30000);
+            // 如果有角色圖片，先載入
+            if (dialogue.characterImage) {
+                const img = new Image();
+                img.onload = showDialogue;
+                img.onerror = showDialogue;
+                img.src = dialogue.characterImage;
             } else {
-                setTimeout(() => startGame(), 500);
+                showDialogue();
             }
         } else {
             if (onStartGame) onStartGame();
@@ -549,22 +727,38 @@ const CollectionSystem = {
         this.playCollectionAnimationKeepDialogue(itemIndex);
     },
 
-    // 依序顯示對話（每句都會等玩家點擊）
+    // 依序顯示對話（每句都會等玩家點擊）- 使用 DialogueSystem
     showDialogueSequence: async function(dialogues, onComplete) {
         for (let i = 0; i < dialogues.length; i++) {
             const dialogue = dialogues[i];
             
+            // ✅ 建立臨時對話行，讓 DialogueSystem 處理
+            const tempLine = {
+                name: dialogue.name || '阿斗仔',
+                text: dialogue.text,
+                characterImage: dialogue.characterImage || null,
+                background: dialogue.background || null,
+                namePosition: 'left'
+            };
+            
+            // 切換背景（DialogueSystem 的方式）
+            if (tempLine.background && window.DialogueSystem.gameBackground) {
+                window.DialogueSystem.gameBackground.style.backgroundImage = `url('${tempLine.background}')`;
+                window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
+                window.DialogueSystem.gameBackground.style.backgroundPosition = 'center';
+            }
+            
             // 顯示對話
-            await Typewriter.showDialogue(
-                dialogue.name || '阿斗仔',
-                dialogue.text,
-                dialogue.characterImage || null,
+            await window.DialogueSystem.typewriter.showDialogue(
+                tempLine.name,
+                tempLine.text,
+                tempLine.characterImage,
                 null,
-                'left',
+                tempLine.namePosition,
                 ''
             );
             
-            // ✅ 手動等待玩家點擊
+            // 等待玩家點擊
             await new Promise((resolve) => {
                 const onClick = () => {
                     document.removeEventListener('click', onClick);
@@ -761,43 +955,65 @@ const CollectionSystem = {
     // 顯示物品對話劇情（等待玩家點擊才繼續）
     showItemDialogue: function(dialogue, onComplete) {
         if (typeof Typewriter !== 'undefined') {
-            // 顯示對話
-            Typewriter.showDialogue(
-                dialogue.name || '阿斗仔',
-                dialogue.text,
-                dialogue.characterImage,
-                null,
-                'left',
-                ''
-            );
-            
-            // ✅ 使用 MutationObserver 監聽對話框是否被隱藏（玩家點擊後對話框會隱藏）
-            const dialogBox = document.getElementById('dialog-box');
-            if (dialogBox) {
-                const observer = new MutationObserver((mutations) => {
-                    for (const mutation of mutations) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                            if (dialogBox.style.display === 'none') {
-                                observer.disconnect();
-                                console.log('對話框已關閉，繼續流程');
-                                if (onComplete) onComplete();
+            // 預載角色圖片（如果需要）
+            const showDialogue = () => {
+                // ✅ 圖片載入完成後，才切換到對話模式
+                this.showDialogueMode();
+                this.hideShopLoading();
+                
+                // ✅ 先切換背景（如果有設定）
+                if (dialogue.background && window.DialogueSystem.gameBackground) {
+                    window.DialogueSystem.gameBackground.style.backgroundImage = `url('${dialogue.background}')`;
+                    window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
+                    window.DialogueSystem.gameBackground.style.backgroundPosition = 'center';
+                }
+                
+                // 顯示對話
+                Typewriter.showDialogue(
+                    dialogue.name || '阿斗仔',
+                    dialogue.text,
+                    dialogue.characterImage,
+                    null,
+                    'left',
+                    ''
+                );
+                
+                // 使用 MutationObserver 監聽對話框是否被隱藏
+                const dialogBox = document.getElementById('dialog-box');
+                if (dialogBox) {
+                    const observer = new MutationObserver((mutations) => {
+                        for (const mutation of mutations) {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                                if (dialogBox.style.display === 'none') {
+                                    observer.disconnect();
+                                    console.log('對話框已關閉，繼續流程');
+                                    if (onComplete) onComplete();
+                                }
                             }
                         }
-                    }
-                });
-                observer.observe(dialogBox, { attributes: true });
-                
-                // 超時備用（15秒）
-                setTimeout(() => {
-                    observer.disconnect();
-                    console.log('超時，強制繼續');
-                    if (onComplete) onComplete();
-                }, 15000);
+                    });
+                    observer.observe(dialogBox, { attributes: true });
+                    
+                    setTimeout(() => {
+                        observer.disconnect();
+                        console.log('超時，強制繼續');
+                        if (onComplete) onComplete();
+                    }, 15000);
+                } else {
+                    setTimeout(() => {
+                        if (onComplete) onComplete();
+                    }, 500);
+                }
+            };
+            
+            // 如果有角色圖片，先載入
+            if (dialogue.characterImage) {
+                const img = new Image();
+                img.onload = showDialogue;
+                img.onerror = showDialogue;
+                img.src = dialogue.characterImage;
             } else {
-                // 找不到對話框，延遲後繼續
-                setTimeout(() => {
-                    if (onComplete) onComplete();
-                }, 500);
+                showDialogue();
             }
         } else {
             if (onComplete) onComplete();
@@ -833,6 +1049,9 @@ const CollectionSystem = {
         if (this.overlay) {
             this.overlay.style.display = 'none';
         }
+        
+        // 確保 loading 也被隱藏
+        this.hideSimpleLoading();
         
         if (window.DialogueSystem && window.DialogueSystem.gameContainer) {
             window.DialogueSystem.gameContainer.onclick = this.savedGameClickHandler;

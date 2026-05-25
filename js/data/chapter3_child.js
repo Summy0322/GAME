@@ -1,7 +1,7 @@
 // js/data/chapter3_child.js
 const chapter3ChildData = {
     id: 'chapter3_child',
-    background: 'assets/images/ch3/background.png',
+    background: 'assets/images/ch3/kitchen.png',
     
     // 玩家名稱
     playerName: '小旅人',
@@ -183,6 +183,7 @@ const chapter3ChildData = {
                                     name: '中藥行老闆',
                                     text: '哦！要買八角和黑胡椒啊？來，我幫你找找看！你知道它們長什麼樣子嗎？',
                                     characterImage: 'assets/images/characters/herbal_owner.png',
+                                    background: 'assets/images/ch3/shop_herbal.png',
                                     options: [
                                         {
                                             text: '🔍 開始尋找香料',
@@ -194,17 +195,20 @@ const chapter3ChildData = {
                                     {
                                         name: '中藥行老闆',
                                         text: '找對了！你好厲害！',
-                                        characterImage: 'assets/images/characters/herbal_owner.png'
+                                        characterImage: 'assets/images/characters/herbal_owner.png',
+                                        background: 'assets/images/ch3/shop_herbal.png'
                                     },
                                     {
                                         name: '中藥行老闆',
                                         text: '八角和黑胡椒長得不一樣，下次你就認得啦！',
-                                        characterImage: 'assets/images/characters/herbal_owner.png'
+                                        characterImage: 'assets/images/characters/herbal_owner.png',
+                                        background: 'assets/images/ch3/shop_herbal.png'
                                     },
                                     {
                                         name: '中藥行老闆',
                                         text: '拿回去給媽媽煮高麗菜飯，一定會很好吃！',
-                                        characterImage: 'assets/images/characters/herbal_owner.png'
+                                        characterImage: 'assets/images/characters/herbal_owner.png',
+                                        background: 'assets/images/ch3/shop_herbal.png'
                                     }
                                 ],
                                 gameConfig: {
@@ -282,6 +286,7 @@ const chapter3ChildData = {
                                     name: '刀行師傅',
                                     text: '來看看……菜刀鈍了。磨刀有順序喔，你來幫我排排看！',
                                     characterImage: 'assets/images/characters/knife_smith.png',
+                                    background: 'assets/images/ch3/shop_knife.png',
                                     options: [
                                         {
                                             text: '🔪 開始磨刀',
@@ -293,17 +298,20 @@ const chapter3ChildData = {
                                     {
                                         name: '刀行師傅',
                                         text: '順序正確！磨好了！',
-                                        characterImage: 'assets/images/characters/knife_smith.png'
+                                        characterImage: 'assets/images/characters/knife_smith.png',
+                                        background: 'assets/images/ch3/shop_knife.png'
                                     },
                                     {
                                         name: '刀行師傅',
                                         text: '要先粗磨石，再細磨石，最後用報紙試試看有沒有利！',
-                                        characterImage: 'assets/images/characters/knife_smith.png'
+                                        characterImage: 'assets/images/characters/knife_smith.png',
+                                        background: 'assets/images/ch3/shop_knife.png'
                                     },
                                     {
                                         name: '刀行師傅',
                                         text: '下次菜刀鈍了，再拿來給師傅磨喔！',
-                                        characterImage: 'assets/images/characters/knife_smith.png'
+                                        characterImage: 'assets/images/characters/knife_smith.png',
+                                        background: 'assets/images/ch3/shop_knife.png'
                                     }
                                 ],
                                 gameConfig: {
@@ -379,6 +387,7 @@ const chapter3ChildData = {
                                     name: '雜貨店老闆娘',
                                     text: '乾香菇有分等級喔！你來幫我分類，哪些適合煮湯，哪些適合煮飯！',
                                     characterImage: 'assets/images/characters/grocery_owner.png',
+                                    background: 'assets/images/ch3/shop_grocery.png',
                                     options: [
                                         {
                                             text: '🍄 開始分類香菇',
@@ -390,17 +399,20 @@ const chapter3ChildData = {
                                     {
                                         name: '雜貨店老闆娘',
                                         text: '分對了！你好聰明！',
-                                        characterImage: 'assets/images/characters/grocery_owner.png'
+                                        characterImage: 'assets/images/characters/grocery_owner.png',
+                                        background: 'assets/images/ch3/shop_grocery.png'
                                     },
                                     {
                                         name: '雜貨店老闆娘',
                                         text: '厚香菇煮湯，薄香菇炒飯，記住了嗎？',
-                                        characterImage: 'assets/images/characters/grocery_owner.png'
+                                        characterImage: 'assets/images/characters/grocery_owner.png',
+                                        background: 'assets/images/ch3/shop_grocery.png'
                                     },
                                     {
                                         name: '雜貨店老闆娘',
                                         text: '拿回去給媽媽，她一定會稱讚你的！',
-                                        characterImage: 'assets/images/characters/grocery_owner.png'
+                                        characterImage: 'assets/images/characters/grocery_owner.png',
+                                        background: 'assets/images/ch3/shop_grocery.png'
                                     }
                                 ],
                                 gameConfig: {
@@ -473,23 +485,25 @@ const chapter3ChildData = {
         {
             id: 'check_complete',
             name: '阿斗仔',
-            text: function() {
-                const allComplete = window.Chapter3_Child?.isAllComplete();
-                if (allComplete) {
-                    return '東西都買齊了！我們回去找媽媽吧！';
-                } else {
-                    return '還有東西沒買完，再去逛逛吧！';
-                }
-            },
+            text:'東西都買齊了！我們去廟裡找媽媽吧！',
+            // text: function() {
+            //     const allComplete = window.Chapter3_Teen?.isAllComplete();
+            //     if (allComplete) {
+            //         return '東西都買齊了！我們回去找媽媽吧！';
+            //     } else {
+            //         return '還有東西沒買完，再去逛逛吧！';
+            //     }
+            // },
             characterImage: 'assets/images/characters/阿斗仔.png',
-            options: function() {
-                const allComplete = window.Chapter3_Child?.isAllComplete();
-                if (allComplete) {
-                    return [{ text: '回去找媽媽', action: 'goto', target: 'ending' }];
-                } else {
-                    return [{ text: '繼續逛逛', action: 'goto', target: 'collection_intro' }];
-                }
-            }
+            background: 'assets/images/ch3/kitchen.png',
+            // options: function() {
+            //     const allComplete = window.Chapter3_Teen?.isAllComplete();
+            //     if (allComplete) {
+            //         return [{ text: '回去找媽媽', action: 'goto', target: 'ending' }];
+            //     } else {
+            //         return [{ text: '繼續逛逛', action: 'goto', target: 'collection_intro' }];
+            //     }
+            // }
         },
         
         // ========== 結局 ==========
@@ -501,6 +515,7 @@ const chapter3ChildData = {
                 return `${name}！都買回來了！你好棒！準備開灶，感謝蘇王爺，感謝今年沒有水患，大家平安！`;
             },
             characterImage: 'assets/images/characters/mom.png',
+            background: 'assets/images/ch3/temple.png',
             next: 'final_message'
         },
         
@@ -508,7 +523,8 @@ const chapter3ChildData = {
             id: 'final_message',
             name: '阿斗仔',
             text: '因為辦桌，香料帶旺了中藥行；因為辦桌，刀行師傅幫大家磨刀；因為辦桌，雜貨店的乾貨一掃而空。一場呷客，串起了整條街的生計，這就是北斗紅磚市場商街的故事。',
-            characterImage: 'assets/images/characters/阿斗仔.png'
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            background: 'assets/images/ch3/temple.png',
         }
     ]
 };
