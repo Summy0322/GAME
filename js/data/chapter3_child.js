@@ -175,8 +175,8 @@ const chapter3ChildData = {
                         hotspots: [
                             // ========== 中藥行 ==========
                             {
-                                x: 25,
-                                y: 40,
+                                x: 20,
+                                y: 55,
                                 shopId: 'herbal',
                                 shopName: '中藥行',
                                 dialogue: {
@@ -278,7 +278,7 @@ const chapter3ChildData = {
                             },
                             // ========== 刀行 ==========
                             {
-                                x: 60,
+                                x: 50,
                                 y: 55,
                                 shopId: 'knife',
                                 shopName: '刀行',
@@ -379,8 +379,8 @@ const chapter3ChildData = {
                             },
                             // ========== 雜貨店 ==========
                             {
-                                x: 45,
-                                y: 75,
+                                x: 80,
+                                y: 55,
                                 shopId: 'grocery',
                                 shopName: '雜貨店',
                                 dialogue: {

@@ -85,54 +85,55 @@ const CollectionSystem = {
         this.itemsDisplayContainer.className = 'collection-items-bar';
         this.itemsDisplayContainer.style.cssText = `
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 2vh;
+            right: 2vh;
             display: flex;
-            gap: 12px;
+            gap: 1.5vh;
             z-index: 3050;
         `;
 
-        // ✅ 錢袋顯示區域
+        // ✅ 錢袋顯示區域（響應式）
         this.moneyDisplay = document.createElement('div');
         this.moneyDisplay.className = 'collection-money-display';
         this.moneyDisplay.style.cssText = `
             position: absolute;
-            top: 15px;
-            right: 200px;
+            top: 5vh;
+            right: 67vh;
             background: rgba(0,0,0,0.6);
-            border-radius: 30px;
-            padding: 8px 16px;
+            border-radius: 5vh;
+            padding: 1vh 2vh;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 1vh;
             z-index: 3050;
-            border: 1px solid #ffd700;
+            border: 0.2vh solid #ffd700;
         `;
         this.moneyDisplay.innerHTML = `
-            <span style="font-size: 20px;">💰</span>
-            <span id="collection-money-amount" style="color: #ffd700; font-size: 18px; font-weight: bold;">20</span>
-            <span style="color: white; font-size: 14px;">枚</span>
+            <span style="font-size: 8vh;">💰</span>
+            <span id="collection-money-amount" style="color: #ffd700; font-size: 8vh; font-weight: bold;">20</span>
+            <span style="color: white; font-size: 8vh;">枚</span>
         `;
         
-        // 完成按鈕
+        // 完成按鈕（響應式）
         this.completeBtn = document.createElement('button');
         this.completeBtn.className = 'collection-complete-btn';
         this.completeBtn.style.cssText = `
             display: none;
             position: absolute;
-            bottom: 30px;
+            bottom: 5vh;
             left: 50%;
             transform: translateX(-50%);
-            padding: 12px 30px;
+            padding: 1.5vh 4vh;
             background: linear-gradient(145deg, #e67e22, #d35400);
             color: white;
             border: none;
-            border-radius: 30px;
-            font-size: 18px;
+            border-radius: 5vh;
+            font-size: 5vh;
             cursor: pointer;
             z-index: 3050;
             font-weight: bold;
             font-family: 'LXGW WenKai TC', '標楷體', sans-serif;
+            white-space: nowrap;
         `;
         this.completeBtn.textContent = '完成蒐集';
         this.completeBtn.onclick = () => this.onComplete();
@@ -228,7 +229,23 @@ const CollectionSystem = {
             });
         }
         
-        // 3. 店家對話圖片（dialogue 中的 characterImage 和 background）
+        // ✅ 3. 店家小圖片（地圖上的地標）
+        if (config.hotspots) {
+            const shopImages = {
+                'herbal': 'assets/images/ch3/shop_herbal_s.png',
+                'knife': 'assets/images/ch3/shop_knife_s.png',
+                'grocery': 'assets/images/ch3/shop_grocery_s.png'
+            };
+            
+            config.hotspots.forEach(hotspot => {
+                const shopImage = shopImages[hotspot.shopId];
+                if (shopImage) {
+                    imagesToPreload.push(shopImage);
+                }
+            });
+        }
+        
+        // 4. 店家對話圖片（dialogue 中的 characterImage 和 background）
         if (config.hotspots) {
             config.hotspots.forEach(hotspot => {
                 // 角色圖片
@@ -511,18 +528,21 @@ const CollectionSystem = {
         }
     },
     
-    // 建立右上角物品顯示區
+    // 建立右上角物品顯示區（響應式）
     buildItemsDisplay: function() {
         if (!this.itemsDisplayContainer) return;
         
         this.itemsDisplayContainer.innerHTML = '';
         
+        // ✅ 響應式圖片大小（使用 vh）
+        const itemSize = '20vh';
+        
         this.items.forEach((item, index) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = `collection-item-slot item-${index}`;
             itemDiv.style.cssText = `
-                width: 50px;
-                height: 50px;
+                width: ${itemSize};
+                height: ${itemSize};
                 position: relative;
                 cursor: default;
             `;
@@ -530,8 +550,8 @@ const CollectionSystem = {
             const shadowImg = document.createElement('img');
             shadowImg.src = item.shadowImage;
             shadowImg.style.cssText = `
-                width: 50px;
-                height: 50px;
+                width: 100%;
+                height: 100%;
                 object-fit: contain;
                 filter: brightness(0) invert(0.3);
                 opacity: 0.7;
@@ -542,8 +562,8 @@ const CollectionSystem = {
             const colorImg = document.createElement('img');
             colorImg.src = item.colorImage;
             colorImg.style.cssText = `
-                width: 50px;
-                height: 50px;
+                width: 100%;
+                height: 100%;
                 object-fit: contain;
                 display: none;
                 position: absolute;
@@ -558,33 +578,76 @@ const CollectionSystem = {
         });
     },
     
-    // 建立定位點
+    // 建立定位點（使用店家小圖片）- 使用 vh 單位
     buildHotspots: function(hotspots) {
         if (!this.hotspotsContainer) return;
         
         this.hotspotsContainer.innerHTML = '';
         
+        // 店家圖片對應
+        const shopImages = {
+            'herbal': 'assets/images/ch3/shop_herbal_s.png',
+            'knife': 'assets/images/ch3/shop_knife_s.png',
+            'grocery': 'assets/images/ch3/shop_grocery_s.png'
+        };
+        
+        // ✅ 使用 vh 單位，圖片大小隨螢幕高度縮放
+        // 6vh 表示螢幕高度的 6%，在不同螢幕上會等比縮放
+        const imageSize = '50vh';  // 可調整這個值來改變大小
+        
         hotspots.forEach((hotspot, index) => {
             const hotspotDiv = document.createElement('div');
             hotspotDiv.className = `collection-hotspot hotspot-${index}`;
-            hotspotDiv.style.cssText = `
-                position: absolute;
-                left: ${hotspot.x}%;
-                top: ${hotspot.y}%;
-                width: 50px;
-                height: 50px;
-                transform: translate(-50%, -50%);
-                cursor: pointer;
-                background: rgba(230,126,34,0.7);
-                border: 3px solid #e67e22;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.2s;
-                animation: pulse 1.5s infinite;
-            `;
-            hotspotDiv.innerHTML = '<span style="color: white; font-size: 24px;">📍</span>';
+            
+            // 取得對應的店家圖片
+            const shopImage = shopImages[hotspot.shopId] || null;
+            
+            if (shopImage) {
+                // 使用圖片
+                hotspotDiv.style.cssText = `
+                    position: absolute;
+                    left: ${hotspot.x}%;
+                    top: ${hotspot.y}%;
+                    width: ${imageSize};
+                    height: ${imageSize};
+                    transform: translate(-50%, -50%);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+                `;
+                hotspotDiv.innerHTML = `<img src="${shopImage}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;">`;
+                
+                // 添加懸停效果
+                hotspotDiv.addEventListener('mouseenter', () => {
+                    hotspotDiv.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                    hotspotDiv.style.filter = 'drop-shadow(0 6px 12px rgba(0,0,0,0.4))';
+                });
+                hotspotDiv.addEventListener('mouseleave', () => {
+                    hotspotDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+                    hotspotDiv.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
+                });
+            } else {
+                // 備用：如果沒有圖片，顯示原來的圓點
+                hotspotDiv.style.cssText = `
+                    position: absolute;
+                    left: ${hotspot.x}%;
+                    top: ${hotspot.y}%;
+                    width: 40px;
+                    height: 40px;
+                    transform: translate(-50%, -50%);
+                    cursor: pointer;
+                    background: rgba(230,126,34,0.7);
+                    border: 3px solid #e67e22;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                    animation: pulse 1.5s infinite;
+                `;
+                hotspotDiv.innerHTML = '<span style="color: white; font-size: 24px;">📍</span>';
+            }
+            
             hotspotDiv.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (this.isAnimating) return;
@@ -784,6 +847,8 @@ const CollectionSystem = {
                         if (!canComplete) {
                             this.showMessage('銅板不足！', '#ff6666');
                             this.showMapMode();
+                            // ✅ 釋放標記
+                            this.isProcessingShop = false;
                             return;
                         }
                         
@@ -791,13 +856,11 @@ const CollectionSystem = {
                         this.showDialogueMode();
                         
                         if (hotspot.successDialogue) {
-                            // 把 successDialogue 統一轉成陣列處理
                             let dialogues = hotspot.successDialogue;
                             if (!Array.isArray(dialogues)) {
                                 dialogues = [dialogues];
                             }
                             
-                            // 依序顯示對話
                             this.showDialogueSequence(dialogues, () => {
                                 console.log('📖 所有成功對話完成，開始蒐集物品');
                                 this.collectItemWithKeepDialogue(itemIndex);
@@ -808,13 +871,15 @@ const CollectionSystem = {
                             this.isProcessingShop = false;
                         }
                     } else {
+                        // ✅ 失敗時也要釋放標記和清理
                         this.showMessage('再試一次吧！', '#ff6666');
                         this.showMapMode();
+                        this.hideShopLoading();  // 確保 loading 被隱藏
+                        this.isProcessingShop = false;  // ✅ 釋放標記
                     }
                 }
             });
         } else {
-            // 備用方案...
             console.error('❌ GameEngine 未定義');
             this.isGameStarting = false;
             this.collectItem(itemIndex);
@@ -1182,6 +1247,9 @@ const CollectionSystem = {
         console.log('🗺️ 關閉蒐集模式');
         
         this.isActive = false;
+        this.isProcessingShop = false;
+        this.isGameStarting = false;
+
         if (this.overlay) {
             this.overlay.style.display = 'none';
         }

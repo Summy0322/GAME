@@ -175,8 +175,8 @@ const chapter3TeenData = {
                         hotspots: [
                             // ========== 中藥行 ==========
                             {
-                                x: 25,
-                                y: 40,
+                                x: 20,
+                                y: 55,
                                 shopId: 'herbal',
                                 shopName: '中藥行',
                                 // ✅ 改用標準的對話 + 選項
@@ -279,7 +279,7 @@ const chapter3TeenData = {
                             },
                             // ========== 刀行 ==========
                             {
-                                x: 60,
+                                x: 50,
                                 y: 55,
                                 shopId: 'knife',
                                 shopName: '刀行',
@@ -380,8 +380,8 @@ const chapter3TeenData = {
                             },
                             // ========== 雜貨店 ==========
                             {
-                                x: 45,
-                                y: 75,
+                                x: 80,
+                                y: 55,
                                 shopId: 'grocery',
                                 shopName: '雜貨店',
                                 dialogue: {
