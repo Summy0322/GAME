@@ -27,7 +27,7 @@ const CollectionSystem = {
     simpleLoading: null,
     shopLoading: null,
     
-    // 初始化
+    // ✅ 初始化
     init: function() {
         console.log('🗺️ CollectionSystem 初始化');
         this.createDOM();
@@ -130,6 +130,8 @@ const CollectionSystem = {
             font-size: 18px;
             cursor: pointer;
             z-index: 3050;
+            font-weight: bold;
+            font-family: 'LXGW WenKai TC', '標楷體', sans-serif;
         `;
         this.completeBtn.textContent = '完成蒐集';
         this.completeBtn.onclick = () => this.onComplete();
@@ -225,17 +227,23 @@ const CollectionSystem = {
             });
         }
         
-        // 3. 店家對話圖片（dialogue 中的 characterImage）
+        // 3. 店家對話圖片（dialogue 中的 characterImage 和 background）
         if (config.hotspots) {
             config.hotspots.forEach(hotspot => {
+                // 角色圖片
                 if (hotspot.dialogue && hotspot.dialogue.characterImage) {
                     imagesToPreload.push(hotspot.dialogue.characterImage);
+                }
+                // 背景圖片
+                if (hotspot.dialogue && hotspot.dialogue.background) {
+                    imagesToPreload.push(hotspot.dialogue.background);
                 }
                 if (hotspot.successDialogue) {
                     let dialogues = hotspot.successDialogue;
                     if (!Array.isArray(dialogues)) dialogues = [dialogues];
                     dialogues.forEach(d => {
                         if (d.characterImage) imagesToPreload.push(d.characterImage);
+                        if (d.background) imagesToPreload.push(d.background);
                     });
                 }
             });
@@ -260,13 +268,17 @@ const CollectionSystem = {
             padding: 20px 40px;
             border-radius: 16px;
             font-size: 20px;
-            z-index: 3100;
+            z-index: 9999;
             text-align: center;
             border: 2px solid #e67e22;
             font-family: 'LXGW WenKai TC', '標楷體', sans-serif;
+            pointer-events: auto;
         `;
         this.simpleLoading.innerHTML = '🎮 載入中，請稍候...';
         this.overlay.appendChild(this.simpleLoading);
+        
+        // ✅ 禁止點擊遮罩
+        this.disableClicksDuringLoading();
     },
     
     // ✅ 隱藏簡單的 loading 提示
@@ -275,13 +287,16 @@ const CollectionSystem = {
             this.simpleLoading.remove();
             this.simpleLoading = null;
         }
+        
+        // ✅ 恢復點擊
+        this.enableClicksAfterLoading();
     },
 
     // ✅ 顯示店家 loading（地圖變暗 + 右下角跳動文字）- 不切換畫面
     showShopLoading: function() {
         if (this.shopLoading) return;
         
-        // 建立 loading 容器
+        // 建立 loading 容器（提高 z-index，確保在最上層）
         this.shopLoading = document.createElement('div');
         this.shopLoading.style.cssText = `
             position: absolute;
@@ -290,11 +305,11 @@ const CollectionSystem = {
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 3040;
+            z-index: 9998;
             display: flex;
             justify-content: flex-end;
             align-items: flex-end;
-            pointer-events: none;  /* 讓點擊穿透，但其實 loading 期間不應該有點擊 */
+            pointer-events: auto;
         `;
         
         // 建立跳動文字
@@ -311,6 +326,7 @@ const CollectionSystem = {
             border: 1px solid #e67e22;
             animation: loadingJump 0.8s ease-in-out infinite;
             letter-spacing: 2px;
+            pointer-events: none;
         `;
         
         this.shopLoading.appendChild(loadingText);
@@ -328,13 +344,46 @@ const CollectionSystem = {
             `;
             document.head.appendChild(jumpStyle);
         }
+        
+        // ✅ 禁止點擊遮罩
+        this.disableClicksDuringLoading();
     },
 
-    // ✅ 新增：隱藏店家 loading
+    // ✅ 隱藏店家 loading
     hideShopLoading: function() {
         if (this.shopLoading) {
             this.shopLoading.remove();
             this.shopLoading = null;
+        }
+        
+        // ✅ 恢復點擊
+        this.enableClicksAfterLoading();
+    },
+    
+    // ✅ 禁止點擊（建立一個透明的點擊攔截層）
+    disableClicksDuringLoading: function() {
+        if (this.clickBlocker) return;
+        
+        this.clickBlocker = document.createElement('div');
+        this.clickBlocker.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9997;
+            cursor: wait;
+            pointer-events: auto;
+        `;
+        this.overlay.appendChild(this.clickBlocker);
+    },
+    
+    // ✅ 恢復點擊
+    enableClicksAfterLoading: function() {
+        if (this.clickBlocker) {
+            this.clickBlocker.remove();
+            this.clickBlocker = null;
         }
     },
     
@@ -1120,6 +1169,8 @@ const CollectionSystem = {
         
         // 確保 loading 也被隱藏
         this.hideSimpleLoading();
+        this.hideShopLoading();
+        this.enableClicksAfterLoading();
         
         if (window.DialogueSystem && window.DialogueSystem.gameContainer) {
             window.DialogueSystem.gameContainer.onclick = this.savedGameClickHandler;

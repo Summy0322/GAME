@@ -102,7 +102,41 @@ const DialogueSystem = {
             this.gameBackground.style.backgroundPosition = 'center';
         }
         
+        // ✅ 新增：預載所有對話中的背景圖片
+        this.preloadDialogueBackgrounds(chapterData.dialogue);
+        
         this.showDialogue();
+    },
+
+    // ✅ 新增方法：預載對話中的背景圖片
+    preloadDialogueBackgrounds: function(dialogueArray) {
+        const backgroundsToPreload = new Set();
+        
+        // 遍歷所有對話，收集 background 圖片
+        dialogueArray.forEach(line => {
+            if (line.background) {
+                backgroundsToPreload.add(line.background);
+            }
+            // 如果有選項，也要檢查選項中的 gallery 等（但背景主要還是在 line 層級）
+            if (line.options) {
+                line.options.forEach(opt => {
+                    if (opt.background) {
+                        backgroundsToPreload.add(opt.background);
+                    }
+                });
+            }
+        });
+        
+        // 如果有需要預載的背景圖片
+        if (backgroundsToPreload.size > 0) {
+            const bgArray = Array.from(backgroundsToPreload);
+            console.log(`📦 預載章節背景圖片: ${bgArray.length} 張`, bgArray);
+            
+            bgArray.forEach(src => {
+                const img = new Image();
+                img.src = src;
+            });
+        }
     },
     
     showDialogue: async function() {
