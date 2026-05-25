@@ -155,6 +155,11 @@ const DialogueSystem = {
             const indicator = document.getElementById('typing-complete-indicator');
             if (indicator) indicator.style.display = 'none';
             
+            // ✅ 獲取當前模式，決定字體
+            const isChildMode = (window.gameMode === 'child');
+            const titleFontFamily = isChildMode ? "'BpmfZihiKai', 'LXGW WenKai TC', '標楷體', sans-serif" : "'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', sans-serif";
+            const buttonFontFamily = isChildMode ? "'BpmfZihiKai', 'LXGW WenKai TC', '標楷體', sans-serif" : "'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', sans-serif";
+            
             // 建立命名畫面
             let namingContainer = document.getElementById('naming-container');
             if (!namingContainer) {
@@ -175,33 +180,61 @@ const DialogueSystem = {
                 this.gameContainer.appendChild(namingContainer);
             }
             
-            // 建立命名面板
+            // ✅ 修正：使用 flex 讓內容自動縮放，避免溢出，並加入兒童模式字體
             namingContainer.innerHTML = `
-                <div style="background: linear-gradient(145deg, #2c1810, #1a0f0a); border: 3px solid #e67e22; border-radius: 20px; padding: 40px; text-align: center; max-width: 400px;">
-                    <div style="color: #ffd700; font-size: 24px; margin-bottom: 20px;">${line.title}</div>
-                    <div style="margin-bottom: 20px;">
-                        <img src="${line.characterImage || ''}" style="width: 100px; height: 100px; object-fit: contain; border-radius: 50%;" onerror="this.style.display='none'">
+                <div style="
+                    background: linear-gradient(145deg, #2c1810, #1a0f0a);
+                    border: 3px solid #e67e22;
+                    border-radius: 20px;
+                    padding: 30px;
+                    text-align: center;
+                    max-width: 90%;
+                    width: 400px;
+                    max-height: 90%;
+                    overflow-y: auto;
+                    box-sizing: border-box;
+                ">
+                    <div style="
+                        color: #ffd700;
+                        font-size: 24px;
+                        margin-bottom: 15px;
+                        font-family: ${titleFontFamily};
+                        letter-spacing: ${isChildMode ? '2px' : 'normal'};
+                    ">${line.title}</div>
+                    <div style="margin-bottom: 15px;">
+                        <img src="${line.characterImage || ''}" style="
+                            width: ${isChildMode ? '100px' : '80px'};
+                            height: ${isChildMode ? '100px' : '80px'};
+                            object-fit: contain;
+                            border-radius: 50%;
+                            display: block;
+                            margin: 0 auto;
+                        " onerror="this.style.display='none'">
                     </div>
                     <input type="text" id="player-name-input" placeholder="輸入你的名字" maxlength="12" style="
                         width: 100%;
                         padding: 12px;
-                        font-size: 18px;
+                        font-size:'16px';
                         background: #3d2a1f;
                         border: 2px solid #e67e22;
                         border-radius: 10px;
                         color: white;
                         text-align: center;
-                        margin-bottom: 20px;
+                        margin-bottom: 15px;
+                        box-sizing: border-box;
+                        font-family: ${titleFontFamily};
                     ">
                     <button id="naming-confirm-btn" style="
                         background: linear-gradient(145deg, #e67e22, #d35400);
                         color: white;
                         border: none;
                         padding: 10px 30px;
-                        font-size: 18px;
+                        font-size: ${isChildMode ? '20px' : '16px'};
                         border-radius: 30px;
                         cursor: pointer;
                         font-weight: bold;
+                        font-family: ${buttonFontFamily};
+                        letter-spacing: ${isChildMode ? '2px' : 'normal'};
                     ">就是我！</button>
                 </div>
             `;

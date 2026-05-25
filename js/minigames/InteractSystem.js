@@ -5,6 +5,7 @@ const InteractSystem = {
     // 狀態
     isActive: false,
     currentMode: 'matching',
+    currentGameMode: 'adult',  // 儲存當前模式
     currentShop: null,
     onComplete: null,
     
@@ -78,6 +79,7 @@ const InteractSystem = {
     start: function(config, onComplete) {
         console.log('🎮 啟動互動系統:', config);
         
+        this.currentGameMode = window.gameMode || 'adult';
         this.currentMode = config.mode;
         this.currentShop = config.shopName;
         this.onComplete = onComplete;
@@ -259,7 +261,7 @@ const InteractSystem = {
         return { x: posX, y: posY };
     },
     
-    // 建立可拖曳物件
+    // 建立可拖曳物件（順序隨機）
     createDragItems: function() {
         if (!this.gameArea) return;
         this.gameArea.innerHTML = '';
@@ -268,7 +270,15 @@ const InteractSystem = {
         const areaWidth = this.gameArea.clientWidth;
         const areaHeight = this.gameArea.clientHeight;
         
-        this.items.forEach((item, index) => {
+        // ✅ 複製一份 items 陣列並打亂順序
+        const shuffledItems = [...this.items];
+        for (let i = shuffledItems.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledItems[i], shuffledItems[j]] = [shuffledItems[j], shuffledItems[i]];
+        }
+        
+        // 使用打亂後的順序建立物件
+        shuffledItems.forEach((item, index) => {
             const { x: posX, y: posY } = this.calculateItemPosition(index, this.items.length, areaWidth, areaHeight);
             const dragEl = this.createDraggableItem(item, index, posX, posY);
             this.gameArea.appendChild(dragEl);
@@ -332,7 +342,7 @@ const InteractSystem = {
         return dragEl;
     },
 
-    // 顯示知識卡彈窗（圖片左，文字右，限制高度）
+    // 顯示知識卡彈窗（圖片左，文字右，限制高度）- 支援兒童模式字體
     showKnowledgeCard: function(item) {
         console.log('📖 顯示知識卡:', item.name);
         
@@ -343,6 +353,11 @@ const InteractSystem = {
         
         // ✅ 標記知識卡開啟，禁用背景拖曳
         this.isKnowledgeCardOpen = true;
+
+        // ✅ 獲取當前模式，決定字體
+        const isChildMode = (window.gameMode === 'child');
+        const titleFontFamily = isChildMode ? "'BpmfZihiKai', 'LXGW WenKai TC', '標楷體', sans-serif" : "'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', sans-serif";
+        const textFontFamily = isChildMode ? "'BpmfZihiKai', 'LXGW WenKai TC', '標楷體', sans-serif" : "'LXGW WenKai TC', 'DFKai-SB', 'Kaiti TC', '標楷體', sans-serif";
         
         // 建立遮罩層
         const overlay = document.createElement('div');
@@ -409,7 +424,6 @@ const InteractSystem = {
             closeBtn.style.background = 'rgba(0,0,0,0.5)';
         };
         closeBtn.onclick = () => {
-            // ✅ 關閉時恢復拖曳
             this.isKnowledgeCardOpen = false;
             overlay.remove();
         };
@@ -462,7 +476,7 @@ const InteractSystem = {
             max-height: 80vh;
         `;
         
-        // 標題
+        // ✅ 標題 - 使用兒童模式字體
         const title = document.createElement('h3');
         title.textContent = item.knowledgeCard.title || item.name;
         title.style.cssText = `
@@ -471,9 +485,11 @@ const InteractSystem = {
             margin: 0 0 8px 0;
             font-weight: bold;
             padding-right: 30px;
+            font-family: ${titleFontFamily};
+            letter-spacing: ${isChildMode ? '2px' : 'normal'};
         `;
         
-        // 描述/特徵
+        // ✅ 描述/特徵 - 使用兒童模式字體
         const desc = document.createElement('p');
         desc.textContent = item.knowledgeCard.description || '';
         desc.style.cssText = `
@@ -481,7 +497,8 @@ const InteractSystem = {
             font-size: 14px;
             margin-bottom: 16px;
             font-style: italic;
-            line-height: 1.4;
+            line-height: 1.5;
+            font-family: ${textFontFamily};
         `;
         
         // 分隔線
@@ -493,14 +510,15 @@ const InteractSystem = {
             margin: 12px 0;
         `;
         
-        // 詳細說明
+        // ✅ 詳細說明 - 使用兒童模式字體
         const detail = document.createElement('p');
         detail.textContent = item.knowledgeCard.detail || '';
         detail.style.cssText = `
             color: #5c4a2a;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.7;
             margin: 0;
+            font-family: ${textFontFamily};
         `;
         
         rightArea.appendChild(title);

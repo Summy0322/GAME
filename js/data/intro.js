@@ -13,7 +13,7 @@ window.IntroChapter = {
         {
             id: 'intro_2',
             name: '阿斗仔󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡',
-            text: '我叫阿斗仔󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡，是這次「北斗紅磚市場的微光記憶」的專屬導覽員，\n也是土生土長的北斗囝仔',
+            text: '我叫阿斗仔󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡，是這次「北斗紅磚市場的微光記憶」的\n專屬導覽員，也是土生土長的北斗囝仔',
             characterImage: 'assets/images/characters/阿斗仔.png'
         },
         {
@@ -31,7 +31,7 @@ window.IntroChapter = {
         {
             id: 'intro_5',
             name: '阿斗仔󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡󠇡',
-            text: '這趟任務，我會一路陪你闖關\n——帶你找回紅磚市場的祕密、故事，還有失落的「記憶之鑰」',
+            text: '這趟任務，我會一路陪你闖關——帶你找回\n紅磚市場的祕密、故事，還有失落的「記憶之鑰」',
             characterImage: 'assets/images/characters/阿斗仔.png'
         }, 
         {

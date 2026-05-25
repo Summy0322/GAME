@@ -162,13 +162,14 @@ const CollectionSystem = {
     
     // ✅ 獲取當前章節的錢袋數量（支援 Teen 和 Child）
     getCurrentMoney: function() {
-        // 優先檢查 Teen 版
-        if (window.Chapter3_Teen && typeof window.Chapter3_Teen.getMoney === 'function') {
-            return window.Chapter3_Teen.getMoney();
-        }
-        // 檢查 Child 版（預留）
-        if (window.Chapter3_Child && typeof window.Chapter3_Child.getMoney === 'function') {
-            return window.Chapter3_Child.getMoney();
+        if (window.gameMode === 'child') {
+            if (window.Chapter3_Child && typeof window.Chapter3_Child.getMoney === 'function') {
+                return window.Chapter3_Child.getMoney();
+            }
+        } else {
+            if (window.Chapter3_Teen && typeof window.Chapter3_Teen.getMoney === 'function') {
+                return window.Chapter3_Teen.getMoney();
+            }
         }
         return 20;
     },
@@ -480,19 +481,22 @@ const CollectionSystem = {
             console.log(`遊戲結果: ${success ? '成功' : '失敗'}`);
             
             if (success) {
-                // ✅ 扣款
+                // ✅ 根據目前模式選擇正確的章節資料
+                let chapterData = null;
+                if (window.gameMode === 'child') {
+                    chapterData = window.Chapter3_Child;
+                    console.log('👶 使用兒童版章節資料');
+                } else {
+                    chapterData = window.Chapter3_Teen;
+                    console.log('👨 使用青少年版章節資料');
+                }
+                
                 let canComplete = false;
-                
-                // 優先使用 Teen 版
-                if (window.Chapter3_Teen && window.Chapter3_Teen.markShopComplete) {
-                    canComplete = window.Chapter3_Teen.markShopComplete(hotspot.shopId);
-                }
-                // 預留 Child 版
-                else if (window.Chapter3_Child && window.Chapter3_Child.markShopComplete) {
-                    canComplete = window.Chapter3_Child.markShopComplete(hotspot.shopId);
+                if (chapterData && chapterData.markShopComplete) {
+                    canComplete = chapterData.markShopComplete(hotspot.shopId);
                 }
                 
-                if (!canComplete && (window.Chapter3_Teen || window.Chapter3_Child)) {
+                if (!canComplete) {
                     this.showMessage('銅板不足！', '#ff6666');
                     this.showMapMode();
                     return;

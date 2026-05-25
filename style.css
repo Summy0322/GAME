@@ -1032,7 +1032,7 @@ h2 {
     font-size: clamp(13px, 2.2vw, 16px);
     color: #ecf0f1;
     line-height: 1.7;
-    white-space: pre-wrap;
+    white-space: normal;
     word-wrap: break-word;
 }
 
