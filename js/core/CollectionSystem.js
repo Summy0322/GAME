@@ -662,7 +662,7 @@ const CollectionSystem = {
     },
     
     // 點擊定位點
-    onHotspotClick: function(itemIndex, hotspot) {
+    onHotspotClick: async function(itemIndex, hotspot) {
         // ✅ 如果正在處理店家點擊，忽略新的點擊
         if (this.isProcessingShop) {
             console.log('⚠️ 正在處理店家點擊，請稍後再試');
@@ -685,6 +685,9 @@ const CollectionSystem = {
         // 顯示 loading 遮罩在地圖上
         this.showShopLoading();
         
+        // ✅ 等待至少 1 秒，確保 loading 有足夠時間顯示
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // 檢查對話是否有選項
         if (hotspot.dialogue && hotspot.dialogue.options && hotspot.dialogue.options.length > 0) {
             this.showDialogueWithOptions(hotspot.dialogue, () => {
@@ -704,7 +707,7 @@ const CollectionSystem = {
     },
 
     // 顯示有選項的對話（防止重複觸發）
-    showDialogueWithOptions: function(dialogue, onStartGame) {
+    showDialogueWithOptions: async function(dialogue, onStartGame) {
         let gameStarted = false;
         
         if (typeof Typewriter !== 'undefined') {
@@ -721,85 +724,78 @@ const CollectionSystem = {
                 imagesToLoad.push(dialogue.background);
             }
             
-            const loadAllImages = () => {
-                if (imagesToLoad.length === 0) {
-                    // 沒有需要載入的圖片，直接顯示
-                    showDialogue();
-                    return;
-                }
-                
-                let loadedCount = 0;
-                const totalCount = imagesToLoad.length;
-                
-                imagesToLoad.forEach(src => {
-                    const img = new Image();
-                    img.onload = () => {
-                        loadedCount++;
-                        if (loadedCount >= totalCount) {
-                            // 所有圖片都載入完成，才顯示對話
-                            showDialogue();
-                        }
-                    };
-                    img.onerror = () => {
-                        loadedCount++;
-                        if (loadedCount >= totalCount) {
-                            showDialogue();
-                        }
-                    };
-                    img.src = src;
-                });
-            };
+            // 載入所有圖片
+            if (imagesToLoad.length > 0) {
+                await Promise.all(imagesToLoad.map(src => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                        img.src = src;
+                    });
+                }));
+            }
             
-            const showDialogue = () => {
-                // ✅ 圖片載入完成後，才切換到對話模式
-                this.showDialogueMode();
-                this.hideShopLoading();
-                
-                // 切換背景
-                if (dialogue.background && window.DialogueSystem.gameBackground) {
-                    window.DialogueSystem.gameBackground.style.backgroundImage = `url('${dialogue.background}')`;
-                    window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
-                    window.DialogueSystem.gameBackground.style.backgroundPosition = 'center';
-                }
-                
-                // 顯示對話
-                Typewriter.showDialogue(
-                    dialogue.name || '老闆',
-                    dialogue.text,
-                    dialogue.characterImage,
-                    null,
-                    'left',
-                    ''
-                );
-                
-                const startGame = () => {
-                    if (gameStarted) return;
-                    gameStarted = true;
-                    console.log('進入遊戲');
-                    if (onStartGame) onStartGame();
-                };
-                
-                // 監聽對話層點擊
-                if (this.dialogueOverlay) {
-                    const onClick = () => {
-                        this.dialogueOverlay.removeEventListener('click', onClick);
-                        clearTimeout(timeoutId);
-                        startGame();
-                    };
-                    this.dialogueOverlay.addEventListener('click', onClick);
+            // ✅ 圖片載入完成後，切換到對話模式
+            this.showDialogueMode();
+            this.hideShopLoading();
+            
+            // 切換背景
+            if (dialogue.background && window.DialogueSystem.gameBackground) {
+                window.DialogueSystem.gameBackground.style.backgroundImage = `url('${dialogue.background}')`;
+                window.DialogueSystem.gameBackground.style.backgroundSize = 'cover';
+                window.DialogueSystem.gameBackground.style.backgroundPosition = 'center';
+            }
+            
+            // ✅ 等待對話顯示完成（打字完成 + 玩家點擊）
+            await Typewriter.showDialogue(
+                dialogue.name || '老闆',
+                dialogue.text,
+                dialogue.characterImage,
+                null,
+                'left',
+                ''
+            );
+            
+            // ✅ 對話完成後，才顯示選項按鈕
+            if (dialogue.options && dialogue.options.length > 0) {
+                const optionsContainer = document.getElementById('options-container');
+                if (optionsContainer) {
+                    optionsContainer.innerHTML = '';
+                    optionsContainer.style.display = 'flex';
+                    optionsContainer.style.zIndex = '10000';  // ✅ 提高 zIndex 高於 3020
                     
-                    const timeoutId = setTimeout(() => {
-                        this.dialogueOverlay.removeEventListener('click', onClick);
-                        console.log('超時，強制進入遊戲');
-                        startGame();
-                    }, 30000);
-                } else {
-                    setTimeout(() => startGame(), 500);
+                    dialogue.options.forEach((opt, index) => {
+                        const btn = document.createElement('button');
+                        btn.innerText = opt.text;
+                        
+                        // 讓 CSS 的動畫自己處理
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            
+                            if (typeof AudioManager !== 'undefined') {
+                                AudioManager.playSFX('assets/sounds/click.mp3');
+                            }
+                            
+                            optionsContainer.innerHTML = '';
+                            optionsContainer.style.display = 'none';
+                            optionsContainer.style.zIndex = '';  // 恢復原本的 zIndex
+                            
+                            const indicator = document.getElementById('typing-complete-indicator');
+                            if (indicator) indicator.remove();
+                            
+                            if (!gameStarted) {
+                                gameStarted = true;
+                                console.log('玩家選擇:', opt.text);
+                                console.log('進入遊戲');
+                                if (onStartGame) onStartGame();
+                            }
+                        };
+                        
+                        optionsContainer.appendChild(btn);
+                    });
                 }
-            };
-            
-            // 開始載入所有圖片
-            loadAllImages();
+            }
             
         } else {
             if (onStartGame) onStartGame();
@@ -1011,7 +1007,8 @@ const CollectionSystem = {
                 if (colorImg) colorImg.style.display = 'block';
                 
                 this.isAnimating = false;
-                this.checkAllCollected();
+                // ✅ 移除這行，不要在這裡呼叫 checkAllCollected
+                // this.checkAllCollected();
                 
                 if (typeof AudioManager !== 'undefined') {
                     AudioManager.playSFX('assets/sounds/collect.mp3', 0.5);
@@ -1028,19 +1025,27 @@ const CollectionSystem = {
     afterCollectionComplete: function(itemIndex) {
         console.log(`✅ 蒐集完成，物品 ${itemIndex + 1}，準備繼續對話`);
         
-        const hasMoreItems = this.collectedItems.some(collected => collected === false);
+        const allItemsCollected = this.collectedItems.every(collected => collected === true);
         
-        if (!hasMoreItems && this.completeBtn) {
-            this.completeBtn.style.display = 'block';
-        }
+        // 顯示短暫的 loading，防止快速點擊下一個店家
+        this.showShopLoading();
         
-        this.showMapMode();
-        
-        if (this.pendingCallback) {
-            const callback = this.pendingCallback;
-            this.pendingCallback = null;
-            callback();
-        }
+        // 延遲 1 秒後才顯示地圖
+        setTimeout(() => {
+            this.hideShopLoading();
+            this.showMapMode();
+            
+            // ✅ 只有在全部蒐集完成時，才顯示完成按鈕
+            if (allItemsCollected && this.completeBtn) {
+                this.completeBtn.style.display = 'block';
+            }
+            
+            if (this.pendingCallback) {
+                const callback = this.pendingCallback;
+                this.pendingCallback = null;
+                callback();
+            }
+        }, 1000);
     },
     
     // 檢查是否全部蒐集完畢
