@@ -203,6 +203,8 @@ const Typewriter = {
     showOptions: function(options) {
         return new Promise((resolve) => {
             this.optionsContainer.innerHTML = '';
+            this.optionsContainer.classList.toggle('quiz-options',
+                options.length === 4 && options.every(opt => opt.action === 'quiz_answer'));
             this.optionsContainer.style.display = 'flex';
             
             options.forEach((opt, index) => {
@@ -223,6 +225,7 @@ const Typewriter = {
                     
                     // 清除選項
                     this.optionsContainer.innerHTML = '';
+                    this.optionsContainer.classList.remove('quiz-options');
                     this.optionsContainer.style.display = 'none';
                     
                     // 移除完成指示器
@@ -244,6 +247,7 @@ const Typewriter = {
         this.npcName.innerText = '';
         this.dialogueText.innerText = '';
         this.optionsContainer.innerHTML = '';
+        this.optionsContainer.classList.remove('quiz-options');
         this.optionsContainer.style.display = 'none';
         
         // 清除完成指示器

@@ -137,6 +137,29 @@ body {
     .confirm-btn { min-width: 0; min-height: 36px; padding: 6px 14px; font-size: clamp(14px, 3cqh, 18px); }
 }
 
+/* 四選一問答：兩欄兩列一次呈現，保留 Typewriter 的 display:flex。 */
+#options-container.quiz-options {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+}
+
+#options-container.quiz-options button {
+    flex: 0 0 calc((100% - 8px) / 2);
+    width: calc((100% - 8px) / 2);
+    max-width: none;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+    margin: 0;
+    white-space: normal;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
 /* 直向仍提示橫放，但提示本身不能超出螢幕。 */
 @media (orientation: portrait) and (max-width: 1024px) {
     body::before {
