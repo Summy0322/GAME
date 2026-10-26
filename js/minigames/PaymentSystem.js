@@ -41,6 +41,9 @@ const PaymentSystem = {
     
     // 開始付款
     start: function(amount, onComplete) {
+        this.close();
+        this.session = new MinigameSession();
+        this._isCompleting = false;
         console.log(`💰 開始付款，需支付: ${amount} 銅板`);
         
         // 從 Chapter3_Teen 取得實際銅板數量
@@ -61,7 +64,7 @@ const PaymentSystem = {
         this.createCoins();
         this.handleResize();
         
-        window.addEventListener('resize', () => this.handleResize());
+        this.session.listen(window, 'resize', () => this.handleResize());
         
         console.log('✅ PaymentSystem 啟動完成');
     },
@@ -337,8 +340,9 @@ const PaymentSystem = {
         closeBtn.onmouseleave = () => closeBtn.style.background = '#95a5a6';
         closeBtn.onclick = () => {
             if (confirm('確定要取消付款嗎？')) {
+                const callback = this.onComplete;
                 this.close();
-                if (this.onComplete) this.onComplete(false);
+                if (callback) callback(false);
             }
         };
         
@@ -471,9 +475,24 @@ const PaymentSystem = {
             
             document.removeEventListener('pointermove', onPointerMove);
             document.removeEventListener('pointerup', onPointerUp);
+            document.removeEventListener('pointercancel', cancelDrag);
+            this.cancelDrag = null;
         };
         
+        const cancelDrag = () => {
+            isDraggingLocal = false;
+            element.style.cssText = originalStyle;
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            document.removeEventListener('pointercancel', cancelDrag);
+            this.cancelDrag = null;
+            this.draggingCoin = null;
+            this.clearPaymentAreaHighlight();
+        };
+        let originalStyle = '';
+
         element.addEventListener('pointerdown', (e) => {
+            if (!this.isActive || this._isCompleting) return;
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             e.preventDefault();
             e.stopPropagation();
@@ -486,11 +505,15 @@ const PaymentSystem = {
             startElementX = rect.left;
             startElementY = rect.top;
             
+            if (this.cancelDrag) this.cancelDrag();
+            originalStyle = element.style.cssText;
+            this.cancelDrag = cancelDrag;
             isDraggingLocal = true;
             this.draggingCoin = element;
             
-            document.addEventListener('pointermove', onPointerMove);
-            document.addEventListener('pointerup', onPointerUp);
+            this.session.listen(document, 'pointermove', onPointerMove);
+            this.session.listen(document, 'pointerup', onPointerUp);
+            this.session.listen(document, 'pointercancel', cancelDrag);
         });
         
         element.style.cursor = 'grab';
@@ -502,7 +525,7 @@ const PaymentSystem = {
         element.style.position = '';
         element.style.left = '';
         element.style.top = '';
-        setTimeout(() => {
+        this.session.timeout(() => {
             element.style.transition = '';
         }, 300);
     },
@@ -588,7 +611,7 @@ const PaymentSystem = {
             this.messageArea.innerHTML = msg;
             this.messageArea.style.color = color;
             this.messageArea.style.background = 'rgba(0,0,0,0.1)';
-            setTimeout(() => {
+            this.session.timeout(() => {
                 if (this.messageArea && this.messageArea.innerHTML === msg) {
                     this.messageArea.innerHTML = '';
                 }
@@ -598,6 +621,8 @@ const PaymentSystem = {
     
     // 付款完成
     onPaymentComplete: function() {
+        if (!this.isActive || this._isCompleting) return;
+        this._isCompleting = true;
         console.log('💰 付款完成！');
         this.showMessage('🎉 付款完成！感謝惠顧！ 🎉', '#00aa00');
         
@@ -610,22 +635,27 @@ const PaymentSystem = {
             }
         }
         
-        setTimeout(() => {
+        this.session.timeout(() => {
+            const callback = this.onComplete;
             this.close();
-            if (this.onComplete) {
-                this.onComplete(true);
-            }
+            if (callback) callback(true);
         }, 1500);
     },
     
     // 關閉付款系統
     close: function() {
+        if (this.cancelDrag) this.cancelDrag();
+        if (this.session) this.session.dispose();
         if (this.container) {
             this.container.remove();
             this.container = null;
         }
         this.isActive = false;
-        window.removeEventListener('resize', () => this.handleResize());
+        this.onComplete = null;
+        this.coins = [];
+        this.paidCoins = [];
+        this.panel = this.coinsArea = this.paymentArea = null;
+        this.amountDisplay = this.messageArea = this.paidCoinsContainer = null;
     }
 };
 

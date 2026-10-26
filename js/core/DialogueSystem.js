@@ -1009,6 +1009,7 @@ const DialogueSystem = {
     
     endDialogue: function(isManualExit = false) {
         console.log('🔚 對話結束, isManualExit:', isManualExit);
+        if (window.GameEngine) window.GameEngine.stopMinigame();
 
         // ✅ 清除旁白打字計時器
         if (this.narrationTimer) {

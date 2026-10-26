@@ -10,7 +10,7 @@ http.createServer((req, res) => {
         const width = Math.max(280, Math.min(2560, Number(url.searchParams.get('w')) || 844));
         const height = Math.max(200, Math.min(1600, Number(url.searchParams.get('h')) || 390));
         const requestedScene = url.searchParams.get('scene');
-        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz'].includes(requestedScene) ? requestedScene : 'age';
+        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup'].includes(requestedScene) ? requestedScene : 'age';
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.end(`<!doctype html><html style="overflow-x:hidden"><head><title>Layout check</title></head><body style="margin:16px;background:#25303a;color:white;font:16px sans-serif"><p>${width} × ${height} · ${scene.replace(/[^a-z]/g, '')}</p><pre id="results" style="white-space:pre-wrap">Checking…</pre><iframe id="preview" title="遊戲預覽" width="${width}" height="${height}" style="border:1px solid #718096;transform:scale(${Math.min(1, 580 / width)});transform-origin:top left" src="/GAME/?testScene=${encodeURIComponent(scene)}&safe=${url.searchParams.get('safe') === '1' ? '1' : '0'}"></iframe><script>addEventListener('message', e => { if(e.origin === location.origin) document.getElementById('results').textContent=JSON.stringify(e.data); });</script></body></html>`);
         return;
@@ -28,7 +28,7 @@ http.createServer((req, res) => {
             let html = bytes.toString().replace(/<script src="https:[^"]+"><\/script>/g, '');
             html = html.replace("if ('serviceWorker' in navigator)", 'if (false)');
             const requestedScene = url.searchParams.get('testScene');
-            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz'].includes(requestedScene) ? requestedScene : 'age');
+            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup'].includes(requestedScene) ? requestedScene : 'age');
             const safe = url.searchParams.get('safe') === '1';
             html = html.replace('</body>', `<script>
                 window.addEventListener('load', () => {
@@ -43,6 +43,32 @@ http.createServer((req, res) => {
                         DialogueSystem.loadChapter({ id:'layout', background:'assets/images/ch1/background.png', dialogue:[{
                             name:'阿斗仔', character:'阿斗仔', text:'這是一段測試對話，用來確認不同螢幕大小下，角色與對話框的位置維持穩定。較長的內容應該可以在對話框內捲動閱讀，不會超出遊戲舞台。'.repeat(5), characterImage:'assets/images/characters/阿斗仔.png'
                         }] });
+                    }
+                    if (scene === 'cleanup') {
+                        const config = { mode:'matching', title:'互動清理測試', hint:'拖曳物品至購物籃', items:[{id:'star',name:'八角',correctZone:'basket',image:'assets/images/ch3/game/star_anise.png'}], zones:[{id:'basket',name:'購物籃'}] };
+                        let cleanupOK = true;
+                        for (let i=0; i<20; i++) {
+                            InteractSystem.start(config, () => {});
+                            const interaction = InteractSystem.session;
+                            InteractSystem.close();
+                            PaymentSystem.start(1, () => {});
+                            const payment = PaymentSystem.session;
+                            PaymentSystem.close();
+                            cleanupOK = cleanupOK && interaction.disposed && payment.disposed && interaction.timeouts.size === 0 && payment.timeouts.size === 0;
+                        }
+                        InteractSystem.start(config, () => {});
+                        const scope = InteractSystem.session;
+                        const item = document.querySelector('.interact-drag-item');
+                        if (item) {
+                            item.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true,cancelable:true,pointerType:'mouse',button:0,clientX:100,clientY:100}));
+                            cleanupOK = cleanupOK && typeof InteractSystem.cancelDrag === 'function';
+                        } else cleanupOK = false;
+                        InteractSystem.close();
+                        const move = new PointerEvent('pointermove', {cancelable:true,clientX:200,clientY:200});
+                        document.dispatchEvent(move);
+                        cleanupOK = cleanupOK && !move.defaultPrevented && scope.disposed && !InteractSystem.cancelDrag && !document.querySelector('.interact-drag-label');
+                        parent.postMessage({cleanupOK,cycles:20}, location.origin);
+                        return;
                     }
                     if (scene === 'quiz') {
                         Typewriter.typingSpeed = 0;
