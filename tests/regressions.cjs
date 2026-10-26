@@ -126,3 +126,37 @@ test('video listeners are detached after the first completion', () => {
     assert.equal(videos[0].oncanplaythrough, null);
     assert.equal(videos[0].onerror, null);
 });
+
+test('quiz layout is removed after answering, clearing, or showing story choices', async () => {
+    const classes = new Set();
+    const container = {
+        style: {}, children: [],
+        classList: {
+            toggle(name, enabled) { if (enabled) classes.add(name); else classes.delete(name); },
+            remove(name) { classes.delete(name); }
+        },
+        set innerHTML(value) { this.children = []; },
+        appendChild(button) { this.children.push(button); }
+    };
+    const context = vm.createContext({ window: {}, document: {
+        createElement() { return { style: {} }; }, getElementById() { return null; }
+    } });
+    vm.runInContext(fs.readFileSync(path.join(root, 'js/core/Typewriter.js'), 'utf8'), context);
+    const writer = context.window.Typewriter;
+    writer.optionsContainer = container;
+    const choices = ['a', 'b', 'c', 'd'].map(text => ({ text, action: 'quiz_answer' }));
+    const answer = writer.showOptions(choices);
+    assert.equal(classes.has('quiz-options'), true);
+    container.children[3].onclick({ stopPropagation() {} });
+    assert.equal(await answer, choices[3]);
+    assert.equal(classes.has('quiz-options'), false);
+    writer.showOptions(choices);
+    writer.showOptions([{text: '繼續故事'}]);
+    assert.equal(classes.has('quiz-options'), false);
+    writer.showOptions(choices);
+    writer.dialogueBox = { style: {} };
+    writer.npcName = {};
+    writer.dialogueText = {};
+    writer.clear();
+    assert.equal(classes.has('quiz-options'), false);
+});

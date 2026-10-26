@@ -10,7 +10,7 @@ http.createServer((req, res) => {
         const width = Math.max(280, Math.min(2560, Number(url.searchParams.get('w')) || 844));
         const height = Math.max(200, Math.min(1600, Number(url.searchParams.get('h')) || 390));
         const requestedScene = url.searchParams.get('scene');
-        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory'].includes(requestedScene) ? requestedScene : 'age';
+        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz'].includes(requestedScene) ? requestedScene : 'age';
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.end(`<!doctype html><html style="overflow-x:hidden"><head><title>Layout check</title></head><body style="margin:16px;background:#25303a;color:white;font:16px sans-serif"><p>${width} × ${height} · ${scene.replace(/[^a-z]/g, '')}</p><pre id="results" style="white-space:pre-wrap">Checking…</pre><iframe id="preview" title="遊戲預覽" width="${width}" height="${height}" style="border:1px solid #718096;transform:scale(${Math.min(1, 580 / width)});transform-origin:top left" src="/GAME/?testScene=${encodeURIComponent(scene)}&safe=${url.searchParams.get('safe') === '1' ? '1' : '0'}"></iframe><script>addEventListener('message', e => { if(e.origin === location.origin) document.getElementById('results').textContent=JSON.stringify(e.data); });</script></body></html>`);
         return;
@@ -28,7 +28,7 @@ http.createServer((req, res) => {
             let html = bytes.toString().replace(/<script src="https:[^"]+"><\/script>/g, '');
             html = html.replace("if ('serviceWorker' in navigator)", 'if (false)');
             const requestedScene = url.searchParams.get('testScene');
-            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory'].includes(requestedScene) ? requestedScene : 'age');
+            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz'].includes(requestedScene) ? requestedScene : 'age');
             const safe = url.searchParams.get('safe') === '1';
             html = html.replace('</body>', `<script>
                 window.addEventListener('load', () => {
@@ -44,11 +44,17 @@ http.createServer((req, res) => {
                             name:'阿斗仔', character:'阿斗仔', text:'這是一段測試對話，用來確認不同螢幕大小下，角色與對話框的位置維持穩定。較長的內容應該可以在對話框內捲動閱讀，不會超出遊戲舞台。'.repeat(5), characterImage:'assets/images/characters/阿斗仔.png'
                         }] });
                     }
+                    if (scene === 'quiz') {
+                        Typewriter.typingSpeed = 0;
+                        DialogueSystem.currentQuizQuestions = QuizQuestions.questions;
+                        DialogueSystem.currentQuizIndex = 0;
+                        DialogueSystem.showQuizQuestion();
+                    }
                     if (scene === 'defense') { DefenseGameV2.start({level:1,onComplete(){}}); }
                     if (scene === 'memory') { MemoryGameV2.start({level:1,onComplete(){}}); }
                     setTimeout(() => {
                         const wrapper = document.getElementById('game-wrapper').getBoundingClientRect();
-                        const selectors = scene === 'age' ? ['#age-child','#age-adult'] : scene === 'menu' ? ['#chapter1-btn','#chapter2-btn','#chapter3-btn','.reset-progress-btn'] : scene === 'dialogue' ? ['#dialog-box','#character-image'] : scene === 'defense' ? ['#defense-stage','#defense-player'] : scene === 'memory' ? ['.memory-panel','#memory-grid'] : [];
+                        const selectors = scene === 'age' ? ['#age-child','#age-adult'] : scene === 'menu' ? ['#chapter1-btn','#chapter2-btn','#chapter3-btn','.reset-progress-btn'] : scene === 'dialogue' ? ['#dialog-box','#character-image'] : scene === 'defense' ? ['#defense-stage','#defense-player'] : scene === 'memory' ? ['.memory-panel','#memory-grid'] : scene === 'quiz' ? ['#options-container', '#options-container button:nth-child(1)', '#options-container button:nth-child(2)', '#options-container button:nth-child(3)', '#options-container button:nth-child(4)'] : [];
                         const contained = selectors.every(selector => {
                             const r = document.querySelector(selector).getBoundingClientRect();
                             return r.width > 0 && r.height > 0 && r.left >= wrapper.left - 1 && r.right <= wrapper.right + 1 && r.top >= wrapper.top - 1 && r.bottom <= wrapper.bottom + 1;
@@ -58,7 +64,10 @@ http.createServer((req, res) => {
                         const ratioOK = Math.abs(wrapper.width / wrapper.height - 16/9) < .005;
                         const centered = Math.abs(wrapper.left - (left + (innerWidth-left-right-wrapper.width)/2)) < 1 && Math.abs(wrapper.top - (top + (innerHeight-top-bottom-wrapper.height)/2)) < 1;
                         const fits = wrapper.left >= left-1 && wrapper.right <= innerWidth-right+1 && wrapper.top >= top-1 && wrapper.bottom <= innerHeight-bottom+1;
-                        parent.postMessage({ratioOK,centered,fits,contained,stage:[Math.round(wrapper.width),Math.round(wrapper.height)],scene}, location.origin);
+                        const options = document.getElementById('options-container');
+                        const buttons = [...options.querySelectorAll('button')];
+                        const quizVisible = scene !== 'quiz' || (buttons.length === 4 && options.scrollHeight <= options.clientHeight + 1 && options.scrollWidth <= options.clientWidth + 1 && new Set(buttons.map(b => Math.round(b.getBoundingClientRect().top))).size === 2 && buttons.every(b => b.scrollHeight <= b.clientHeight + 1 && b.scrollWidth <= b.clientWidth + 1) && options.getBoundingClientRect().bottom <= document.getElementById('dialog-box').getBoundingClientRect().top);
+                        parent.postMessage({ratioOK,centered,fits,contained,quizVisible,stage:[Math.round(wrapper.width),Math.round(wrapper.height)],scene}, location.origin);
                     }, 750);
                 });
             </script></body>`);
