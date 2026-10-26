@@ -114,12 +114,9 @@ function preloadIntroAssets(onComplete) {
     
     // 1. 加入開場影片
     const introVideo = document.getElementById('intro-video');
-    if (introVideo && introVideo.src) {
-        assetsToPreload.push(introVideo.src);
-    } else {
-        const videoSrc = introVideo ? introVideo.getAttribute('src') || introVideo.getAttribute('data-src') : null;
-        if (videoSrc) assetsToPreload.push(videoSrc);
-    }
+    const videoSrc = introVideo && (introVideo.getAttribute('src') ||
+        introVideo.querySelector('source')?.getAttribute('src'));
+    if (videoSrc) assetsToPreload.push(videoSrc);
     
     // 2. 只有當選擇小朋友模式時，才預載入注音字型
     if (gameMode === 'child') {
@@ -267,7 +264,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 AudioManager.playSFX('assets/sounds/click.mp3');
             }
             
+            if (startBtn.dataset.loading === 'true') return;
+            startBtn.dataset.loading = 'true';
             preloadIntroAssets(() => {
+                startBtn.dataset.loading = 'false';
                 playIntroVideo();
             });
         });
@@ -353,8 +353,14 @@ function collectChapterAssets(chapterData) {
     
     if (chapterData.dialogue) {
         chapterData.dialogue.forEach(line => {
+            if (line.background) assets.push(line.background);
             if (line.characterImage) {
                 assets.push(line.characterImage);
+            }
+            if (line.options) {
+                line.options.forEach(option => {
+                    if (option.background) assets.push(option.background);
+                });
             }
         });
     }
@@ -439,37 +445,37 @@ function setupBackButton() {
 // ========== 關卡控制系統 ==========
 // 關卡狀態：'open' = 開放, 'locked' = 鎖定, 'completed' = 已完成
 const chapterStatus = {
-    chapter1: 'open',      // 第一章預設開放
-    chapter2: 'open',    // 第二章預設鎖定
-    chapter3: 'open'     // 第三章預設鎖定
+    chapter1: 'open',
+    chapter2: 'open',
+    chapter3: 'open'
 };
 
 // 儲存到 localStorage
 function saveChapterStatus() {
-    localStorage.setItem('chapterStatus', JSON.stringify(chapterStatus));
+    try {
+        localStorage.setItem('chapterStatus', JSON.stringify(chapterStatus));
+    } catch (error) {
+        if (window.Logger) window.Logger.warn('無法儲存關卡進度，本次遊戲仍可繼續', error);
+    }
     if (window.Logger) window.Logger.debug('💾 關卡狀態已儲存:', chapterStatus);
 }
 
-// 是否在重整時清除進度（設為 true 則每次重整都重設）
-const RESET_ON_RELOAD = true;  // 改為 false 則會保留進度
-
 // 載入儲存的狀態
 function loadChapterStatus() {
-    if (RESET_ON_RELOAD) {
-        // ✅ 每次都重設，不讀取儲存
-        chapterStatus.chapter1 = 'open';
-        chapterStatus.chapter2 = 'open';
-        chapterStatus.chapter3 = 'open';
-        localStorage.removeItem('chapterStatus');
-        if (window.Logger) window.Logger.info('📀 重整模式：關卡狀態已重設為預設值');
-    } else {
-        // 從 localStorage 讀取
+    try {
         const saved = localStorage.getItem('chapterStatus');
         if (saved) {
             const loaded = JSON.parse(saved);
-            Object.assign(chapterStatus, loaded);
-            if (window.Logger) window.Logger.info('📀 載入關卡狀態:', chapterStatus);
+            if (loaded && typeof loaded === 'object' && !Array.isArray(loaded)) {
+                Object.keys(chapterStatus).forEach(chapter => {
+                    if (['open', 'locked', 'completed'].includes(loaded[chapter])) {
+                        chapterStatus[chapter] = loaded[chapter];
+                    }
+                });
+            }
         }
+    } catch (error) {
+        if (window.Logger) window.Logger.warn('無法讀取關卡進度，使用預設狀態', error);
     }
     updateChapterButtons();
 }
@@ -504,7 +510,7 @@ function updateChapterButtons() {
 
 // 設定關卡狀態（後台用）
 function setChapterStatus(chapterId, status) {
-    if (chapterStatus[chapterId] !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(chapterStatus, chapterId) && ['open', 'locked', 'completed'].includes(status)) {
         chapterStatus[chapterId] = status;
         saveChapterStatus();
         updateChapterButtons();
@@ -535,11 +541,11 @@ function lockChapter(chapterId) {
     setChapterStatus(chapterId, 'locked');
 }
 
-// 重設所有關卡（方便測試）
+// 重新遊玩時恢復三章開放的初始狀態
 function resetAllChapters() {
     chapterStatus.chapter1 = 'open';
-    chapterStatus.chapter2 = 'locked';
-    chapterStatus.chapter3 = 'locked';
+    chapterStatus.chapter2 = 'open';
+    chapterStatus.chapter3 = 'open';
     saveChapterStatus();
     updateChapterButtons();
     if (window.Logger) window.Logger.info('🔄 所有關卡已重設');
