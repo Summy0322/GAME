@@ -78,6 +78,8 @@ const InteractSystem = {
     
     // 開始遊戲
     start: function(config, onComplete) {
+        this.close();
+        this.session = new MinigameSession();
         // ✅ 處理兩種呼叫方式：
         // 方式1: start(config, onComplete)
         // 方式2: start({ ...config, onComplete: fn })
@@ -119,7 +121,7 @@ const InteractSystem = {
         this.createDropZones();
         this.showHint(finalConfig.hint);
         
-        window.addEventListener('resize', () => this.handleResize());
+        this.session.listen(window, 'resize', () => this.handleResize());
         this.handleResize();
         
         console.log('✅ InteractSystem 啟動完成');
@@ -218,8 +220,9 @@ const InteractSystem = {
         closeBtn.textContent = '✕ 關閉遊戲';
         closeBtn.onclick = () => {
             if (confirm('確定要離開嗎？進度不會儲存。')) {
+                const callback = this.onComplete;
                 this.close();
-                if (this.onComplete) this.onComplete(false);
+                if (callback) callback(false);
             }
         };
         
@@ -550,6 +553,7 @@ const InteractSystem = {
         overlay.appendChild(card);
         
         document.body.appendChild(overlay);
+        this.session.ownNode(overlay);
         
         // 點擊遮罩關閉
         overlay.addEventListener('click', (e) => {
@@ -697,9 +701,26 @@ const InteractSystem = {
             
             document.removeEventListener('pointermove', onPointerMove);
             document.removeEventListener('pointerup', onPointerUp);
+            document.removeEventListener('pointercancel', cancelDrag);
+            this.cancelDrag = null;
         };
         
+        const cancelDrag = () => {
+            isDraggingLocal = false;
+            element.style.cssText = originalStyle;
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            document.removeEventListener('pointercancel', cancelDrag);
+            this.cancelDrag = null;
+            this.draggingItem = this.draggingElement = null;
+            this.removeDragLabel();
+            this.clearDropZonesHighlight();
+            document.body.style.userSelect = '';
+        };
+        let originalStyle = '';
+
         element.addEventListener('pointerdown', (e) => {
+            if (!this.isActive || this._isCompleting) return;
             // ✅ 如果已經配對成功，不能拖曳
             if (element.getAttribute('data-matched') === 'true') {
                 console.log('已配對，不能拖曳');
@@ -716,6 +737,8 @@ const InteractSystem = {
             e.preventDefault();
             e.stopPropagation();
             
+            if (this.cancelDrag) this.cancelDrag();
+            originalStyle = element.style.cssText;
             startMouseX = e.clientX;
             startMouseY = e.clientY;
             startLeft = parseFloat(element.style.left) || 0;
@@ -724,14 +747,16 @@ const InteractSystem = {
             this.dragLabel = this.createDragLabel(itemData.name, e.clientX, e.clientY);
             this.bringToFront(element);
             
+            this.cancelDrag = cancelDrag;
             isDraggingLocal = true;
             this.draggingItem = itemData;
             this.draggingElement = element;
             
             document.body.style.userSelect = 'none';
             
-            document.addEventListener('pointermove', onPointerMove);
-            document.addEventListener('pointerup', onPointerUp);
+            this.session.listen(document, 'pointermove', onPointerMove);
+            this.session.listen(document, 'pointerup', onPointerUp);
+            this.session.listen(document, 'pointercancel', cancelDrag);
         });
         
         element.style.cursor = 'grab';
@@ -785,7 +810,7 @@ const InteractSystem = {
             const rotate = item.getAttribute('data-rotate') || (Math.random() * 16) - 8;
             item.style.transform = `rotate(${rotate}deg)`;
             
-            setTimeout(() => {
+            this.session.timeout(() => {
                 item.style.transition = '';
             }, 300);
         });
@@ -904,7 +929,7 @@ const InteractSystem = {
         if (this.messageArea) {
             this.messageArea.innerHTML = msg;
             this.messageArea.style.color = color;
-            setTimeout(() => {
+            this.session.timeout(() => {
                 if (this.messageArea) {
                     this.messageArea.innerHTML = '';
                 }
@@ -940,7 +965,7 @@ const InteractSystem = {
             pointer-events: none;
         `;
         this.container.appendChild(hintDiv);
-        setTimeout(() => hintDiv.remove(), 4000);
+        this.session.timeout(() => hintDiv.remove(), 4000);
     },
     
     // 完成遊戲
@@ -974,13 +999,17 @@ const InteractSystem = {
             white-space: nowrap;
         `;
         document.body.appendChild(completeMsg);
+        const session = this.session;
+        session.ownNode(completeMsg);
         
         const finishGame = () => {
+            if (session.disposed) return;
+            const callback = this.onComplete;
             if (completeMsg && completeMsg.parentNode) completeMsg.remove();
             this.close();
-            if (this.onComplete) {
+            if (callback) {
                 console.log('📞 呼叫 onComplete(true)');
-                this.onComplete(true);
+                callback(true);
             }
             this._isCompleting = false;
         };
@@ -988,7 +1017,7 @@ const InteractSystem = {
         completeMsg.onclick = finishGame;
         
         // 2秒後自動關閉
-        setTimeout(() => {
+        this.session.timeout(() => {
             if (completeMsg && completeMsg.parentNode) {
                 console.log('⏰ 自動關閉');
                 finishGame();
@@ -1001,10 +1030,22 @@ const InteractSystem = {
         console.log('🗺️ 關閉遊戲模式');
         
         this.isActive = false;
+        if (this.cancelDrag) this.cancelDrag();
+        if (this.session) this.session.dispose();
+        this.removeDragLabel();
+        this.isKnowledgeCardOpen = false;
+        this._isCompleting = false;
+        this.onComplete = null;
+        this.items = [];
+        this.zones = [];
+        this.matchedItems = [];
+        this.initialPositions.clear();
         if (this.container) {
             this.container.remove();
             this.container = null;
         }
+        this.panel = this.gameArea = this.dropZonesContainer = null;
+        this.progressFill = this.messageArea = this.titleEl = null;
     },
 };
 

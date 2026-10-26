@@ -1,6 +1,21 @@
 // js/core/GameEngine.js
 const GameEngine = {
     currentMinigame: null,
+    loadRequestId: 0,
+
+    stopMinigame: function() {
+        this.loadRequestId++;
+        if (window.MemoryGameV2) window.MemoryGameV2.stop();
+        if (window.DefenseGameV2) window.DefenseGameV2.stop();
+        if (window.InteractSystem) window.InteractSystem.close();
+        if (window.PaymentSystem) window.PaymentSystem.close();
+        this.currentMinigame = null;
+        const canvas = document.getElementById('gameCanvas');
+        if (canvas) {
+            canvas.style.display = 'none';
+            canvas.classList.remove('minigame-active');
+        }
+    },
     
     collectMinigameAssets: function(minigameName, options) {
         if (window.MinigameAssets) {
@@ -43,13 +58,16 @@ const GameEngine = {
     
     startMinigame: function(minigameName, options) {
         if (window.Logger) window.Logger.info('🎮 GameEngine 啟動小遊戲:', minigameName);
+        const requestId = ++this.loadRequestId;
         
         const assets = this.collectMinigameAssets(minigameName, options);
         
         if (assets.length > 0 && typeof LoadingManager !== 'undefined') {
             if (window.Logger) window.Logger.info(`📦 預載入 ${assets.length} 個小遊戲資源`);
             LoadingManager.showAndLoad(assets, () => {
-                this._startMinigameImmediately(minigameName, options);
+                if (requestId === this.loadRequestId) {
+                    this._startMinigameImmediately(minigameName, options);
+                }
             });
         } else {
             this._startMinigameImmediately(minigameName, options);
@@ -58,15 +76,7 @@ const GameEngine = {
     
     _startMinigameImmediately: function(minigameName, options) {
         // 清理之前的遊戲
-        if (window.MemoryGameV2 && typeof window.MemoryGameV2.stop === 'function') {
-            window.MemoryGameV2.stop();
-        }
-        if (window.DefenseGameV2 && typeof window.DefenseGameV2.stop === 'function') {
-            window.DefenseGameV2.stop();
-        }
-        if (window.InteractSystem && typeof window.InteractSystem.close === 'function') {
-            window.InteractSystem.close();
-        }
+        this.stopMinigame();
 
         const gameMode = typeof window !== 'undefined' && window.gameMode ? window.gameMode : 'adult';
 
