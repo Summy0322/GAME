@@ -59,63 +59,46 @@ const LoadingManager = {
         if (window.Logger) window.Logger.info('✅ 已建立備用 Loading 畫面');
     },
     
-    // 顯示 Loading 並載入資源
+    // 每次只保留最新載入工作的完成回呼，避免快速重複操作切回舊場景。
+    loadId: 0,
+    assetTimeoutMs: 15000,
+
     showAndLoad: function(assets, onComplete) {
-        if (!this.loadingScreen) {
-            if (window.Logger) window.Logger.error('❌ loadingScreen 不存在');
-            if (onComplete) onComplete();
-            return;
-        }
-        
-        this.loadingScreen.style.display = 'flex';
+        const loadId = ++this.loadId;
+        if (!this.loadingScreen) this.init();
+        if (this.loadingScreen) this.loadingScreen.style.display = 'flex';
         this.updateProgress(0);
-        
+        const urls = [...new Set(assets.filter(src => typeof src === 'string' && src))];
         let loadedCount = 0;
-        const totalCount = assets.length;
-        
-        if (totalCount === 0) {
+        if (urls.length === 0) {
+            this.updateProgress(100);
             this.finish(onComplete);
             return;
         }
-        
-        assets.forEach(src => {
-            // 判斷字型檔案
-            if (src.match(/\.(ttf|otf|woff|woff2)$/i)) {
-                this.loadFont('BpmfZihiKai', src, () => {
-                    loadedCount++;
-                    this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                    if (loadedCount === totalCount) {
-                        setTimeout(() => this.finish(onComplete), 300);
-                    }
-                });
-            } 
-            // 判斷圖片
-            else if (src.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                this.loadImage(src, () => {
-                    loadedCount++;
-                    this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                    if (loadedCount === totalCount) {
-                        setTimeout(() => this.finish(onComplete), 300);
-                    }
-                });
-            } 
-            // 判斷影片
-            else if (src.match(/\.(mp4|webm|ogg)$/i)) {
-                this.loadVideo(src, () => {
-                    loadedCount++;
-                    this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                    if (loadedCount === totalCount) {
-                        setTimeout(() => this.finish(onComplete), 300);
-                    }
-                });
-            } 
-            // 其他資源
-            else {
+        urls.forEach(src => {
+            let settled = false;
+            const done = () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                if (loadId !== this.loadId) return;
                 loadedCount++;
-                this.updateProgress(Math.floor((loadedCount / totalCount) * 100));
-                if (loadedCount === totalCount) {
-                    setTimeout(() => this.finish(onComplete), 300);
-                }
+                this.updateProgress(Math.floor(loadedCount / urls.length * 100));
+                if (loadedCount === urls.length) this.finish(onComplete);
+            };
+            const timeout = setTimeout(() => {
+                if (window.Logger) window.Logger.warn('資源載入逾時，繼續遊戲:', src);
+                done();
+            }, this.assetTimeoutMs);
+            const path = src.split(/[?#]/)[0];
+            try {
+                if (/\.(ttf|otf|woff2?)$/i.test(path)) this.loadFont('BpmfZihiKai', src, done);
+                else if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(path)) this.loadImage(src, done);
+                else if (/\.(mp4|webm|ogg)$/i.test(path)) this.loadVideo(src, done);
+                else done();
+            } catch (error) {
+                if (window.Logger) window.Logger.warn('資源載入失敗，繼續遊戲:', src, error);
+                done();
             }
         });
     },
@@ -133,10 +116,18 @@ const LoadingManager = {
     loadVideo: function(src, callback) {
         const video = document.createElement('video');
         video.preload = 'auto';
-        video.oncanplaythrough = callback;
+        let completed = false;
+        const finish = () => {
+            if (completed) return;
+            completed = true;
+            video.oncanplaythrough = null;
+            video.onerror = null;
+            callback();
+        };
+        video.oncanplaythrough = finish;
         video.onerror = () => {
             if (window.Logger) window.Logger.warn('⚠️ 影片載入失敗:', src);
-            callback();
+            finish();
         };
         video.src = src;
         video.load();

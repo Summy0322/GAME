@@ -86,6 +86,7 @@
                 <button id="chapter2-btn" onclick="loadChapter('chapter2')">第二章：老街記憶</button>
                 <button id="chapter3-btn" onclick="loadChapter('chapter3')">第三章：時光印記</button>
             </div>
+            <button class="reset-progress-btn" onclick="if (confirm('確定要重設章節完成紀錄嗎？三個章節將重新開放。')) resetAllChapters()">重設章節進度</button>
             <button class="back-btn" onclick="showScene('start-menu')">返回</button>
         </div>
 
@@ -163,7 +164,6 @@
     <script src="js/data/quizQuestions.js"></script>
     
     <!-- 5. 小遊戲 -->
-    <script src="js/minigames/MemoryGame.js"></script>
     <!-- <script src="js/minigames/PuzzleGame.js"></script> -->
     <!-- <script src="js/minigames/FindingGame.js"></script> -->
     <script src="js/minigames/DefenseLevels.js"></script>     <!-- 先載入關卡設定 -->
