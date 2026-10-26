@@ -282,8 +282,10 @@ const DefenseGameV2 = {
         const mode = this.getGameMode();
         console.log(`🎮 防禦遊戲 V2 開始，關卡: ${options.level || 1}，模式: ${mode === 'child' ? '小朋友版' : '一般版'}`);
         
-        const containerWidth = window.innerWidth;
-        const containerHeight = window.innerHeight;
+        const wrapper = document.getElementById('game-wrapper');
+        const bounds = wrapper?.getBoundingClientRect();
+        const containerWidth = bounds?.width || window.innerWidth;
+        const containerHeight = bounds?.height || window.innerHeight;
         this.scale = Math.min(containerWidth / 1920, containerHeight / 1080);
         
         this.gameActive = true;
