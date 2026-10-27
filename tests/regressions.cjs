@@ -160,3 +160,92 @@ test('quiz layout is removed after answering, clearing, or showing story choices
     writer.clear();
     assert.equal(classes.has('quiz-options'), false);
 });
+
+function writerFixture() {
+    const ticks = new Map();
+    let next = 0;
+    const context = vm.createContext({ window: {}, console: { log() {} },
+        document: { getElementById() { return null; } },
+        setInterval(fn) { ticks.set(++next, fn); return next; },
+        clearInterval(id) { ticks.delete(id); }
+    });
+    vm.runInContext(fs.readFileSync(path.join(root, 'js/core/Typewriter.js'), 'utf8'), context);
+    const writer = context.window.Typewriter;
+    const element = () => ({style:{}, classList:{add(){},remove(){}}});
+    writer.dialogueBox = element();
+    writer.dialogueText = element();
+    writer.npcName = element();
+    writer.optionsContainer = element();
+    writer.showCompletionIndicator = () => {};
+    return { writer, ticks };
+}
+
+test('cleared or replaced dialogue cannot keep typing or complete an old line', () => {
+    const { writer, ticks } = writerFixture();
+    let oldComplete = 0;
+    writer.typeText('old', () => oldComplete++);
+    const late = [...ticks.values()][0];
+    late();
+    writer.clear();
+    assert.equal(ticks.size, 0);
+    const before = writer.dialogueText.textContent;
+    late();
+    assert.equal(writer.dialogueText.textContent, before);
+    writer.typeText('new', () => {});
+    late();
+    assert.equal(writer.dialogueText.textContent, '');
+    assert.equal(oldComplete, 0);
+});
+
+test('function-valued dialogue names and text are evaluated once and displayed', async () => {
+    const { writer, ticks } = writerFixture();
+    let names = 0, texts = 0;
+    const done = writer.showDialogue(() => { names++; return '阿斗仔'; }, () => { texts++; return '你好'; });
+    for (let i = 0; i < 3; i++) for (const tick of [...ticks.values()]) tick();
+    await done;
+    assert.equal(names, 1);
+    assert.equal(texts, 1);
+    assert.equal(writer.npcName.innerText, '阿斗仔');
+    assert.equal(writer.dialogueText.textContent, '你好');
+    assert.equal(ticks.size, 0);
+});
+
+function engineFixture() {
+    const pending = [];
+    const window = {};
+    const context = vm.createContext({ window, console: { log() {} },
+        document: { getElementById() { return null; } },
+        setTimeout(fn) { pending.push(fn); }
+    });
+    vm.runInContext(fs.readFileSync(path.join(root, 'js/core/GameEngine.js'), 'utf8'), context);
+    return { engine: window.GameEngine, window, pending };
+}
+
+test('a missing minigame reports failure rather than granting a win', () => {
+    const { engine, pending } = engineFixture();
+    const results = [];
+    engine.startMinigame('missing', { onComplete: result => results.push(result) });
+    pending.forEach(fn => fn());
+    assert.deepEqual(results, [false]);
+});
+
+test('a missing game callback is ignored after exiting', () => {
+    const { engine, pending } = engineFixture();
+    let callbacks = 0;
+    engine.startMinigame('missing', {onComplete() { callbacks++; }});
+    engine.stopMinigame();
+    pending.forEach(fn => fn());
+    assert.equal(callbacks, 0);
+});
+
+test('stopped minigames cannot finish a new game and completion is delivered once', () => {
+    const { engine, window } = engineFixture();
+    const starts = [], results = [];
+    window.MemoryGameV2 = { stop() {}, start(options) { starts.push(options); } };
+    engine.startMinigame('memory', {onComplete() { results.push('old'); }});
+    engine.startMinigame('memory', {onComplete() { results.push('new'); }});
+    starts[0].onComplete(true);
+    starts[1].onComplete(true);
+    starts[1].onComplete(true);
+    assert.deepEqual(results, ['new']);
+});

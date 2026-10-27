@@ -6,6 +6,14 @@ const Typewriter = {
     npcName: null,
     optionsContainer: null,
     typingSpeed: 40, // 每個字元的延遲時間（毫秒）
+    typingInterval: null,
+    typingRun: 0,
+
+    stopTyping: function() {
+        this.typingRun++;
+        if (this.typingInterval !== null) clearInterval(this.typingInterval);
+        this.typingInterval = null;
+    },
     
     // 初始化
     init: function() {
@@ -57,8 +65,8 @@ const Typewriter = {
             }
             
             // 確保是字串
-            finalText = finalText || '';
-            finalName = finalName || '';
+            finalText = String(finalText ?? '');
+            finalName = String(finalName ?? '');
 
             // 清除舊的完成指示器
             const oldIndicator = document.getElementById('typing-complete-indicator');
@@ -69,7 +77,7 @@ const Typewriter = {
             
             // 設定角色名稱和位置
             if (this.npcName) {
-                this.npcName.innerText = name || '';
+                this.npcName.innerText = finalName;
                 this.npcName.style.display = 'block';
                 this.npcName.style.opacity = '1';
                 
@@ -129,12 +137,14 @@ const Typewriter = {
             }
             
             // 開始打字效果
-            this.typeText(text, resolve);
+            this.typeText(finalText, resolve);
         });
     },
     
     // 打字機效果核心函數
     typeText: function(fullText, onComplete) {
+        this.stopTyping();
+        const run = this.typingRun;
         // 清空
         this.dialogueText.textContent = '';
 
@@ -149,6 +159,7 @@ const Typewriter = {
         let displayText = '';
 
         const typingInterval = setInterval(() => {
+            if (run !== this.typingRun) return;
             if (index < cleanText.length) {
                 displayText += cleanText[index];
                 this.dialogueText.textContent = displayText;
@@ -163,6 +174,7 @@ const Typewriter = {
                 index++;
             } else {
                 clearInterval(typingInterval);
+                this.typingInterval = null;
 
                 // ✅ 2. 最後一次才放「完整字串」（含 IVS）
                 this.dialogueText.textContent = fullText;
@@ -171,6 +183,7 @@ const Typewriter = {
                 if (onComplete) onComplete();
             }
         }, this.typingSpeed);
+        this.typingInterval = typingInterval;
     },
     
     // 顯示完成標誌
@@ -243,6 +256,7 @@ const Typewriter = {
     
     // 清除對話框
     clear: function() {
+        this.stopTyping();
         this.dialogueBox.style.display = 'none';
         this.npcName.innerText = '';
         this.dialogueText.innerText = '';

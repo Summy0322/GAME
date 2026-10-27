@@ -25,7 +25,8 @@ function fixture(name) {
     const context = vm.createContext({ window, document, AbortController,
         console: { log() {}, warn() {} },
         setTimeout(fn) { const id = ++nextId; timers.set(id, fn); return id; },
-        clearTimeout(id) { timers.delete(id); }
+        clearTimeout(id) { timers.delete(id); },
+        clearInterval(id) { timers.delete(id); }
     });
     vm.runInContext(fs.readFileSync(path.join(root, 'js/core/MinigameSession.js'), 'utf8'), context);
     if (name) vm.runInContext(fs.readFileSync(path.join(root, `js/minigames/${name}.js`), 'utf8'), context);
@@ -151,3 +152,56 @@ for (const name of ['InteractSystem', 'PaymentSystem']) {
         env.game.close();
     });
 }
+
+function memoryFixture() {
+    const env = fixture('MemoryGameV2');
+    const game = env.window.MemoryGameV2;
+    const card = () => ({ style: {}, classList: { add() {}, remove() {} } });
+    game.prepareCardSymbols = game.setCardContents = game.adjustCardSize = () => {};
+    game.updateStats = game.updateStrikes = () => {};
+    game.createUI = () => {
+        game.container = new Element();
+        game.grid = { querySelectorAll: () => [card(), card(), card(), card()] };
+        game.statusText = {};
+        game.cardSymbols = [1, 2, 3, 4];
+    };
+    game.calculateGrid = () => ({ cols: 2, rows: 2 });
+    return { ...env, game };
+}
+
+test('memory: stopped memorization cannot flip cards or start the new session timer', () => {
+    const env = memoryFixture();
+    let starts = 0;
+    env.game.startGameMechanic = () => starts++;
+    env.game.start({ needMemorize: true });
+    const late = [...env.timers.values()];
+    env.game.stop();
+    assert.equal(env.timers.size, 0);
+    env.game.start({ needMemorize: false });
+    late.forEach(fn => fn());
+    assert.equal(starts, 0);
+    assert.equal(env.game.isMemorizing, false);
+    env.flush();
+    assert.equal(starts, 1);
+    env.game.stop();
+});
+
+test('memory: ending the game cancels pending animations and shows one result', () => {
+    const env = memoryFixture();
+    let results = 0;
+    env.game.showResultOverlay = () => results++;
+    env.game.start({ needMemorize: true });
+    env.game.endGame(false);
+    env.game.endGame(false);
+    assert.equal(env.timers.size, 0);
+    assert.equal(results, 1);
+    assert.equal(env.game.canFlip, false);
+    env.game.stop();
+});
+
+test('memory: every referenced sound exists in the game assets', () => {
+    const source = fs.readFileSync(path.join(root, 'js/minigames/MemoryGameV2.js'), 'utf8');
+    for (const match of source.matchAll(/['"](assets\/sounds\/[^'"]+)['"]/g)) {
+        assert.equal(fs.existsSync(path.join(root, match[1])), true, match[1]);
+    }
+});

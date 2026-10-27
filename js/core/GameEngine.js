@@ -56,7 +56,7 @@ const GameEngine = {
         return [];
     },
     
-    startMinigame: function(minigameName, options) {
+    startMinigame: function(minigameName, options = {}) {
         if (window.Logger) window.Logger.info('🎮 GameEngine 啟動小遊戲:', minigameName);
         const requestId = ++this.loadRequestId;
         
@@ -74,9 +74,10 @@ const GameEngine = {
         }
     },
     
-    _startMinigameImmediately: function(minigameName, options) {
+    _startMinigameImmediately: function(minigameName, options = {}) {
         // 清理之前的遊戲
         this.stopMinigame();
+        const sessionId = this.loadRequestId;
 
         const gameMode = typeof window !== 'undefined' && window.gameMode ? window.gameMode : 'adult';
 
@@ -101,12 +102,15 @@ const GameEngine = {
             
             // ✅ 保存 onComplete 回調
             const onCompleteCallback = options.onComplete;
+            let completed = false;
             
             // ✅ 確保 onComplete 被傳入
             const startOptions = {
                 ...options,
                 gameMode: options && (options.gameMode === 'child' || options.gameMode === 'adult') ? options.gameMode : gameMode,
                 onComplete: (success) => {
+                    if (completed || sessionId !== this.loadRequestId) return;
+                    completed = true;
                     console.log('🎮 GameEngine 內部 onComplete, success:', success);
                     if (canvas) {
                         canvas.style.display = 'none';
@@ -130,12 +134,13 @@ const GameEngine = {
         } else {
             if (window.Logger) window.Logger.error('❌ 找不到小遊戲:', minigameName);
             setTimeout(() => {
+                if (sessionId !== this.loadRequestId) return;
                 if (canvas) {
                     canvas.style.display = 'none';
                     canvas.classList.remove('minigame-active');
                 }
                 if (options && options.onComplete) {
-                    options.onComplete(true);
+                    options.onComplete(false);
                 }
             }, 500);
         }

@@ -160,6 +160,20 @@ body {
     overflow-wrap: anywhere;
 }
 
+/* 圖片按鈕改用原生 button，維持原有圖片大小並提供鍵盤焦點。 */
+#start-menu .menu-buttons .img-btn {
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+}
+
+button:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
 /* 直向仍提示橫放，但提示本身不能超出螢幕。 */
 @media (orientation: portrait) and (max-width: 1024px) {
     body::before {
