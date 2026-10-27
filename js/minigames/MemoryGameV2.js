@@ -121,6 +121,8 @@ const MemoryGameV2 = {
     
     // 開始遊戲
     start: function(options) {
+        this.stop();
+        this.session = new MinigameSession();
         console.log('🎮 記憶遊戲開始', options);
         
         this.gameActive = true;
@@ -511,7 +513,8 @@ const MemoryGameV2 = {
                 white-space: nowrap;
             `;
             document.body.appendChild(redemptionText);
-            setTimeout(() => redemptionText.remove(), 800);
+        this.session.ownNode(redemptionText);
+            this.session.timeout(() => redemptionText.remove(), 800);
             return; // ✅ 不扣次數，直接返回
         }
         
@@ -519,7 +522,7 @@ const MemoryGameV2 = {
         const attemptsEl = document.getElementById('memory-attempts');
         if (attemptsEl) {
             attemptsEl.classList.add('penalty-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 attemptsEl.classList.remove('penalty-flash');
             }, 500);
         }
@@ -527,7 +530,7 @@ const MemoryGameV2 = {
         const panel = this.container.querySelector('.memory-panel');
         if (panel) {
             panel.classList.add('penalty-panel-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 panel.classList.remove('penalty-panel-flash');
             }, 300);
         }
@@ -549,7 +552,8 @@ const MemoryGameV2 = {
             white-space: nowrap;
         `;
         document.body.appendChild(penaltyText);
-        setTimeout(() => penaltyText.remove(), 800);
+        this.session.ownNode(penaltyText);
+        this.session.timeout(() => penaltyText.remove(), 800);
     },
 
     // ✅ 限次數模式：加次數特效
@@ -557,7 +561,7 @@ const MemoryGameV2 = {
         const attemptsEl = document.getElementById('memory-attempts');
         if (attemptsEl) {
             attemptsEl.classList.add('bonus-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 attemptsEl.classList.remove('bonus-flash');
             }, 500);
         }
@@ -565,7 +569,7 @@ const MemoryGameV2 = {
         const panel = this.container.querySelector('.memory-panel');
         if (panel) {
             panel.classList.add('bonus-panel-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 panel.classList.remove('bonus-panel-flash');
             }, 300);
         }
@@ -587,7 +591,8 @@ const MemoryGameV2 = {
             white-space: nowrap;
         `;
         document.body.appendChild(bonusText);
-        setTimeout(() => bonusText.remove(), 800);
+        this.session.ownNode(bonusText);
+        this.session.timeout(() => bonusText.remove(), 800);
     },
 
     // 觸發扣秒特效（限時模式）- 如果有減免次數就不扣
@@ -615,7 +620,8 @@ const MemoryGameV2 = {
                 white-space: nowrap;
             `;
             document.body.appendChild(redemptionText);
-            setTimeout(() => redemptionText.remove(), 800);
+        this.session.ownNode(redemptionText);
+            this.session.timeout(() => redemptionText.remove(), 800);
             return; // ✅ 不扣秒，直接返回
         }
         
@@ -623,7 +629,7 @@ const MemoryGameV2 = {
         const timerEl = document.getElementById('memory-timer');
         if (timerEl) {
             timerEl.classList.add('penalty-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 timerEl.classList.remove('penalty-flash');
             }, 500);
         }
@@ -631,7 +637,7 @@ const MemoryGameV2 = {
         const panel = this.container.querySelector('.memory-panel');
         if (panel) {
             panel.classList.add('penalty-panel-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 panel.classList.remove('penalty-panel-flash');
             }, 300);
         }
@@ -653,7 +659,8 @@ const MemoryGameV2 = {
             white-space: nowrap;
         `;
         document.body.appendChild(penaltyText);
-        setTimeout(() => penaltyText.remove(), 800);
+        this.session.ownNode(penaltyText);
+        this.session.timeout(() => penaltyText.remove(), 800);
     },
 
     // 觸發加分特效（限時模式）
@@ -661,7 +668,7 @@ const MemoryGameV2 = {
         const timerEl = document.getElementById('memory-timer');
         if (timerEl) {
             timerEl.classList.add('bonus-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 timerEl.classList.remove('bonus-flash');
             }, 500);
         }
@@ -669,7 +676,7 @@ const MemoryGameV2 = {
         const panel = this.container.querySelector('.memory-panel');
         if (panel) {
             panel.classList.add('bonus-panel-flash');
-            setTimeout(() => {
+            this.session.timeout(() => {
                 panel.classList.remove('bonus-panel-flash');
             }, 300);
         }
@@ -691,7 +698,8 @@ const MemoryGameV2 = {
             white-space: nowrap;
         `;
         document.body.appendChild(bonusText);
-        setTimeout(() => bonusText.remove(), 800);
+        this.session.ownNode(bonusText);
+        this.session.timeout(() => bonusText.remove(), 800);
     },
     
     // 重置遊戲
@@ -813,13 +821,13 @@ const MemoryGameV2 = {
             // 有記憶階段：彈出動畫 → 翻到正面 → 記憶時間到 → 翻回背面
             this.statusText.innerText = "預備...";
             visibleCards.forEach((card, index) => {
-                setTimeout(() => {
+                this.session.timeout(() => {
                     card.classList.add('is-visible');
                 }, index * 50);
             });
             
             // 彈出完成後翻到正面（記憶階段）
-            setTimeout(() => {
+            this.session.timeout(() => {
                 this.statusText.innerText = "記住它們！";
                 this.isMemorizing = true;
                 visibleCards.forEach(card => {
@@ -828,7 +836,7 @@ const MemoryGameV2 = {
             }, 1000);
             
             // 記憶時間到，翻回背面，開始遊戲
-            setTimeout(() => {
+            this.session.timeout(() => {
                 visibleCards.forEach(card => {
                     card.classList.remove('is-flipped');
                 });
@@ -841,12 +849,12 @@ const MemoryGameV2 = {
             // 無記憶階段：直接彈出卡片，然後開始遊戲
             this.statusText.innerText = "開始配對！";
             visibleCards.forEach((card, index) => {
-                setTimeout(() => {
+                this.session.timeout(() => {
                     card.classList.add('is-visible');
                 }, index * 50);
             });
             
-            setTimeout(() => {
+            this.session.timeout(() => {
                 this.canFlip = true;
                 this.startGameMechanic();
             }, 500);
@@ -960,7 +968,7 @@ const MemoryGameV2 = {
                     if (isRedEnabled) this.updateStrikes();
                     
                     this.statusText.style.color = '#00ff88';
-                    setTimeout(() => {
+                    this.session.timeout(() => {
                         if (this.statusText) this.statusText.style.color = '#ffd700';
                     }, 1500);
                 }
@@ -972,14 +980,14 @@ const MemoryGameV2 = {
             this.matchedPairs++;
             this.updateStats();
             
-            setTimeout(() => {
+            this.session.timeout(() => {
                 card1.classList.add('matched');
                 card2.classList.add('matched');
                 this.flippedCards = [];
                 this.canFlip = true;
                 
                 if (typeof AudioManager !== 'undefined') {
-                    AudioManager.playSFX('assets/sounds/success.mp3', 0.3);
+                    AudioManager.playSFX('assets/sounds/correct.mp3', 0.3);
                 }
                 
                 if (this.matchedPairs === this.totalPairs) {
@@ -1022,18 +1030,18 @@ const MemoryGameV2 = {
                     this.updateStrikes();
                     
                     this.statusText.style.color = '#ff6666';
-                    setTimeout(() => {
+                    this.session.timeout(() => {
                         if (this.statusText) this.statusText.style.color = '#ffd700';
                     }, 1500);
                 }
             } else {
                 // 無燈光模式：只播放音效，不計連續失敗次數
                 if (typeof AudioManager !== 'undefined') {
-                    AudioManager.playSFX('assets/sounds/error.mp3', 0.3);
+                    AudioManager.playSFX('assets/sounds/wrong.mp3', 0.3);
                 }
             }
             
-            setTimeout(() => {
+            this.session.timeout(() => {
                 card1.classList.remove('is-flipped');
                 card2.classList.remove('is-flipped');
                 this.flippedCards = [];
@@ -1090,21 +1098,16 @@ const MemoryGameV2 = {
         
         const resultBtn = document.getElementById('memory-result-btn');
         resultBtn.onclick = () => {
-            overlay.remove();
-            if (this.container) {
-                this.container.remove();
-                this.container = null;
-            }
-            if (this.onCompleteCallback) {
-                this.onCompleteCallback(isWin);
-            }
+            const callback = this.onCompleteCallback;
+            this.stop();
+            if (callback) callback(isWin);
         };
         
         if (typeof AudioManager !== 'undefined') {
             if (isWin) {
-                AudioManager.playSFX('assets/sounds/win.mp3', 0.5);
+                AudioManager.playSFX('assets/sounds/correct.mp3', 0.5);
             } else {
-                AudioManager.playSFX('assets/sounds/fail.mp3', 0.5);
+                AudioManager.playSFX('assets/sounds/wrong.mp3', 0.5);
             }
         }
     },
@@ -1114,6 +1117,8 @@ const MemoryGameV2 = {
      */
     stop: function () {
         this.gameActive = false;
+        this.canFlip = false;
+        if (this.session) this.session.dispose();
         if (this.handleResize) {
             window.removeEventListener('resize', this.handleResize);
             this.handleResize = null;
@@ -1126,12 +1131,20 @@ const MemoryGameV2 = {
             this.container.remove();
         }
         this.container = null;
+        this.onCompleteCallback = null;
+        this.cards = [];
+        this.flippedCards = [];
+        this.strikeLights = [];
+        this.grid = this.statusText = this.timerText = null;
+        this.movesText = this.matchedText = this.attemptsText = null;
     },
 
     // 結束遊戲
     endGame: function(isWin) {
+        if (!this.gameActive) return;
         this.gameActive = false;
         this.canFlip = false;
+        if (this.session) this.session.dispose();
         
         // ✅ 儲存遊戲結果到全域變數，供 DialogueSystem 使用
         window.lastGameSuccess = isWin;
