@@ -1,5 +1,52 @@
 /* css/defense-game.css */
 
+#defense-wave-progress {
+    color: #fff;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 4px 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    font-size: clamp(12px, 2.7cqh, 18px);
+    text-align: right;
+}
+
+#defense-msg {
+    max-width: 55cqw;
+    box-sizing: border-box;
+    white-space: normal;
+}
+
+#defense-wait-meter {
+    width: clamp(100px, 23cqw, 190px);
+    margin-top: 6px;
+    padding: 6px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffd700;
+    font-size: clamp(11px, 2.5cqh, 16px);
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.defense-wait-track {
+    height: 6px;
+    margin-top: 5px;
+    border-radius: 4px;
+    background: #555;
+    overflow: hidden;
+}
+
+.defense-wait-fill {
+    height: 100%;
+    background: #ffd700;
+    transform-origin: left;
+}
+
+@keyframes defense-wait {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
 /* 遊戲主容器 - 基礎樣式 */
 .defense-game-container {
     position: absolute;

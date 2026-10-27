@@ -33,7 +33,6 @@
                     { type: 'NORMAL', dir: 'left', wait: 3500, text: '⬅️ 肉圓' },
                     { type: 'NORMAL', dir: 'right', wait: 3500, text: '➡️ 肉圓' },
                     { type: 'DECOY', dir: 'up', wait: 2500, text: '🪨 石頭！別滑' },
-                    { type: 'DECOY', dir: 'right', wait: 2500, text: '🪨 石頭！別滑' },
                     { type: 'MULTI', dirs: ['up', 'down'], wait: 4000, text: '⬆️⬇️ 肉圓' },
                     { type: 'MULTI', dirs: ['left', 'right'], wait: 4000, text: '⬅️➡️ 肉圓' },
                     {
@@ -44,16 +43,6 @@
                         wait: 4000,
                         text: '⬅️肉圓｜➡️石頭'
                     },
-                    {
-                        type: 'MULTI_MIXED',
-                        dirs: ['up', 'down'],
-                        correctDirs: ['down'],
-                        wrongDirs: ['up'],
-                        wait: 4000,
-                        text: '⬆️石頭｜⬇️肉圓'
-                    },
-                    { type: 'NORMAL', dir: 'up', wait: 3500, text: '⬆️ 肉圓' },
-                    { type: 'NORMAL', dir: 'left', wait: 3500, text: '⬅️ 肉圓' },
                     { type: 'MULTI', dirs: ['up', 'left', 'right'], wait: 4500, text: '⬆️⬅️➡️ 肉圓' },
                     {
                         type: 'MULTI_MIXED',
@@ -84,6 +73,11 @@
                         text: '⬅️肉圓｜➡️石頭'
                     },
                     { type: 'MULTI', dirs: ['up', 'left', 'right'], wait: 5500, text: '⬆️⬅️➡️ 肉圓' },
+                    {
+                        type: 'MULTI_MIXED', dirs: ['up', 'down', 'right'],
+                        correctDirs: ['up', 'right'], wrongDirs: ['down'], wait: 5500,
+                        text: '⬆️➡️肉圓｜⬇️石頭'
+                    },
                     { type: 'END', text: '' }
                 ]
             })
@@ -294,6 +288,26 @@
             }
         }
     };
+
+    // 第一章三個防禦小關共用完成節奏；99 測試關維持原設定。
+    for (const level of [1, 2, 3]) {
+        for (const mode of ['adult', 'child']) {
+            const config = DefenseLevels[level][mode];
+            const child = mode === 'child';
+            config.flow = {
+                targetName: ['', '肉圓', '火焰', '黃豆'][level],
+                prepareTime: child ? 350 : 250,
+                successGap: child ? 450 : 320,
+                avoidHold: child ? 800 : 600
+            };
+            config.attackPatterns.forEach((attack, index) => {
+                if (attack.type === 'DECOY') attack.wait = child ? 1900 : 1400;
+                if (level === 1 && attack.type !== 'END') {
+                    attack.phase = index < 5 ? '練習' : index < 8 ? '辨識' : '挑戰';
+                }
+            });
+        }
+    }
 
     window.DefenseLevels = DefenseLevels;
 })();

@@ -200,7 +200,7 @@ const DefenseGameV2 = {
     // ========== 初始化 ==========
     start: function(options) {
         // ✅ 加入這兩行
-        this.sessionId = Date.now();
+        this.sessionId = (this.sessionId || 0) + 1;
         const currentSession = this.sessionId;
 
         // ========== 完整重置 ==========
@@ -310,14 +310,14 @@ const DefenseGameV2 = {
         }, 16);
         
         this.setState(this.states.IDLE);
-        setTimeout(() => this.startAttackSequence(), 1000);
+        this.queueWaveCallback(() => this.startAttackSequence(), 1000);
     },
 
     /**
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function () {
-        this.sessionId = Date.now();
+        this.sessionId = (this.sessionId || 0) + 1;
         this.gameActive = false;
         this.runtimeGameMode = null;
 
@@ -489,6 +489,13 @@ const DefenseGameV2 = {
             </div>
             <div style="position:absolute; top:2%; right:2%; z-index:110;">
                 <div id="defense-combo" style="font-size:${comboFontSize}px; font-weight:bold; color:#00ffaa; background:rgba(0,0,0,0.5); display:inline-block; padding:5px 15px; border-radius:30px;">分數: 0</div>
+                <div id="defense-wave-progress" aria-live="polite">準備開始</div>
+                <div id="defense-wait-meter" hidden>
+                    <span>保持不滑，等待石頭離開</span>
+                    <div class="defense-wait-track" role="progressbar" aria-label="等待石頭離開" aria-valuetext="請保持不滑">
+                        <div class="defense-wait-fill"></div>
+                    </div>
+                </div>
             </div>
             <div style="position:absolute; bottom:3%; left:0; width:100%; text-align:center; color:#888; font-size:${hintFontSize}px; background:rgba(0,0,0,0.4); padding:5px;">滑動方向發射投射物 · AOE模式需旋轉</div>
         `;
@@ -710,6 +717,10 @@ const DefenseGameV2 = {
         
         if (Date.now() - this.lastSwipeTime < 200) return;
         this.lastSwipeTime = Date.now();
+        if (this.levelConfig.flow && (this.state === this.states.MULTI || this.state === this.states.MULTI_MIXED)) {
+            this.handleFlowSwipe(dir);
+            return;
+        }
         
         // ========== 重擊攻擊的特殊處理 ==========
         if (this.currentAttack && this.currentAttack.type === 'HEAVY') {
@@ -849,6 +860,10 @@ const DefenseGameV2 = {
                             // 正確方向：標記為等待擊中，不立即結束
                             console.log('✅ 正確方向，等待子彈擊中敵人');
                             this.currentAttack.correctHit = true;
+                            if (this.levelConfig.flow && this.currentAttack.timer) {
+                                clearTimeout(this.currentAttack.timer);
+                                this.currentAttack.timer = null;
+                            }
                         } else {
                             console.log('⚠️ 已經加過分，忽略');
                         }
@@ -1283,7 +1298,7 @@ const DefenseGameV2 = {
         const duration = 400;
         
         const animate = (now) => {
-            if (this.sessionId !== currentSession) return;
+            if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== currentAttackRef || currentAttackRef.finished) return;
             const elapsed = now - startTime;
             const t = Math.min(1, elapsed / duration);
             const easeOut = 1 - Math.pow(1 - t, 2);
@@ -1321,6 +1336,7 @@ const DefenseGameV2 = {
 
                     // 0.2 秒後移除敵人
                     setTimeout(() => {
+                        if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== currentAttackRef || currentAttackRef.finished) return;
                         if (targetEnemy.element && targetEnemy.element.parentNode) {
                             targetEnemy.element.remove();
                         }

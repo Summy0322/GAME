@@ -10,9 +10,9 @@ http.createServer((req, res) => {
         const width = Math.max(280, Math.min(2560, Number(url.searchParams.get('w')) || 844));
         const height = Math.max(200, Math.min(1600, Number(url.searchParams.get('h')) || 390));
         const requestedScene = url.searchParams.get('scene');
-        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup'].includes(requestedScene) ? requestedScene : 'age';
+        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age';
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.end(`<!doctype html><html style="overflow-x:hidden"><head><title>Layout check</title></head><body style="margin:16px;background:#25303a;color:white;font:16px sans-serif"><p>${width} × ${height} · ${scene.replace(/[^a-z]/g, '')}</p><pre id="results" style="white-space:pre-wrap">Checking…</pre><iframe id="preview" title="遊戲預覽" width="${width}" height="${height}" style="border:1px solid #718096;transform:scale(${Math.min(1, 580 / width)});transform-origin:top left" src="/GAME/?testScene=${encodeURIComponent(scene)}&safe=${url.searchParams.get('safe') === '1' ? '1' : '0'}"></iframe><script>addEventListener('message', e => { if(e.origin === location.origin && e.source === document.getElementById('preview').contentWindow && e.data && ['ratioOK','cleanupOK','memoryCleanupOK'].some(key => typeof e.data[key] === 'boolean')) document.getElementById('results').textContent=JSON.stringify(e.data); });</script></body></html>`);
+        res.end(`<!doctype html><html style="overflow-x:hidden"><head><title>Layout check</title></head><body style="margin:16px;background:#25303a;color:white;font:16px sans-serif"><p>${width} × ${height} · ${scene.replace(/[^a-z]/g, '')}</p><pre id="results" style="white-space:pre-wrap">Checking…</pre><iframe id="preview" title="遊戲預覽" width="${width}" height="${height}" style="border:1px solid #718096;transform:scale(${Math.min(1, 580 / width)});transform-origin:top left" src="/GAME/?testScene=${encodeURIComponent(scene)}&safe=${url.searchParams.get('safe') === '1' ? '1' : '0'}&child=${url.searchParams.get('child') === '1' ? '1' : '0'}"></iframe><script>addEventListener('message', e => { if(e.origin === location.origin && e.source === document.getElementById('preview').contentWindow && e.data && ['ratioOK','cleanupOK','memoryCleanupOK','pacingOK'].some(key => typeof e.data[key] === 'boolean')) document.getElementById('results').textContent=JSON.stringify(e.data); });</script></body></html>`);
         return;
     }
     let name;
@@ -28,14 +28,16 @@ http.createServer((req, res) => {
             let html = bytes.toString().replace(/<script src="https:[^"]+"><\/script>/g, '');
             html = html.replace("if ('serviceWorker' in navigator)", 'if (false)');
             const requestedScene = url.searchParams.get('testScene');
-            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup'].includes(requestedScene) ? requestedScene : 'age');
+            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age');
             const safe = url.searchParams.get('safe') === '1';
+            const mode = url.searchParams.get('child') === '1' ? 'child' : 'adult';
             html = html.replace('</body>', `<script>
                 window.addEventListener('load', async () => {
                     ${safe ? "document.documentElement.style.cssText='--safe-left:44px;--safe-right:44px;--safe-bottom:21px'" : ''};
                     const scene = ${scene};
                     if (scene !== 'age') {
-                        window.gameMode = 'adult';
+                        window.gameMode = ${JSON.stringify(mode)};
+                        document.body.classList.toggle('child-mode', window.gameMode === 'child');
                         document.getElementById('age-select-dialog').style.display = 'none';
                         showScene(scene === 'menu' ? 'level-select' : 'game-container');
                     }
@@ -43,6 +45,33 @@ http.createServer((req, res) => {
                         DialogueSystem.loadChapter({ id:'layout', background:'assets/images/ch1/background.png', dialogue:[{
                             name:'阿斗仔', character:'阿斗仔', text:'這是一段測試對話，用來確認不同螢幕大小下，角色與對話框的位置維持穩定。較長的內容應該可以在對話框內捲動閱讀，不會超出遊戲舞台。'.repeat(5), characterImage:'assets/images/characters/阿斗仔.png'
                         }] });
+                    }
+                    if (scene === 'defensepace') {
+                        const game = DefenseGameV2;
+                        game.start({level:1,gameMode:window.gameMode,onComplete(){}});
+                        const started = performance.now();
+                        const samples = new Map();
+                        let lastInput = 0;
+                        while (performance.now()-started < 60000 && game.gameActive) {
+                            const attack = game.currentAttack;
+                            if (attack && attack.type !== 'END' && game.state !== game.states.PREPARING) {
+                                if (!samples.has(attack)) samples.set(attack, {type:attack.type,start:performance.now(),end:null});
+                                const sample = samples.get(attack);
+                                if (attack.finished && sample.end === null) sample.end = performance.now();
+                                if (!attack.finished && performance.now()-lastInput >= 250) {
+                                    let dir = null;
+                                    if (attack.type === 'NORMAL' && !attack.correctHit) dir = attack.dir;
+                                    if (attack.type === 'MULTI') dir = attack.dirs.find(d => !attack.swipedDirs.includes(d));
+                                    if (attack.type === 'MULTI_MIXED') dir = attack.correctDirs.find(d => !attack.swipedDirs.includes(d));
+                                    if (dir) { game.handleSwipe(dir); lastInput = performance.now(); }
+                                }
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 20));
+                        }
+                        const reports = [...samples.values()].map(s => ({type:s.type,ms:Math.round((s.end||performance.now())-s.start)}));
+                        const pacingOK = !game.gameActive && game.waveNumber === 10 && game.score === game.maxScore && samples.size === 10;
+                        parent.postMessage({pacingOK,mode:window.gameMode,waves:game.waveNumber,score:game.score,maxScore:game.maxScore,reports}, location.origin);
+                        return;
                     }
                     if (scene === 'memorycleanup') {
                         let cleanupOK = true, oldCompletions = 0;
