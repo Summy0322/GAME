@@ -13,6 +13,7 @@
 - **三章故事**：結合防禦挑戰、記憶配對、知識問答、物品拖曳與銅板付款。
 - **橫向 16:9 舞台**：保持場景構圖，依裝置可用範圍縮放並避開手機安全區域。
 - **章節紀錄**：完成紀錄保存在目前瀏覽器；關卡選單可重設。尚不支援對話或小遊戲中途續玩。
+- **第一章節奏**：第一個防禦小關共 10 波，從練習逐步進入混合辨識，畫面顯示波次與石頭等待進度。
 - **PWA 配置**：含安裝與快取設定；完整離線資源涵蓋範圍仍待驗證。
 
 ## 在電腦上執行
@@ -63,7 +64,7 @@ flowchart TD
 若已安裝 Node.js，可在專案根目錄執行：
 
 ```sh
-node --test tests/regressions.cjs tests/lifecycle.test.cjs
+node --test tests/regressions.cjs tests/lifecycle.test.cjs tests/defense-flow.test.cjs
 node tests/serve-layout.cjs
 ```
 
@@ -71,6 +72,7 @@ node tests/serve-layout.cjs
 可切換 `age`、`menu`、`dialogue`、`quiz`、`defense`、`memory` 場景；
 `scene=cleanup` 會執行互動／付款反覆開關及拖曳退出的檢查。
 `scene=memorycleanup` 檢查記憶階段退出重進；首頁圖片按鈕可使用 Tab 與 Enter 操作。
+`scene=defensepace` 會自動操作第一個防禦小關並檢查 10 波、計分及結算；加上 `child=1` 可測小朋友版。
 這些測試工具與 `docs` 不影響正式遊戲啟動；`js`、`css` 與入口引用的資源則需要保留。
 
 ## 已知限制與下一步
