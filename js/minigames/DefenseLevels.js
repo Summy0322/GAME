@@ -300,8 +300,15 @@
                 successGap: child ? 450 : 320,
                 avoidHold: child ? 800 : 600
             };
-            if (level === 1) config.flow.randomizeAfter = 5;
+            config.flow.randomizeAfter = 5;
+            const introduced = new Set();
             config.attackPatterns.forEach((attack, index) => {
+                // 首次重擊保留示範方向；旋轉與結束固定在原位置。
+                if (attack.type === 'AOE' || attack.type === 'END' ||
+                    (attack.type === 'HEAVY' && !introduced.has('HEAVY'))) {
+                    attack.keepAuthored = true;
+                }
+                introduced.add(attack.type);
                 if (attack.type === 'DECOY') attack.wait = child ? 1900 : 1400;
                 if (level === 1 && attack.type !== 'END') {
                     attack.phase = index < 5 ? '練習' : index < 8 ? '辨識' : '挑戰';

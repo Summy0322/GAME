@@ -16,7 +16,8 @@ window.DefenseAttackRunnerMixin = {
         // 只交換連續、同題型／目標數／時限／階段的模板，保留難度曲線及最後挑戰。
         const category = attack => JSON.stringify([
             attack.type, attack.dirs?.length, attack.correctDirs?.length,
-            attack.wrongDirs?.length, attack.wait, attack.phase
+            attack.wrongDirs?.length, attack.wait, attack.phase, attack.keepAuthored,
+            attack.type === 'HEAVY' ? (['up','down'].includes(attack.dir) ? 'vertical' : 'horizontal') : null
         ]);
         for (let start = fixedCount; start < queue.length; ) {
             let end = start + 1;
@@ -31,17 +32,21 @@ window.DefenseAttackRunnerMixin = {
         const directions = ['up', 'right', 'down', 'left'];
         const arrows = {up:'⬆️', right:'➡️', down:'⬇️', left:'⬅️'};
         const counts = Object.fromEntries(directions.map(dir => [dir, 0]));
-        const targets = attack => attack.correctDirs || attack.dirs || (attack.type === 'NORMAL' ? [attack.dir] : []);
+        const targets = attack => attack.correctDirs || attack.dirs || (['NORMAL','HEAVY'].includes(attack.type) ? [attack.dir] : []);
+        const obstacles = attack => attack.wrongDirs || (attack.type === 'DECOY' ? [attack.dir] : []);
         const layout = attack => JSON.stringify([
-            [...targets(attack)].sort(), [...(attack.wrongDirs || [])].sort()
+            [...targets(attack)].sort(), [...obstacles(attack)].sort()
         ]);
         for (let index = 0; index < queue.length; index++) {
             let attack = queue[index];
-            if (index >= fixedCount && ['MULTI', 'MULTI_MIXED'].includes(attack.type)) {
+            if (index >= fixedCount && !attack.keepAuthored &&
+                ['NORMAL','DECOY','MULTI','MULTI_MIXED','HEAVY'].includes(attack.type)) {
                 // 用整體旋轉保留對向／相鄰關係，不因隨機化增加操作負擔。
-                let candidates = directions.map((_, rotation) => {
+                const rotations = attack.type === 'HEAVY' ? [0,2] : [0,1,2,3];
+                let candidates = rotations.map(rotation => {
                     const rotated = {...attack};
                     const rotate = dir => directions[(directions.indexOf(dir) + rotation) % 4];
+                    if (attack.dir) rotated.dir = rotate(attack.dir);
                     for (const key of ['dirs', 'correctDirs', 'wrongDirs']) {
                         if (attack[key]) rotated[key] = attack[key].map(rotate);
                     }
@@ -60,9 +65,17 @@ window.DefenseAttackRunnerMixin = {
                 attack = candidates[Math.floor(random() * candidates.length)];
                 const targetName = this.levelConfig.flow.targetName;
                 const icons = dirs => dirs.map(dir => arrows[dir]).join('');
-                attack.text = attack.type === 'MULTI_MIXED'
-                    ? `${icons(attack.correctDirs)}${targetName}｜${icons(attack.wrongDirs)}石頭`
-                    : `${icons(attack.dirs)} ${targetName}`;
+                if (attack.type === 'MULTI_MIXED') {
+                    attack.text = `${icons(attack.correctDirs)}${targetName}｜${icons(attack.wrongDirs)}石頭`;
+                } else if (attack.type === 'MULTI') {
+                    attack.text = `${icons(attack.dirs)} ${targetName}`;
+                } else if (attack.type === 'NORMAL') {
+                    attack.text = `${arrows[attack.dir]} ${targetName}`;
+                } else if (attack.type === 'DECOY') {
+                    attack.text = `${arrows[attack.dir]} 🪨 石頭！別滑`;
+                } else {
+                    attack.text = `${arrows[attack.dir]} ${attack.text}`;
+                }
                 queue[index] = attack;
             }
             targets(attack).forEach(dir => counts[dir]++);

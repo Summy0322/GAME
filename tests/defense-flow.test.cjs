@@ -277,12 +277,65 @@ test('different random streams produce varied layouts while identical seeds repr
     assert.equal(JSON.stringify(game.buildAttackQueue(seededRandom(42))), JSON.stringify(game.buildAttackQueue(seededRandom(42))));
 });
 
-test('other sublevels and test levels retain their authored directions and cues', () => {
-    for (const level of [2,3,99]) {
+test('test levels retain their authored directions and cues', () => {
+    for (const level of [99]) {
         for (const mode of ['adult','child']) {
             const {game} = fixture(mode,level);
             const expected = game.levelConfig.attackPatterns.map(a => ({...a,resolved:false}));
             assert.equal(JSON.stringify(game.buildAttackQueue(seededRandom(7))), JSON.stringify(expected));
         }
+    }
+});
+
+
+test('all six configurations randomize practice while preserving lessons, special mechanics and scoring', () => {
+    const ring = ['up','right','down','left'];
+    const arrows = {up:'⬆️',right:'➡️',down:'⬇️',left:'⬅️'};
+    const plain = value => JSON.parse(JSON.stringify(value));
+    for (const level of [1,2,3]) for (const mode of ['adult','child']) {
+        const {game} = fixture(mode,level);
+        const templates = game.levelConfig.attackPatterns;
+        const before = JSON.stringify(templates);
+        const variants = new Set();
+        for (let seed=1; seed<=256; seed++) {
+            const queue = game.buildAttackQueue(seededRandom(seed));
+            variants.add(JSON.stringify(queue));
+            assert.equal(queue.length, templates.length);
+            assert.deepEqual(plain(queue.slice(0,5)), plain(templates.slice(0,5).map(a=>({...a,resolved:false}))));
+            queue.forEach((attack,index) => {
+                const source = templates[index];
+                for (const key of ['type','wait','phase','keepAuthored']) assert.equal(attack[key],source[key]);
+                for (const key of ['dirs','correctDirs','wrongDirs']) {
+                    assert.equal(attack[key]?.length,source[key]?.length);
+                    if (attack[key]) {
+                        assert.equal(new Set(attack[key]).size,attack[key].length);
+                        assert.ok(attack[key].every(d=>ring.includes(d)));
+                    }
+                }
+                if (index<5 || source.keepAuthored) {
+                    assert.deepEqual(plain(attack),plain({...source,resolved:false}));
+                    return;
+                }
+                if (attack.type==='HEAVY') {
+                    assert.equal(['up','down'].includes(attack.dir),['up','down'].includes(source.dir));
+                    assert.equal(attack.text,arrows[attack.dir]+' '+source.text);
+                }
+                if (attack.type==='NORMAL') assert.equal(attack.text,arrows[attack.dir]+' '+game.levelConfig.flow.targetName);
+                if (attack.type==='DECOY') assert.equal(attack.text,arrows[attack.dir]+' 🪨 石頭！別滑');
+                if (attack.dirs) {
+                    const rotation=(ring.indexOf(attack.dirs[0])-ring.indexOf(source.dirs[0])+4)%4;
+                    for (const key of ['dirs','correctDirs','wrongDirs']) if (source[key]) {
+                        assert.deepEqual(Array.from(attack[key]),Array.from(source[key],d=>ring[(ring.indexOf(d)+rotation)%4]));
+                    }
+                    if (attack.correctDirs) {
+                        assert.ok(attack.correctDirs.every(d=>!attack.wrongDirs.includes(d)));
+                        assert.equal(attack.correctDirs.length+attack.wrongDirs.length,attack.dirs.length);
+                        assert.equal(attack.text,attack.correctDirs.map(d=>arrows[d]).join('')+game.levelConfig.flow.targetName+'｜'+attack.wrongDirs.map(d=>arrows[d]).join('')+'石頭');
+                    } else assert.equal(attack.text,attack.dirs.map(d=>arrows[d]).join('')+' '+game.levelConfig.flow.targetName);
+                }
+            });
+        }
+        assert.ok(variants.size>=8, level+' '+mode+' has varied layouts');
+        assert.equal(JSON.stringify(templates),before);
     }
 });
