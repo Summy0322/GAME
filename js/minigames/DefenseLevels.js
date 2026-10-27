@@ -300,12 +300,13 @@
                 successGap: child ? 450 : 320,
                 avoidHold: child ? 800 : 600
             };
-            config.flow.randomizeAfter = 5;
+            config.flow.randomizeAfter = level === 1 ? 5 : 0;
+            config.flow.shuffleWindow = level === 1 ? 0 : 4;
             const introduced = new Set();
             config.attackPatterns.forEach((attack, index) => {
-                // 首次重擊保留示範方向；旋轉與結束固定在原位置。
+                // 火災關首次重擊保留教學；黃豆關已學會重擊。旋轉作為固定節奏錨點。
                 if (attack.type === 'AOE' || attack.type === 'END' ||
-                    (attack.type === 'HEAVY' && !introduced.has('HEAVY'))) {
+                    (level === 2 && attack.type === 'HEAVY' && !introduced.has('HEAVY'))) {
                     attack.keepAuthored = true;
                 }
                 introduced.add(attack.type);

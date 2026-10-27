@@ -11,17 +11,20 @@ window.DefenseAttackRunnerMixin = {
             return copy;
         });
         const fixedCount = this.levelConfig.flow?.randomizeAfter;
-        if (!Number.isInteger(fixedCount) || fixedCount < 1) return queue;
+        if (!Number.isInteger(fixedCount) || fixedCount < 0) return queue;
 
-        // 只交換連續、同題型／目標數／時限／階段的模板，保留難度曲線及最後挑戰。
+        // 後續小關已學會基本操作，在最多四波的區段內混排；不跨教學／旋轉錨點。
+        const windowSize = this.levelConfig.flow.shuffleWindow;
         const category = attack => JSON.stringify([
             attack.type, attack.dirs?.length, attack.correctDirs?.length,
             attack.wrongDirs?.length, attack.wait, attack.phase, attack.keepAuthored,
             attack.type === 'HEAVY' ? (['up','down'].includes(attack.dir) ? 'vertical' : 'horizontal') : null
         ]);
         for (let start = fixedCount; start < queue.length; ) {
+            if (queue[start].keepAuthored) { start++; continue; }
             let end = start + 1;
-            while (end < queue.length && category(queue[end]) === category(queue[start])) end++;
+            while (end < queue.length && !queue[end].keepAuthored &&
+                (windowSize ? end - start < windowSize : category(queue[end]) === category(queue[start]))) end++;
             for (let i = end - 1; i > start; i--) {
                 const j = start + Math.floor(random() * (i - start + 1));
                 [queue[i], queue[j]] = [queue[j], queue[i]];
@@ -52,7 +55,7 @@ window.DefenseAttackRunnerMixin = {
                     }
                     return rotated;
                 });
-                const different = candidates.filter(candidate => layout(candidate) !== layout(queue[index - 1]));
+                const different = candidates.filter(candidate => layout(candidate) !== (index > 0 ? layout(queue[index - 1]) : null));
                 if (different.length) candidates = different;
                 const cost = candidate => {
                     const next = {...counts};

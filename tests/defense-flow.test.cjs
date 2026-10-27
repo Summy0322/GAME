@@ -288,54 +288,54 @@ test('test levels retain their authored directions and cues', () => {
 });
 
 
-test('all six configurations randomize practice while preserving lessons, special mechanics and scoring', () => {
-    const ring = ['up','right','down','left'];
-    const arrows = {up:'⬆️',right:'➡️',down:'⬇️',left:'⬅️'};
-    const plain = value => JSON.parse(JSON.stringify(value));
-    for (const level of [1,2,3]) for (const mode of ['adult','child']) {
-        const {game} = fixture(mode,level);
-        const templates = game.levelConfig.attackPatterns;
-        const before = JSON.stringify(templates);
-        const variants = new Set();
-        for (let seed=1; seed<=256; seed++) {
-            const queue = game.buildAttackQueue(seededRandom(seed));
-            variants.add(JSON.stringify(queue));
-            assert.equal(queue.length, templates.length);
-            assert.deepEqual(plain(queue.slice(0,5)), plain(templates.slice(0,5).map(a=>({...a,resolved:false}))));
-            queue.forEach((attack,index) => {
-                const source = templates[index];
-                for (const key of ['type','wait','phase','keepAuthored']) assert.equal(attack[key],source[key]);
-                for (const key of ['dirs','correctDirs','wrongDirs']) {
-                    assert.equal(attack[key]?.length,source[key]?.length);
-                    if (attack[key]) {
-                        assert.equal(new Set(attack[key]).size,attack[key].length);
-                        assert.ok(attack[key].every(d=>ring.includes(d)));
-                    }
+test('later levels mix learned mechanics from wave one without crossing teaching anchors', () => {
+    const ring=['up','right','down','left'];
+    const arrows={up:'⬆️',right:'➡️',down:'⬇️',left:'⬅️'};
+    const plain=v=>JSON.parse(JSON.stringify(v));
+    const signature=a=>JSON.stringify([a.type,a.wait,a.phase,a.keepAuthored,a.dirs?.length,a.correctDirs?.length,a.wrongDirs?.length,a.type==='HEAVY'?['up','down'].includes(a.dir):null]);
+    for(const level of [2,3]) for(const mode of ['adult','child']) {
+        const {game}=fixture(mode,level), templates=game.levelConfig.attackPatterns;
+        const before=JSON.stringify(templates), orders=new Set(), openings=new Set();
+        assert.equal(game.levelConfig.flow.randomizeAfter,0);
+        assert.equal(templates.find(a=>a.type==='HEAVY').keepAuthored,level===2?true:undefined);
+        for(let seed=1;seed<=256;seed++) {
+            const queue=game.buildAttackQueue(seededRandom(seed));
+            assert.equal(queue.length,templates.length);
+            orders.add(queue.map(signature).join('|'));
+            openings.add(queue[0].dir);
+            for(let start=0;start<templates.length;) {
+                if(templates[start].keepAuthored) {
+                    assert.deepEqual(plain(queue[start]),plain({...templates[start],resolved:false}));
+                    start++;continue;
                 }
-                if (index<5 || source.keepAuthored) {
-                    assert.deepEqual(plain(attack),plain({...source,resolved:false}));
-                    return;
-                }
-                if (attack.type==='HEAVY') {
-                    assert.equal(['up','down'].includes(attack.dir),['up','down'].includes(source.dir));
-                    assert.equal(attack.text,arrows[attack.dir]+' '+source.text);
-                }
-                if (attack.type==='NORMAL') assert.equal(attack.text,arrows[attack.dir]+' '+game.levelConfig.flow.targetName);
-                if (attack.type==='DECOY') assert.equal(attack.text,arrows[attack.dir]+' 🪨 石頭！別滑');
-                if (attack.dirs) {
-                    const rotation=(ring.indexOf(attack.dirs[0])-ring.indexOf(source.dirs[0])+4)%4;
-                    for (const key of ['dirs','correctDirs','wrongDirs']) if (source[key]) {
-                        assert.deepEqual(Array.from(attack[key]),Array.from(source[key],d=>ring[(ring.indexOf(d)+rotation)%4]));
-                    }
-                    if (attack.correctDirs) {
+                let end=start+1;
+                while(end<templates.length&&!templates[end].keepAuthored&&end-start<4)end++;
+                assert.deepEqual(queue.slice(start,end).map(signature).sort(),templates.slice(start,end).map(signature).sort());
+                for(const attack of queue.slice(start,end)) {
+                    const possible=templates.slice(start,end).filter(a=>signature(a)===signature(attack));
+                    assert.ok(possible.some(source=> {
+                        return (attack.type==='HEAVY'?[0,2]:[0,1,2,3]).some(rotation=> {
+                            const rotate=d=>ring[(ring.indexOf(d)+rotation)%4];
+                            if(source.dir&&attack.dir!==rotate(source.dir))return false;
+                            return ['dirs','correctDirs','wrongDirs'].every(key=>!source[key]||JSON.stringify(Array.from(attack[key]))===JSON.stringify(Array.from(source[key],rotate)));
+                        });
+                    }));
+                    const target=game.levelConfig.flow.targetName;
+                    const icons=dirs=>dirs.map(d=>arrows[d]).join('');
+                    if(attack.type==='NORMAL')assert.equal(attack.text,arrows[attack.dir]+' '+target);
+                    if(attack.type==='DECOY')assert.equal(attack.text,arrows[attack.dir]+' 🪨 石頭！別滑');
+                    if(attack.type==='HEAVY')assert.ok(possible.some(a=>attack.text===arrows[attack.dir]+' '+a.text));
+                    if(attack.type==='MULTI')assert.equal(attack.text,icons(attack.dirs)+' '+target);
+                    if(attack.type==='MULTI_MIXED') {
+                        assert.equal(attack.text,icons(attack.correctDirs)+target+'｜'+icons(attack.wrongDirs)+'石頭');
                         assert.ok(attack.correctDirs.every(d=>!attack.wrongDirs.includes(d)));
-                        assert.equal(attack.correctDirs.length+attack.wrongDirs.length,attack.dirs.length);
-                        assert.equal(attack.text,attack.correctDirs.map(d=>arrows[d]).join('')+game.levelConfig.flow.targetName+'｜'+attack.wrongDirs.map(d=>arrows[d]).join('')+'石頭');
-                    } else assert.equal(attack.text,attack.dirs.map(d=>arrows[d]).join('')+' '+game.levelConfig.flow.targetName);
+                    }
                 }
-            });
+                start=end;
+            }
         }
-        assert.ok(variants.size>=8, level+' '+mode+' has varied layouts');
+        assert.ok(orders.size>=8,level+' '+mode+' varies type order');
+        assert.equal(openings.size,4,level+' '+mode+' varies opening direction');
         assert.equal(JSON.stringify(templates),before);
     }
 });
