@@ -55,7 +55,7 @@ http.createServer((req, res) => {
                         while (performance.now()-started < 60000 && game.gameActive) {
                             const attack = game.currentAttack;
                             if (attack && attack.type !== 'END' && game.state !== game.states.PREPARING) {
-                                if (!samples.has(attack)) samples.set(attack, {type:attack.type,start:performance.now(),end:null});
+                                if (!samples.has(attack)) samples.set(attack, {type:attack.type,directions:attack.dirs || (attack.dir ? [attack.dir] : []),correctDirs:attack.correctDirs || [],wrongDirs:attack.wrongDirs || [],start:performance.now(),end:null});
                                 const sample = samples.get(attack);
                                 if (attack.finished && sample.end === null) sample.end = performance.now();
                                 if (!attack.finished && performance.now()-lastInput >= 250) {
@@ -68,7 +68,7 @@ http.createServer((req, res) => {
                             }
                             await new Promise(resolve => setTimeout(resolve, 20));
                         }
-                        const reports = [...samples.values()].map(s => ({type:s.type,ms:Math.round((s.end||performance.now())-s.start)}));
+                        const reports = [...samples.values()].map(s => ({type:s.type,directions:s.directions,correctDirs:s.correctDirs,wrongDirs:s.wrongDirs,ms:Math.round((s.end||performance.now())-s.start)}));
                         const pacingOK = !game.gameActive && game.waveNumber === 10 && game.score === game.maxScore && samples.size === 10;
                         parent.postMessage({pacingOK,mode:window.gameMode,waves:game.waveNumber,score:game.score,maxScore:game.maxScore,reports}, location.origin);
                         return;

@@ -2,6 +2,90 @@
 // 攻擊序列與結束流程（由 DefenseGameV2 合併）
 
 window.DefenseAttackRunnerMixin = {
+    buildAttackQueue: function(random = Math.random) {
+        const queue = this.levelConfig.attackPatterns.map(attack => {
+            const copy = {...attack, resolved:false};
+            for (const key of ['dirs', 'correctDirs', 'wrongDirs']) {
+                if (attack[key]) copy[key] = [...attack[key]];
+            }
+            return copy;
+        });
+        const fixedCount = this.levelConfig.flow?.randomizeAfter;
+        if (!Number.isInteger(fixedCount) || fixedCount < 0) return queue;
+
+        // 後續小關已學會基本操作，在最多四波的區段內混排；不跨教學／旋轉錨點。
+        const windowSize = this.levelConfig.flow.shuffleWindow;
+        const category = attack => JSON.stringify([
+            attack.type, attack.dirs?.length, attack.correctDirs?.length,
+            attack.wrongDirs?.length, attack.wait, attack.phase, attack.keepAuthored,
+            attack.type === 'HEAVY' ? (['up','down'].includes(attack.dir) ? 'vertical' : 'horizontal') : null
+        ]);
+        for (let start = fixedCount; start < queue.length; ) {
+            if (queue[start].keepAuthored) { start++; continue; }
+            let end = start + 1;
+            while (end < queue.length && !queue[end].keepAuthored &&
+                (windowSize ? end - start < windowSize : category(queue[end]) === category(queue[start]))) end++;
+            for (let i = end - 1; i > start; i--) {
+                const j = start + Math.floor(random() * (i - start + 1));
+                [queue[i], queue[j]] = [queue[j], queue[i]];
+            }
+            start = end;
+        }
+
+        const directions = ['up', 'right', 'down', 'left'];
+        const arrows = {up:'⬆️', right:'➡️', down:'⬇️', left:'⬅️'};
+        const counts = Object.fromEntries(directions.map(dir => [dir, 0]));
+        const targets = attack => attack.correctDirs || attack.dirs || (['NORMAL','HEAVY'].includes(attack.type) ? [attack.dir] : []);
+        const obstacles = attack => attack.wrongDirs || (attack.type === 'DECOY' ? [attack.dir] : []);
+        const layout = attack => JSON.stringify([
+            [...targets(attack)].sort(), [...obstacles(attack)].sort()
+        ]);
+        for (let index = 0; index < queue.length; index++) {
+            let attack = queue[index];
+            if (index >= fixedCount && !attack.keepAuthored &&
+                ['NORMAL','DECOY','MULTI','MULTI_MIXED','HEAVY'].includes(attack.type)) {
+                // 用整體旋轉保留對向／相鄰關係，不因隨機化增加操作負擔。
+                const rotations = attack.type === 'HEAVY' ? [0,2] : [0,1,2,3];
+                let candidates = rotations.map(rotation => {
+                    const rotated = {...attack};
+                    const rotate = dir => directions[(directions.indexOf(dir) + rotation) % 4];
+                    if (attack.dir) rotated.dir = rotate(attack.dir);
+                    for (const key of ['dirs', 'correctDirs', 'wrongDirs']) {
+                        if (attack[key]) rotated[key] = attack[key].map(rotate);
+                    }
+                    return rotated;
+                });
+                const different = candidates.filter(candidate => layout(candidate) !== (index > 0 ? layout(queue[index - 1]) : null));
+                if (different.length) candidates = different;
+                const cost = candidate => {
+                    const next = {...counts};
+                    targets(candidate).forEach(dir => next[dir]++);
+                    const values = Object.values(next);
+                    return (Math.max(...values) - Math.min(...values)) * 100 + values.reduce((sum, n) => sum + n*n, 0);
+                };
+                const best = Math.min(...candidates.map(cost));
+                candidates = candidates.filter(candidate => cost(candidate) === best);
+                attack = candidates[Math.floor(random() * candidates.length)];
+                const targetName = this.levelConfig.flow.targetName;
+                const icons = dirs => dirs.map(dir => arrows[dir]).join('');
+                if (attack.type === 'MULTI_MIXED') {
+                    attack.text = `${icons(attack.correctDirs)}${targetName}｜${icons(attack.wrongDirs)}石頭`;
+                } else if (attack.type === 'MULTI') {
+                    attack.text = `${icons(attack.dirs)} ${targetName}`;
+                } else if (attack.type === 'NORMAL') {
+                    attack.text = `${arrows[attack.dir]} ${targetName}`;
+                } else if (attack.type === 'DECOY') {
+                    attack.text = `${arrows[attack.dir]} 🪨 石頭！別滑`;
+                } else {
+                    attack.text = `${arrows[attack.dir]} ${attack.text}`;
+                }
+                queue[index] = attack;
+            }
+            targets(attack).forEach(dir => counts[dir]++);
+        }
+        return queue;
+    },
+
     queueWaveCallback: function(callback, delay, attack = null) {
         const session = this.sessionId;
         const timer = setTimeout(() => {
@@ -116,14 +200,7 @@ window.DefenseAttackRunnerMixin = {
 
     startAttackSequence: function () {
         if (!this.gameActive) return;
-        this.attackQueue = this.levelConfig.attackPatterns.map((attack) => {
-            const copy = { ...attack };
-            if (attack.dirs) copy.dirs = [...attack.dirs];
-            if (attack.correctDirs) copy.correctDirs = [...attack.correctDirs];
-            if (attack.wrongDirs) copy.wrongDirs = [...attack.wrongDirs];
-            copy.resolved = false;
-            return copy;
-        });
+        this.attackQueue = this.buildAttackQueue();
         this.totalWaves = this.attackQueue.filter(attack => attack.type !== 'END').length;
         this.waveNumber = 0;
         this.processNextAttack();

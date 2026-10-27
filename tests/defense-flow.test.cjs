@@ -218,3 +218,124 @@ test('mixed completion works with the real configurations of all three defense s
         }
     }
 });
+
+function seededRandom(seed) {
+    return () => {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+    };
+}
+
+test('randomized practice preserves teaching, difficulty, geometry, balanced directions and matching cues', () => {
+    const ring = ['up','right','down','left'];
+    const arrows = {up:'⬆️',right:'➡️',down:'⬇️',left:'⬅️'};
+    const plain = value => JSON.parse(JSON.stringify(value));
+    for (const mode of ['adult','child']) {
+        const {game} = fixture(mode);
+        const templates = game.levelConfig.attackPatterns;
+        const before = JSON.stringify(templates);
+        for (let seed = 1; seed <= 256; seed++) {
+            const queue = game.buildAttackQueue(seededRandom(seed));
+            assert.deepEqual(plain(queue.slice(0,5)), plain(templates.slice(0,5).map(a => ({...a,resolved:false}))));
+            assert.equal(queue.length, 11);
+            assert.equal(queue.at(-1).type, 'END');
+            const counts = Object.fromEntries(ring.map(d => [d,1]));
+            for (let i = 5; i < 10; i++) {
+                const attack = queue[i], source = templates[i];
+                assert.equal(attack.type, source.type);
+                assert.equal(attack.wait, source.wait);
+                assert.equal(attack.phase, source.phase);
+                assert.equal(new Set(attack.dirs).size, source.dirs.length);
+                assert.ok(attack.dirs.every(d => ring.includes(d)));
+                const rotation = (ring.indexOf(attack.dirs[0]) - ring.indexOf(source.dirs[0]) + 4) % 4;
+                for (const key of ['dirs','correctDirs','wrongDirs']) {
+                    if (source[key]) assert.deepEqual(Array.from(attack[key]), Array.from(source[key], d => ring[(ring.indexOf(d)+rotation)%4]));
+                }
+                const correct = attack.correctDirs || attack.dirs;
+                const wrong = attack.wrongDirs || [];
+                assert.ok(correct.every(d => !wrong.includes(d)));
+                if (attack.type === 'MULTI_MIXED') {
+                    assert.equal(correct.length + wrong.length, attack.dirs.length);
+                    assert.equal(attack.text, correct.map(d=>arrows[d]).join('')+'肉圓｜'+wrong.map(d=>arrows[d]).join('')+'石頭');
+                } else {
+                    assert.equal(attack.text, correct.map(d=>arrows[d]).join('')+' 肉圓');
+                }
+                correct.forEach(d => counts[d]++);
+            }
+            assert.ok(Math.max(...Object.values(counts))-Math.min(...Object.values(counts)) <= 1);
+            assert.notDeepEqual([...queue[5].dirs].sort(), [...queue[6].dirs].sort());
+        }
+        assert.equal(JSON.stringify(templates), before);
+    }
+});
+
+test('different random streams produce varied layouts while identical seeds reproduce a layout', () => {
+    const {game} = fixture();
+    const variants = new Set();
+    for (let seed=1; seed<=64; seed++) variants.add(JSON.stringify(game.buildAttackQueue(seededRandom(seed))));
+    assert.ok(variants.size >= 8);
+    assert.equal(JSON.stringify(game.buildAttackQueue(seededRandom(42))), JSON.stringify(game.buildAttackQueue(seededRandom(42))));
+});
+
+test('test levels retain their authored directions and cues', () => {
+    for (const level of [99]) {
+        for (const mode of ['adult','child']) {
+            const {game} = fixture(mode,level);
+            const expected = game.levelConfig.attackPatterns.map(a => ({...a,resolved:false}));
+            assert.equal(JSON.stringify(game.buildAttackQueue(seededRandom(7))), JSON.stringify(expected));
+        }
+    }
+});
+
+
+test('later levels mix learned mechanics from wave one without crossing teaching anchors', () => {
+    const ring=['up','right','down','left'];
+    const arrows={up:'⬆️',right:'➡️',down:'⬇️',left:'⬅️'};
+    const plain=v=>JSON.parse(JSON.stringify(v));
+    const signature=a=>JSON.stringify([a.type,a.wait,a.phase,a.keepAuthored,a.dirs?.length,a.correctDirs?.length,a.wrongDirs?.length,a.type==='HEAVY'?['up','down'].includes(a.dir):null]);
+    for(const level of [2,3]) for(const mode of ['adult','child']) {
+        const {game}=fixture(mode,level), templates=game.levelConfig.attackPatterns;
+        const before=JSON.stringify(templates), orders=new Set(), openings=new Set();
+        assert.equal(game.levelConfig.flow.randomizeAfter,0);
+        assert.equal(templates.find(a=>a.type==='HEAVY').keepAuthored,level===2?true:undefined);
+        for(let seed=1;seed<=256;seed++) {
+            const queue=game.buildAttackQueue(seededRandom(seed));
+            assert.equal(queue.length,templates.length);
+            orders.add(queue.map(signature).join('|'));
+            openings.add(queue[0].dir);
+            for(let start=0;start<templates.length;) {
+                if(templates[start].keepAuthored) {
+                    assert.deepEqual(plain(queue[start]),plain({...templates[start],resolved:false}));
+                    start++;continue;
+                }
+                let end=start+1;
+                while(end<templates.length&&!templates[end].keepAuthored&&end-start<4)end++;
+                assert.deepEqual(queue.slice(start,end).map(signature).sort(),templates.slice(start,end).map(signature).sort());
+                for(const attack of queue.slice(start,end)) {
+                    const possible=templates.slice(start,end).filter(a=>signature(a)===signature(attack));
+                    assert.ok(possible.some(source=> {
+                        return (attack.type==='HEAVY'?[0,2]:[0,1,2,3]).some(rotation=> {
+                            const rotate=d=>ring[(ring.indexOf(d)+rotation)%4];
+                            if(source.dir&&attack.dir!==rotate(source.dir))return false;
+                            return ['dirs','correctDirs','wrongDirs'].every(key=>!source[key]||JSON.stringify(Array.from(attack[key]))===JSON.stringify(Array.from(source[key],rotate)));
+                        });
+                    }));
+                    const target=game.levelConfig.flow.targetName;
+                    const icons=dirs=>dirs.map(d=>arrows[d]).join('');
+                    if(attack.type==='NORMAL')assert.equal(attack.text,arrows[attack.dir]+' '+target);
+                    if(attack.type==='DECOY')assert.equal(attack.text,arrows[attack.dir]+' 🪨 石頭！別滑');
+                    if(attack.type==='HEAVY')assert.ok(possible.some(a=>attack.text===arrows[attack.dir]+' '+a.text));
+                    if(attack.type==='MULTI')assert.equal(attack.text,icons(attack.dirs)+' '+target);
+                    if(attack.type==='MULTI_MIXED') {
+                        assert.equal(attack.text,icons(attack.correctDirs)+target+'｜'+icons(attack.wrongDirs)+'石頭');
+                        assert.ok(attack.correctDirs.every(d=>!attack.wrongDirs.includes(d)));
+                    }
+                }
+                start=end;
+            }
+        }
+        assert.ok(orders.size>=8,level+' '+mode+' varies type order');
+        assert.equal(openings.size,4,level+' '+mode+' varies opening direction');
+        assert.equal(JSON.stringify(templates),before);
+    }
+});
