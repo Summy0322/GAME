@@ -300,6 +300,7 @@
                 successGap: child ? 450 : 320,
                 avoidHold: child ? 800 : 600
             };
+            if (level === 1) config.flow.randomizeAfter = 5;
             config.attackPatterns.forEach((attack, index) => {
                 if (attack.type === 'DECOY') attack.wait = child ? 1900 : 1400;
                 if (level === 1 && attack.type !== 'END') {

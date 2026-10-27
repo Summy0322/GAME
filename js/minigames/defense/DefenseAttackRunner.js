@@ -2,6 +2,74 @@
 // 攻擊序列與結束流程（由 DefenseGameV2 合併）
 
 window.DefenseAttackRunnerMixin = {
+    buildAttackQueue: function(random = Math.random) {
+        const queue = this.levelConfig.attackPatterns.map(attack => {
+            const copy = {...attack, resolved:false};
+            for (const key of ['dirs', 'correctDirs', 'wrongDirs']) {
+                if (attack[key]) copy[key] = [...attack[key]];
+            }
+            return copy;
+        });
+        const fixedCount = this.levelConfig.flow?.randomizeAfter;
+        if (!Number.isInteger(fixedCount) || fixedCount < 1) return queue;
+
+        // 只交換連續、同題型／目標數／時限／階段的模板，保留難度曲線及最後挑戰。
+        const category = attack => JSON.stringify([
+            attack.type, attack.dirs?.length, attack.correctDirs?.length,
+            attack.wrongDirs?.length, attack.wait, attack.phase
+        ]);
+        for (let start = fixedCount; start < queue.length; ) {
+            let end = start + 1;
+            while (end < queue.length && category(queue[end]) === category(queue[start])) end++;
+            for (let i = end - 1; i > start; i--) {
+                const j = start + Math.floor(random() * (i - start + 1));
+                [queue[i], queue[j]] = [queue[j], queue[i]];
+            }
+            start = end;
+        }
+
+        const directions = ['up', 'right', 'down', 'left'];
+        const arrows = {up:'⬆️', right:'➡️', down:'⬇️', left:'⬅️'};
+        const counts = Object.fromEntries(directions.map(dir => [dir, 0]));
+        const targets = attack => attack.correctDirs || attack.dirs || (attack.type === 'NORMAL' ? [attack.dir] : []);
+        const layout = attack => JSON.stringify([
+            [...targets(attack)].sort(), [...(attack.wrongDirs || [])].sort()
+        ]);
+        for (let index = 0; index < queue.length; index++) {
+            let attack = queue[index];
+            if (index >= fixedCount && ['MULTI', 'MULTI_MIXED'].includes(attack.type)) {
+                // 用整體旋轉保留對向／相鄰關係，不因隨機化增加操作負擔。
+                let candidates = directions.map((_, rotation) => {
+                    const rotated = {...attack};
+                    const rotate = dir => directions[(directions.indexOf(dir) + rotation) % 4];
+                    for (const key of ['dirs', 'correctDirs', 'wrongDirs']) {
+                        if (attack[key]) rotated[key] = attack[key].map(rotate);
+                    }
+                    return rotated;
+                });
+                const different = candidates.filter(candidate => layout(candidate) !== layout(queue[index - 1]));
+                if (different.length) candidates = different;
+                const cost = candidate => {
+                    const next = {...counts};
+                    targets(candidate).forEach(dir => next[dir]++);
+                    const values = Object.values(next);
+                    return (Math.max(...values) - Math.min(...values)) * 100 + values.reduce((sum, n) => sum + n*n, 0);
+                };
+                const best = Math.min(...candidates.map(cost));
+                candidates = candidates.filter(candidate => cost(candidate) === best);
+                attack = candidates[Math.floor(random() * candidates.length)];
+                const targetName = this.levelConfig.flow.targetName;
+                const icons = dirs => dirs.map(dir => arrows[dir]).join('');
+                attack.text = attack.type === 'MULTI_MIXED'
+                    ? `${icons(attack.correctDirs)}${targetName}｜${icons(attack.wrongDirs)}石頭`
+                    : `${icons(attack.dirs)} ${targetName}`;
+                queue[index] = attack;
+            }
+            targets(attack).forEach(dir => counts[dir]++);
+        }
+        return queue;
+    },
+
     queueWaveCallback: function(callback, delay, attack = null) {
         const session = this.sessionId;
         const timer = setTimeout(() => {
@@ -116,14 +184,7 @@ window.DefenseAttackRunnerMixin = {
 
     startAttackSequence: function () {
         if (!this.gameActive) return;
-        this.attackQueue = this.levelConfig.attackPatterns.map((attack) => {
-            const copy = { ...attack };
-            if (attack.dirs) copy.dirs = [...attack.dirs];
-            if (attack.correctDirs) copy.correctDirs = [...attack.correctDirs];
-            if (attack.wrongDirs) copy.wrongDirs = [...attack.wrongDirs];
-            copy.resolved = false;
-            return copy;
-        });
+        this.attackQueue = this.buildAttackQueue();
         this.totalWaves = this.attackQueue.filter(attack => attack.type !== 'END').length;
         this.waveNumber = 0;
         this.processNextAttack();

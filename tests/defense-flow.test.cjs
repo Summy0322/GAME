@@ -218,3 +218,71 @@ test('mixed completion works with the real configurations of all three defense s
         }
     }
 });
+
+function seededRandom(seed) {
+    return () => {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+    };
+}
+
+test('randomized practice preserves teaching, difficulty, geometry, balanced directions and matching cues', () => {
+    const ring = ['up','right','down','left'];
+    const arrows = {up:'⬆️',right:'➡️',down:'⬇️',left:'⬅️'};
+    const plain = value => JSON.parse(JSON.stringify(value));
+    for (const mode of ['adult','child']) {
+        const {game} = fixture(mode);
+        const templates = game.levelConfig.attackPatterns;
+        const before = JSON.stringify(templates);
+        for (let seed = 1; seed <= 256; seed++) {
+            const queue = game.buildAttackQueue(seededRandom(seed));
+            assert.deepEqual(plain(queue.slice(0,5)), plain(templates.slice(0,5).map(a => ({...a,resolved:false}))));
+            assert.equal(queue.length, 11);
+            assert.equal(queue.at(-1).type, 'END');
+            const counts = Object.fromEntries(ring.map(d => [d,1]));
+            for (let i = 5; i < 10; i++) {
+                const attack = queue[i], source = templates[i];
+                assert.equal(attack.type, source.type);
+                assert.equal(attack.wait, source.wait);
+                assert.equal(attack.phase, source.phase);
+                assert.equal(new Set(attack.dirs).size, source.dirs.length);
+                assert.ok(attack.dirs.every(d => ring.includes(d)));
+                const rotation = (ring.indexOf(attack.dirs[0]) - ring.indexOf(source.dirs[0]) + 4) % 4;
+                for (const key of ['dirs','correctDirs','wrongDirs']) {
+                    if (source[key]) assert.deepEqual(Array.from(attack[key]), Array.from(source[key], d => ring[(ring.indexOf(d)+rotation)%4]));
+                }
+                const correct = attack.correctDirs || attack.dirs;
+                const wrong = attack.wrongDirs || [];
+                assert.ok(correct.every(d => !wrong.includes(d)));
+                if (attack.type === 'MULTI_MIXED') {
+                    assert.equal(correct.length + wrong.length, attack.dirs.length);
+                    assert.equal(attack.text, correct.map(d=>arrows[d]).join('')+'肉圓｜'+wrong.map(d=>arrows[d]).join('')+'石頭');
+                } else {
+                    assert.equal(attack.text, correct.map(d=>arrows[d]).join('')+' 肉圓');
+                }
+                correct.forEach(d => counts[d]++);
+            }
+            assert.ok(Math.max(...Object.values(counts))-Math.min(...Object.values(counts)) <= 1);
+            assert.notDeepEqual([...queue[5].dirs].sort(), [...queue[6].dirs].sort());
+        }
+        assert.equal(JSON.stringify(templates), before);
+    }
+});
+
+test('different random streams produce varied layouts while identical seeds reproduce a layout', () => {
+    const {game} = fixture();
+    const variants = new Set();
+    for (let seed=1; seed<=64; seed++) variants.add(JSON.stringify(game.buildAttackQueue(seededRandom(seed))));
+    assert.ok(variants.size >= 8);
+    assert.equal(JSON.stringify(game.buildAttackQueue(seededRandom(42))), JSON.stringify(game.buildAttackQueue(seededRandom(42))));
+});
+
+test('other sublevels and test levels retain their authored directions and cues', () => {
+    for (const level of [2,3,99]) {
+        for (const mode of ['adult','child']) {
+            const {game} = fixture(mode,level);
+            const expected = game.levelConfig.attackPatterns.map(a => ({...a,resolved:false}));
+            assert.equal(JSON.stringify(game.buildAttackQueue(seededRandom(7))), JSON.stringify(expected));
+        }
+    }
+});
