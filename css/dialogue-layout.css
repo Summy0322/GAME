@@ -1,11 +1,14 @@
 /* 對話比例草稿：集中覆寫，撤回此樣式即可回到原比例。 */
 #dialog-box {
+    --name-font-size: 20px;
+    --name-padding-y: 4px;
+    --name-clearance: calc(var(--name-font-size) * .7 + var(--name-padding-y) + 8px);
     bottom: 1%;
     width: 88%;
     height: var(--dialogue-height, 24%);
     min-height: 0;
     max-height: none;
-    padding: 28px 4% 22px;
+    padding: var(--name-clearance) 4% 22px;
     border-width: 2px;
     border-radius: 15px;
     background: rgba(25, 20, 17, .94);
@@ -23,12 +26,13 @@
     overflow-wrap: anywhere;
 }
 #npc-name {
-    top: auto;
-    bottom: 100%;
-    margin-bottom: -1px;
+    top: 0;
+    bottom: auto;
+    margin-bottom: 0;
+    transform: translateY(-50%);
     left: 4%;
-    padding: 4px 20px;
-    font-size: 20px;
+    padding: var(--name-padding-y) 20px;
+    font-size: var(--name-font-size);
     line-height: 1.4;
     border-radius: 25px;
     color: #ffe6a7;
@@ -53,19 +57,19 @@
 #game-container:has(#character-image[src$="herbal_owner.png"]:not([style*="display: none"])),
 #game-container:has(#character-image[src$="knife_smith.png"]:not([style*="display: none"])) { --dialogue-height: 26%; }
 body.child-mode #dialogue-text { font-size: 27px; line-height: 1.8; }
-#npc-name.position-center { left: 50%; transform: translateX(-50%); }
+#npc-name.position-center { left: 50%; transform: translate(-50%, -50%); }
 #npc-name.position-right { left: auto; right: 4%; }
 
 @supports (font-size: 1cqh) {
     #dialog-box {
-        padding: clamp(8px, 2.5cqh, 22px) 3% clamp(4px, 1.5cqh, 14px);
+        --name-font-size: clamp(14px, 3cqh, 23px);
+        --name-padding-y: .45cqh;
+        padding: var(--name-clearance) 3% clamp(4px, 1.5cqh, 14px);
     }
     #dialogue-text { font-size: clamp(16px, 3.5cqh, 28px); }
     body.child-mode #dialogue-text { font-size: clamp(17px, 3.8cqh, 30px); }
     #npc-name {
-        top: auto;
-        font-size: clamp(14px, 3cqh, 23px);
-        padding: .45cqh 1.6cqw;
+        padding: var(--name-padding-y) 1.6cqw;
         border-radius: 25px;
     }
     /* 選項區與較高的對話框分開，四個答案仍一次呈現。 */
@@ -94,6 +98,6 @@ body.child-mode #dialogue-text { font-size: 27px; line-height: 1.8; }
 }
 
 @container (max-height: 430px) {
-    #dialog-box { padding: 6px 3% 1px; }
+    #dialog-box { padding: var(--name-clearance) 3% 1px; }
     #dialog-box #dialogue-text { line-height: 1.5; }
 }
