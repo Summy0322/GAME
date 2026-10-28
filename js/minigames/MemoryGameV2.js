@@ -1144,7 +1144,7 @@ const MemoryGameV2 = {
     // 結束遊戲
     endGame: function(isWin) {
         if (!this.gameActive) return;
-        window.GameMusic?.stop('memory');
+        window.GameMusic?.fadeOut('memory');
         this.gameActive = false;
         this.canFlip = false;
         if (this.session) this.session.dispose();

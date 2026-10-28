@@ -15,7 +15,9 @@
   https://dova-s.jp/en/bgm/detail/21714
   第三章 InteractSystem 拖放小遊戲，付款與前導對話不播放。
 
-目前音檔尚未取得，程式遇到缺檔時保持靜音，不影響遊戲。
+四個音檔已取得並改為上列檔名；Chrome 載入及解碼全部成功。長度依序約 137.2、72.7、234.7、185.8 秒。
+本機驗證頁：/GAME/tests/music-assets.html（檢查解碼，不播放）。
+程式遇到缺檔時保持靜音，不影響遊戲。
 音樂預設 20%，結算、離開小遊戲及換場景停止；隱藏分頁暫停。
 
 OpenTracks（原 DOVA-SYNDROME）官方條款允許遊戲背景使用，但禁止程式自動收集、音檔外連及讓使用者可直接取得複製原音檔的公開方式。
@@ -24,3 +26,5 @@ OpenTracks（原 DOVA-SYNDROME）官方條款允許遊戲背景使用，但禁�
 
 官方授權：https://opentracks.com/en/help/articles/license/
 網站條款：https://opentracks.com/en/help/articles/terms/
+
+關卡正常結束時，音樂以 800 毫秒線性淡出後釋放；重複完成不重啟淡出。退出、換場景、開始下一關、靜音與隱藏分頁會立即清理舊聲，避免殘留。快取 game-v15。新增淡出測試，全套 56 項通過。

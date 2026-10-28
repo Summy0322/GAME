@@ -1217,7 +1217,7 @@ const DefenseGameV2 = {
     },
     
     showFinalResult: function() {
-        window.GameMusic?.stop('defense');
+        window.GameMusic?.fadeOut('defense');
         this.gameActive = false;
         this.clearAllTimers();
         

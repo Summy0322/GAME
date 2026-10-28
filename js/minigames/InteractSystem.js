@@ -977,7 +977,7 @@ const InteractSystem = {
         // 防止重複呼叫
         if (this._isCompleting) return;
         this._isCompleting = true;
-        window.GameMusic?.stop('interact');
+        window.GameMusic?.fadeOut('interact');
         
         // 顯示完成訊息
         const completeMsg = document.createElement('div');

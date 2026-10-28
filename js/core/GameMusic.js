@@ -11,6 +11,7 @@ window.GameMusic = {
     generation: 0,
     volume: 0.20,
     needsGesture: false,
+    fading: new Map(),
     start(owner, level = 1) {
         this.stop();
         const key = owner === 'defense' ? (Number(level) === 3 ? 'han' : Number(level) === 1 || Number(level) === 2 ? 'ready' : null)
@@ -32,7 +33,7 @@ window.GameMusic = {
         try {
             const result = player.play();
             result?.then(() => {
-                if (this.player !== player || generation !== this.generation) player.pause();
+                if ((this.player !== player || generation !== this.generation) && !this.fading.has(player)) player.pause();
                 else if (document.hidden) player.pause();
                 else this.needsGesture = false;
             }).catch(error => {
@@ -42,12 +43,22 @@ window.GameMusic = {
         } catch (_) { /* 音樂失敗不阻擋遊戲。 */ }
     },
     stop(owner) {
+        if (!owner) {
+            for (const [player, fade] of this.fading) {
+                clearTimeout(fade.timer);
+                this.disposePlayer(player);
+            }
+            this.fading.clear();
+        }
         if (owner && owner !== this.owner) return;
         this.generation++;
         this.owner = null;
         this.needsGesture = false;
         const player = this.player;
         this.player = null;
+        this.disposePlayer(player);
+    },
+    disposePlayer(player) {
         if (player) {
             player.onerror = null;
             player.pause();
@@ -55,9 +66,41 @@ window.GameMusic = {
             player.load();
         }
     },
+    fadeOut(owner, duration = 800) {
+        if (owner !== this.owner || !this.player) return;
+        const player = this.player;
+        this.player = null;
+        this.owner = null;
+        this.needsGesture = false;
+        this.generation++;
+        player.onerror = null;
+        if (document.hidden || this.volume === 0 || !Number.isFinite(duration) || duration <= 0) {
+            this.disposePlayer(player);
+            return;
+        }
+        const fade = {timer:null, started:performance.now(), volume:player.volume};
+        this.fading.set(player, fade);
+        const step = () => {
+            if (this.fading.get(player) !== fade) return;
+            const progress = Math.min(1, (performance.now() - fade.started) / duration);
+            player.volume = fade.volume * (1 - progress);
+            if (progress >= 1 || document.hidden || this.volume === 0) {
+                this.fading.delete(player);
+                this.disposePlayer(player);
+            } else fade.timer = setTimeout(step, 25);
+        };
+        step();
+    },
     setVolume(value) {
         if (!Number.isFinite(value)) return;
         this.volume = Math.max(0, Math.min(1, value));
+        if (this.volume === 0) {
+            for (const [player, fade] of this.fading) {
+                clearTimeout(fade.timer);
+                this.disposePlayer(player);
+            }
+            this.fading.clear();
+        }
         if (this.player) {
             this.player.volume = this.volume;
             if (this.volume === 0) this.player.pause();
@@ -71,7 +114,14 @@ window.GameMusic = {
         document.addEventListener('pointerdown', retry, {passive:true});
         document.addEventListener('keydown', retry);
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) this.player?.pause();
+            if (document.hidden) {
+                this.player?.pause();
+                for (const [player, fade] of this.fading) {
+                    clearTimeout(fade.timer);
+                    this.disposePlayer(player);
+                }
+                this.fading.clear();
+            }
             else this.play();
         });
         window.addEventListener('pagehide', () => this.stop());

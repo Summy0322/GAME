@@ -793,7 +793,7 @@ const DialogueSystem = {
     // 顯示一題問答
     showQuizQuestion: function() {
         if (this.currentQuizIndex >= this.currentQuizQuestions.length) {
-            window.GameMusic?.stop('quiz');
+            window.GameMusic?.fadeOut('quiz');
             // 所有題目答完
             console.log(`📊 問答完成！答對 ${this.quizScore} / ${this.currentQuizQuestions.length} 題`);
             if (this.quizCallback) {
