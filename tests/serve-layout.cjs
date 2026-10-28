@@ -33,8 +33,8 @@ http.createServer((req, res) => {
             const mode = url.searchParams.get('child') === '1' ? 'child' : 'adult';
             if (url.searchParams.get('layout') === 'before') html = html.replace('<link rel="stylesheet" href="css/dialogue-layout.css">', '');
             const sample = url.searchParams.get('sample') === 'long' ? 'long' : 'short';
-            const actor = ['mom','herbal_owner','knife_smith'].includes(url.searchParams.get('actor')) ? url.searchParams.get('actor') : '阿斗仔';
-            const actorName = {mom:'媽媽',herbal_owner:'中藥行老闆',knife_smith:'刀行師傅','阿斗仔':'阿斗仔'}[actor];
+            const actor = ['mom','herbal_owner','knife_smith','grocery_owner'].includes(url.searchParams.get('actor')) ? url.searchParams.get('actor') : '阿斗仔';
+            const actorName = {mom:'媽媽',herbal_owner:'中藥行老闆',knife_smith:'刀行師傅',grocery_owner:'雜貨店老闆','阿斗仔':'阿斗仔'}[actor];
             html = html.replace('</body>', `<script>
                 window.addEventListener('load', async () => {
                     ${safe ? "document.documentElement.style.cssText='--safe-left:44px;--safe-right:44px;--safe-bottom:21px'" : ''};
