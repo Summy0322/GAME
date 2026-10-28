@@ -8,16 +8,8 @@ const Typewriter = {
     typingSpeed: 40, // 每個字元的延遲時間（毫秒）
     typingInterval: null,
     typingRun: 0,
-    paginationRun: 0,
 
-    cancelPagination: function() {
-        this.paginationRun++;
-        const button = document.getElementById('dialogue-next-page');
-        if (button) { button.onclick = null; button.remove(); }
-    },
-
-    stopTyping: function(keepPagination = false) {
-        if (!keepPagination) this.cancelPagination();
+    stopTyping: function() {
         this.typingRun++;
         if (typeof AudioManager !== 'undefined') AudioManager.stopDialogueChirp?.();
         if (this.typingInterval !== null) clearInterval(this.typingInterval);
@@ -146,89 +138,13 @@ const Typewriter = {
             }
             
             // 開始打字效果
-            this.showTextPages(finalText, resolve);
+            this.typeText(finalText, resolve);
         });
-    },
-
-    // 用字素分割，保留注音 IVS、標點與 emoji；盡量在句尾換頁。
-    splitTextIntoPages: function(text, fits) {
-        const units = typeof Intl.Segmenter === 'function'
-            ? Array.from(new Intl.Segmenter('zh-Hant', {granularity:'grapheme'}).segment(text), item => item.segment)
-            : Array.from(text.matchAll(/[^\u{E0100}-\u{E01EF}][\u{E0100}-\u{E01EF}]*/gu), item => item[0]);
-        const pages = [];
-        let offset = 0;
-        while (offset < units.length) {
-            let low = 1, high = units.length - offset, count = 0;
-            while (low <= high) {
-                const middle = Math.floor((low + high) / 2);
-                if (fits(units.slice(offset, offset + middle).join(''))) { count = middle; low = middle + 1; }
-                else high = middle - 1;
-            }
-            count = Math.max(1, count);
-            if (offset + count < units.length) {
-                for (let i = count - 1; i >= Math.floor(count * .55); i--) {
-                    if (/[。！？；，、：]$/u.test(units[offset + i])) { count = i + 1; break; }
-                }
-            }
-            pages.push(units.slice(offset, offset + count).join(''));
-            offset += count;
-        }
-        return pages.length ? pages : [''];
-    },
-
-    getDialoguePages: function(text) {
-        const element = this.dialogueText;
-        if (window.gameMode !== 'child' || !element?.getBoundingClientRect || element.getBoundingClientRect().width === 0) return [text];
-        const saved = element.textContent;
-        const fits = value => {
-            element.textContent = value;
-            const finalFits = element.scrollHeight <= element.clientHeight + 1 && element.scrollWidth <= element.clientWidth + 1;
-            // 打字中暫不附加 IVS，也必須容納得下，避免過程中短暫冒出捲軸。
-            element.textContent = value.replace(/[\u{E0000}-\u{E0FFF}]/gu, '');
-            return finalFits && element.scrollHeight <= element.clientHeight + 1 && element.scrollWidth <= element.clientWidth + 1;
-        };
-        const pages = fits(text) ? [text] : this.splitTextIntoPages(text, fits);
-        element.textContent = saved;
-        return pages;
-    },
-
-    showTextPages: function(text, onComplete) {
-        this.stopTyping();
-        const session = this.paginationRun;
-        const begin = () => {
-            if (session !== this.paginationRun) return;
-            const pages = this.getDialoguePages(text);
-            const show = index => {
-                if (session !== this.paginationRun) return;
-                this.typeText(pages[index], () => {
-                    if (session !== this.paginationRun) return;
-                    if (index === pages.length - 1) { if (onComplete) onComplete(); return; }
-                    const indicator = document.getElementById('typing-complete-indicator');
-                    if (indicator) indicator.remove();
-                    const button = document.createElement('button');
-                    button.id = 'dialogue-next-page';
-                    button.type = 'button';
-                    button.textContent = `下一頁（${index + 1}/${pages.length}）`;
-                    button.onclick = event => {
-                        event.stopPropagation();
-                        if (session !== this.paginationRun) return;
-                        button.onclick = null;
-                        button.remove();
-                        show(index + 1);
-                    };
-                    this.dialogueBox.appendChild(button);
-                });
-            };
-            show(0);
-        };
-        // 等待實際字型完成，避免用替代字型估算後又溢出。
-        if (window.gameMode === 'child' && document.fonts?.ready) document.fonts.ready.then(begin);
-        else begin();
     },
     
     // 打字機效果核心函數
     typeText: function(fullText, onComplete) {
-        this.stopTyping(true);
+        this.stopTyping();
         const run = this.typingRun;
         // 清空
         this.dialogueText.textContent = '';

@@ -91,17 +91,31 @@ const chapter3ChildData = {
             name: '媽媽',
             text: function() {
                 const name = window.Chapter3_Child?.playerName || '小旅人';
-                return `${name}！好可愛的名字！來，媽媽有事要拜託你……`;
+                return `${name}！名字好可愛！`;
             },
+            characterImage: 'assets/images/characters/mom.png',
+            next: 'after_naming_task'
+        },
+        {
+            id: 'after_naming_task',
+            name: '媽媽',
+            text: '來，媽媽有事要拜託你……',
             characterImage: 'assets/images/characters/mom.png',
             next: 'opening'
         },
         
         // ========== 序幕 ==========
         {
-            id: 'opening',
+            id: "opening",
             name: '媽媽',
-            text: '今年蘇王爺聖誕，咱們村要辦呷客！媽媽要煮高麗菜飯，你去幫我買幾樣東西！',
+            characterImage: 'assets/images/characters/mom.png',
+            text: "今年蘇王爺聖誕，咱們村要辦呷客！",
+            next: "opening_part2"
+        },
+        {
+            id: "opening_part2",
+            name: '媽媽',
+            text: "媽媽要煮高麗菜飯，你去幫我買幾樣東西！",
             characterImage: 'assets/images/characters/mom.png',
             next: 'player_ask'
         },
@@ -116,9 +130,23 @@ const chapter3ChildData = {
         },
         
         {
-            id: 'mom_tell',
+            id: "mom_tell",
             name: '媽媽',
-            text: '去中藥行買八角和黑胡椒，去雜貨店買乾香菇，還有把菜刀帶去刀行磨一磨！',
+            characterImage: 'assets/images/characters/mom.png',
+            text: "去中藥行買八角和黑胡椒，",
+            next: "mom_tell_part2"
+        },
+        {
+            id: "mom_tell_part2",
+            name: '媽媽',
+            characterImage: 'assets/images/characters/mom.png',
+            text: "去雜貨店買乾香菇，",
+            next: "mom_tell_part3"
+        },
+        {
+            id: "mom_tell_part3",
+            name: '媽媽',
+            text: "還有把菜刀帶去刀行磨一磨！",
             characterImage: 'assets/images/characters/mom.png',
             next: 'give_money'
         },
@@ -126,9 +154,16 @@ const chapter3ChildData = {
         {
             id: 'give_money',
             name: '媽媽',
+            text: '這是給你的錢袋，裡面有20枚銅板。',
+            characterImage: 'assets/images/characters/mom.png',
+            next: 'give_money_reminder'
+        },
+        {
+            id: 'give_money_reminder',
+            name: '媽媽',
             text: function() {
                 const name = window.Chapter3_Child?.playerName || '小旅人';
-                return `${name}，這是給你的錢袋（20枚銅板），要收好喔！`;
+                return `${name}，收好錢袋喔！`;
             },
             characterImage: 'assets/images/characters/mom.png',
             next: 'player_confirm'
@@ -145,9 +180,16 @@ const chapter3ChildData = {
         
         // ========== 地圖收集模式 ==========
         {
-            id: 'collection_intro',
+            id: "collection_intro",
             name: '阿斗仔',
-            text: '呷客辦桌需要準備食材和工具，我們去市場逛逛吧！',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            text: "呷客辦桌需要準備食材和工具，",
+            next: "collection_intro_part2"
+        },
+        {
+            id: "collection_intro_part2",
+            name: '阿斗仔',
+            text: "我們去市場逛逛吧！",
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -181,7 +223,7 @@ const chapter3ChildData = {
                                 shopName: '中藥行',
                                 dialogue: {
                                     name: '中藥行老闆',
-                                    text: '哦！要買八角和黑胡椒啊？來，我幫你找找看！你知道它們長什麼樣子嗎？',
+                                    text: '來找八角和黑胡椒！你認得它們嗎？',
                                     characterImage: 'assets/images/characters/herbal_owner.png',
                                     background: 'assets/images/ch3/shop_herbal.png',
                                     options: [
@@ -200,13 +242,13 @@ const chapter3ChildData = {
                                     },
                                     {
                                         name: '中藥行老闆',
-                                        text: '八角和黑胡椒長得不一樣，下次你就認得啦！',
+                                        text: '八角和黑胡椒不同，下次你就認得啦！',
                                         characterImage: 'assets/images/characters/herbal_owner.png',
                                         background: 'assets/images/ch3/shop_herbal.png'
                                     },
                                     {
                                         name: '中藥行老闆',
-                                        text: '拿回去給媽媽煮高麗菜飯，一定會很好吃！',
+                                        text: '帶給媽媽煮高麗菜飯，一定很好吃！',
                                         characterImage: 'assets/images/characters/herbal_owner.png',
                                         background: 'assets/images/ch3/shop_herbal.png'
                                     }
@@ -284,7 +326,7 @@ const chapter3ChildData = {
                                 shopName: '刀行',
                                 dialogue: {
                                     name: '刀行師傅',
-                                    text: '來看看……菜刀鈍了。磨刀有順序喔，你來幫我排排看！',
+                                    text: '菜刀鈍了！幫我排好磨刀順序吧！',
                                     characterImage: 'assets/images/characters/knife_smith.png',
                                     background: 'assets/images/ch3/shop_knife.png',
                                     options: [
@@ -303,7 +345,7 @@ const chapter3ChildData = {
                                     },
                                     {
                                         name: '刀行師傅',
-                                        text: '要先粗磨石，再細磨石，最後用報紙試試看有沒有利！',
+                                        text: '先粗磨石，再細磨石，最後用報紙試刀！',
                                         characterImage: 'assets/images/characters/knife_smith.png',
                                         background: 'assets/images/ch3/shop_knife.png'
                                     },
@@ -385,7 +427,7 @@ const chapter3ChildData = {
                                 shopName: '雜貨店',
                                 dialogue: {
                                     name: '雜貨店老闆娘',
-                                    text: '乾香菇有分等級喔！你來幫我分類，哪些適合煮湯，哪些適合煮飯！',
+                                    text: '幫香菇分類，分出煮湯和煮飯的香菇！',
                                     characterImage: 'assets/images/characters/grocery_owner.png',
                                     background: 'assets/images/ch3/shop_grocery.png',
                                     options: [
@@ -512,17 +554,65 @@ const chapter3ChildData = {
             name: '媽媽',
             text: function() {
                 const name = window.Chapter3_Child?.playerName || '小旅人';
-                return `${name}！都買回來了！你好棒！準備開灶，感謝蘇王爺，感謝今年沒有水患，大家平安！`;
+                return `${name}，你都買齊了！`;
             },
+            characterImage: 'assets/images/characters/mom.png',
+            background: 'assets/images/ch3/temple.png',
+            next: 'ending_thanks'
+        },
+        {
+            id: 'ending_thanks',
+            name: '媽媽',
+            text: '你好棒！準備開灶，感謝蘇王爺！',
+            characterImage: 'assets/images/characters/mom.png',
+            background: 'assets/images/ch3/temple.png',
+            next: 'ending_peace'
+        },
+        {
+            id: 'ending_peace',
+            name: '媽媽',
+            text: '感謝今年沒有水患，大家平安！',
             characterImage: 'assets/images/characters/mom.png',
             background: 'assets/images/ch3/temple.png',
             next: 'final_message'
         },
         
         {
-            id: 'final_message',
+            id: "final_message",
             name: '阿斗仔',
-            text: '因為辦桌，香料帶旺了中藥行；因為辦桌，刀行師傅幫大家磨刀；因為辦桌，雜貨店的乾貨一掃而空。一場呷客，串起了整條街的生計，這就是北斗紅磚市場商街的故事。',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            background: 'assets/images/ch3/temple.png',
+            text: "因為辦桌，香料帶旺了中藥行；",
+            next: "final_message_part2"
+        },
+        {
+            id: "final_message_part2",
+            name: '阿斗仔',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            background: 'assets/images/ch3/temple.png',
+            text: "因為辦桌，刀行師傅幫大家磨刀；",
+            next: "final_message_part3"
+        },
+        {
+            id: "final_message_part3",
+            name: '阿斗仔',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            background: 'assets/images/ch3/temple.png',
+            text: "因為辦桌，雜貨店的乾貨一掃而空。",
+            next: "final_message_part4"
+        },
+        {
+            id: "final_message_part4",
+            name: '阿斗仔',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            background: 'assets/images/ch3/temple.png',
+            text: "一場呷客，串起了整條街的生計，",
+            next: "final_message_part5"
+        },
+        {
+            id: "final_message_part5",
+            name: '阿斗仔',
+            text: "這就是北斗紅磚市場商街的故事。",
             characterImage: 'assets/images/characters/阿斗仔.png',
             background: 'assets/images/ch3/temple.png',
         }
