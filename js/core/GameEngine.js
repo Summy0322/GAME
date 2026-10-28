@@ -4,6 +4,7 @@ const GameEngine = {
     loadRequestId: 0,
 
     stopMinigame: function() {
+        window.GameMusic?.stop();
         this.loadRequestId++;
         if (window.MemoryGameV2) window.MemoryGameV2.stop();
         if (window.DefenseGameV2) window.DefenseGameV2.stop();

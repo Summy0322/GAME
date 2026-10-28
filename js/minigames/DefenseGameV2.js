@@ -310,6 +310,7 @@ const DefenseGameV2 = {
         }, 16);
         
         this.setState(this.states.IDLE);
+        window.GameMusic?.start('defense', this.currentLevel);
         this.queueWaveCallback(() => this.startAttackSequence(), 1000);
     },
 
@@ -317,6 +318,7 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function () {
+        window.GameMusic?.stop('defense');
         this.sessionId = (this.sessionId || 0) + 1;
         this.gameActive = false;
         this.runtimeGameMode = null;
@@ -1215,6 +1217,7 @@ const DefenseGameV2 = {
     },
     
     showFinalResult: function() {
+        window.GameMusic?.fadeOut('defense');
         this.gameActive = false;
         this.clearAllTimers();
         

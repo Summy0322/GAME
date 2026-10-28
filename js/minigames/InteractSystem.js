@@ -123,6 +123,7 @@ const InteractSystem = {
         
         this.session.listen(window, 'resize', () => this.handleResize());
         this.handleResize();
+        window.GameMusic?.start('interact');
         
         console.log('✅ InteractSystem 啟動完成');
     },
@@ -976,6 +977,7 @@ const InteractSystem = {
         // 防止重複呼叫
         if (this._isCompleting) return;
         this._isCompleting = true;
+        window.GameMusic?.fadeOut('interact');
         
         // 顯示完成訊息
         const completeMsg = document.createElement('div');
@@ -1027,6 +1029,7 @@ const InteractSystem = {
     
     // 關閉遊戲（修正：移除錯誤的方法呼叫）
     close: function() {
+        window.GameMusic?.stop('interact');
         console.log('🗺️ 關閉遊戲模式');
         
         this.isActive = false;

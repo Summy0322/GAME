@@ -9,18 +9,20 @@ setSFXVolume 同時控制逐字短音；設為 0 或原音效播放器 muted 時
 44 項自動測試通過，含音訊未啟用、節流、正確音高、標點、停止、靜音、隱藏頁面、重複初始化。
 尚需手機／不同瀏覽器及實際喇叭試聽，測試不保證所有裝置都能播放。
 
-## 背景音樂：候選，尚未下載／接入
+## 已選定的小遊戲曲目（音檔已取得供本機試玩）
 
-選曲是依官方樂器、風格與節奏資料提出的建議，仍需遊戲內試聽確認混音；不是已完成的聽感驗證。
+第一章 1、2 小關：Ready for Adventure / Yosuke Matsuura。
+第一章 3 小關：中華料理屋のハンさん / MAKOOTO。
+第二章翻牌、問答：A Small Town, A Great Journey / Yosuke Matsuura。
+第三章拖動物品：A Walk is a Little Adventure / Yosuke Matsuura。付款不播放。
 
-- 第一章防禦：Kevin MacLeod《Cipher》。電子合成器、電鋼琴、打擊，150 BPM。建議低音量試配，保持操作提示清楚。
-  https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100844
-- 第二章記憶／問答：Kevin MacLeod《Carefree》。烏克麗麗、木琴等，96 BPM。較輕鬆，可先作為思考活動的候選。
-  https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN1400037
-- 第三章逛店／購物互動：Kevin MacLeod《Monkeys Spinning Monkeys》。輕快趣味方向的候選；若覺得喜劇感太強，可與第二章共用《Carefree》。
-  https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400011
+GameMusic 只由小遊戲啟動，普通對話不啟動；結算／退出／換場景停止，隱藏分頁暫停，回到仍在進行的小遊戲才恢復。缺檔／播放失敗不阻擋遊戲。
+預設音量 20%，可用 GameMusic.setVolume(0) 靜音。瀏覽器阻擋自動播放時，只在下一次互動重試仍有效的小遊戲。
+快取 game-v14 只加入新腳本，不把缺少的音檔放入預快取，以免安裝失敗。
 
-官方頁提供 CC BY 4.0 署名授權；正式使用時在遊戲製作名單及 README 寫曲名、Kevin MacLeod、來源連結、授權連結，若剪輯／改作亦註明。
-授權入口：https://incompetech.com/music/royalty-free/licenses/
-授權全文：https://creativecommons.org/licenses/by/4.0/
-本提交沒有加入音樂檔，不構成已套用背景音樂。
+53 項自動測試通過，含音樂曲目對應、對話期間不啟動、停止與延遲回呼、背景分頁、阻擋後重試、缺檔、拖放與問答生命週期、切場景。四首音檔已通過 Chrome 實際載入／解碼；尚未進行遊戲內音量與循環接點的聽感調整。
+
+音檔及公開部署限制、官方下載連結與檔名見 ../assets/music/README.md。
+四個正式音檔已取得並完成檔名對應，僅供本機試玩；公開部署方式尚待確認，音檔仍不提交到公開 GitHub。
+
+關卡正常結束時，音樂以 800 毫秒線性淡出後釋放；重複完成不重啟淡出。退出、換場景、開始下一關、靜音與隱藏分頁會立即清理舊聲，避免殘留。快取 game-v15。新增淡出測試，全套 56 項通過。
