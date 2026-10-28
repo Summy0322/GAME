@@ -164,9 +164,16 @@ window.Chapter1_Child = {
             next: 'level2_story1'
         },
         {
-            id: 'level2_story1',
+            id: "level2_story1",
             name: '阿斗仔',
-            text: '因為人越來越多，大家就一起蓋了一座真正的紅磚市場。本來這裡很熱鬧，可是後來發生了一場大火。',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            text: "因為人越來越多，大家就一起蓋了一座真正的紅磚市場。",
+            next: "level2_story1_part2"
+        },
+        {
+            id: "level2_story1_part2",
+            name: '阿斗仔',
+            text: "本來這裡很熱鬧，可是後來發生了一場大火。",
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_scared'
         },
@@ -178,9 +185,16 @@ window.Chapter1_Child = {
             next: 'level2_story2'
         },
         {
-            id: 'level2_story2',
+            id: "level2_story2",
             name: '阿斗仔',
-            text: '是啊，市場裡有些地方被燒黑了，還留下燒焦的痕跡。可是別怕，這一關你不是來看火災的，你是來幫忙守護市場的！',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            text: "是啊，市場裡有些地方被燒黑了，還留下燒焦的痕跡。",
+            next: "level2_story2_part2"
+        },
+        {
+            id: "level2_story2_part2",
+            name: '阿斗仔',
+            text: "可是別怕，這一關你不是來看火災的，你是來幫忙守護市場的！",
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_help'
         },
@@ -349,9 +363,16 @@ window.Chapter1_Child = {
         
         // ========== 好結局（三關全通） ==========
         {
-            id: 'good_ending',
+            id: "good_ending",
             name: '阿斗仔',
-            text: '🎉 太厲害了！三個任務你都完成了！你保護了肉圓、守住了大火中的市場、還做出了好喝的豆乳！你是最棒的小幫手！紅磚市場會永遠記得你喔！',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            text: "🎉 太厲害了！三個任務你都完成了！你保住肉圓，也守住了大火中的市場！",
+            next: "good_ending_part2"
+        },
+        {
+            id: "good_ending_part2",
+            name: '阿斗仔',
+            text: "你還做出了好喝的豆乳！你是最棒的小幫手，紅磚市場會永遠記得你喔！",
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'final_thanks'
         },

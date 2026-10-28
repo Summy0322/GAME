@@ -512,17 +512,33 @@ const chapter3ChildData = {
             name: '媽媽',
             text: function() {
                 const name = window.Chapter3_Child?.playerName || '小旅人';
-                return `${name}！都買回來了！你好棒！準備開灶，感謝蘇王爺，感謝今年沒有水患，大家平安！`;
+                return `${name}！都買回來了！你好棒！`;
             },
+            characterImage: 'assets/images/characters/mom.png',
+            background: 'assets/images/ch3/temple.png',
+            next: 'ending_thanks'
+        },
+        {
+            id: 'ending_thanks',
+            name: '媽媽',
+            text: '準備開灶，感謝蘇王爺！感謝今年沒有水患，大家平安！',
             characterImage: 'assets/images/characters/mom.png',
             background: 'assets/images/ch3/temple.png',
             next: 'final_message'
         },
         
         {
-            id: 'final_message',
+            id: "final_message",
             name: '阿斗仔',
-            text: '因為辦桌，香料帶旺了中藥行；因為辦桌，刀行師傅幫大家磨刀；因為辦桌，雜貨店的乾貨一掃而空。一場呷客，串起了整條街的生計，這就是北斗紅磚市場商街的故事。',
+            characterImage: 'assets/images/characters/阿斗仔.png',
+            background: 'assets/images/ch3/temple.png',
+            text: "因為辦桌，香料帶旺了中藥行，刀行師傅幫大家磨刀，雜貨店的乾貨也一掃而空。",
+            next: "final_message_part2"
+        },
+        {
+            id: "final_message_part2",
+            name: '阿斗仔',
+            text: "一場呷客，串起了整條街的生計，這就是北斗紅磚市場商街的故事。",
             characterImage: 'assets/images/characters/阿斗仔.png',
             background: 'assets/images/ch3/temple.png',
         }

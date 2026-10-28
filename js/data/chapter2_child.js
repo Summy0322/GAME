@@ -165,11 +165,11 @@ const chapter2ChildData = {
             get text() {
                 const score = window.Chapter2_Child?.quizScore || 0;
                 if (score === 0) {
-                    return '很可惜，你沒有答對任何題目。沒有減免機會，但還是可以挑戰遊戲喔！要再試一次嗎？';
+                    return '這次沒答對，沒有減免機會，但還是能挑戰遊戲喔！要再試一次嗎？';
                 } else if (score === 1) {
-                    return '你答對了 1 題！獲得 1 次懲罰減免機會！要再回答一次爭取更多減免，還是直接開始遊戲？';
+                    return '你答對1題，獲得1次懲罰減免！要再答一次爭取減免，還是開始遊戲？';
                 } else {
-                    return '太厲害了！你答對了 2 題！獲得 2 次懲罰減免機會！直接開始遊戲吧!';
+                    return '太厲害了！你答對2題，獲得2次懲罰減免機會！直接開始遊戲吧！';
                 }
             },
             options: [
