@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>對話版面檢查</title><h1>對話版面檢查</h1><pre id="results">檢查中…</pre><div id="frames" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+<script>
+const jobs=new Map(),results=[];
+function report(){document.getElementById('results').textContent=JSON.stringify({allDone:jobs.size===0,allOK:jobs.size===0&&results.every(r=>r.ok),results},null,2)}
+addEventListener('message',event=>{if(event.origin!==location.origin||!event.data.layoutScan)return;const job=jobs.get(event.source);if(!job)return;clearTimeout(job.timer);jobs.delete(event.source);results.push({...job.item,...event.data});report()});
+for(const [w,h] of [[1280,720],[844,390],[640,360],[1024,768]])for(const child of [0,1]){
+ const item={w,h,child},frame=document.createElement('iframe'),host=document.createElement('div');host.style.cssText='position:relative;width:'+w*.12+'px;height:'+h*.12+'px;overflow:hidden';frame.width=w;frame.height=h;frame.style.cssText='position:absolute;transform:scale(.12);transform-origin:top left;border:0';frame.src='/GAME/?testScene=quiz&scan=1&safe=1&child='+child;host.appendChild(frame);document.getElementById('frames').appendChild(host);const source=frame.contentWindow;const timer=setTimeout(()=>{if(jobs.delete(source)){results.push({...item,ok:false,error:'timeout'});report()}},45000);jobs.set(source,{item,timer});
+}
+</script></html>
