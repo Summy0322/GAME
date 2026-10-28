@@ -107,6 +107,26 @@ body.child-mode #dialogue-text { font-size: 27px; line-height: 1.8; }
 #options-container button:hover { background: #ffdda0; color: #4a2c1a; }
 #options-container button:focus-visible { outline-color: #82452f; }
 
+/* 小朋友版長對話草稿：分頁按鈕放在框外右上方，不佔用文字區。 */
+body.child-mode #dialog-box {
+    /* 直向手機的 16:9 舞台很矮，至少保留一整行注音文字的高度。 */
+    min-height: calc(var(--name-clearance) + clamp(17px, 3.8cqh, 30px) * 1.8 + 8px);
+}
+#dialogue-next-page {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 6px);
+    min-height: 44px;
+    padding: 8px 14px;
+    font: 16px/1.4 system-ui, sans-serif;
+    border: 2px solid #c8893f;
+    border-radius: 12px;
+    background: #f4c77d;
+    color: #4a2c1a;
+    cursor: pointer;
+}
+#dialogue-next-page:focus-visible { outline: 3px solid #fff1c2; outline-offset: 2px; }
+
 /* 一般對話三選項：三個等寬按鈕，上排兩個、下排置中，一次看完。 */
 #options-container:has(> button:nth-child(3):last-child) {
     flex-direction: row;

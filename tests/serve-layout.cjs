@@ -10,7 +10,7 @@ http.createServer((req, res) => {
         const width = Math.max(280, Math.min(2560, Number(url.searchParams.get('w')) || 844));
         const height = Math.max(200, Math.min(1600, Number(url.searchParams.get('h')) || 390));
         const requestedScene = url.searchParams.get('scene');
-        const scene = ['age', 'menu', 'dialogue', 'choices', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age';
+        const scene = ['age', 'menu', 'dialogue', 'childpages', 'choices', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age';
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.end(`<!doctype html><html style="overflow-x:hidden"><head><title>Layout check</title></head><body style="margin:16px;background:#25303a;color:white;font:16px sans-serif"><p>${width} × ${height} · ${scene.replace(/[^a-z]/g, '')}</p><pre id="results" style="white-space:pre-wrap">Checking…</pre><iframe id="preview" title="遊戲預覽" width="${width}" height="${height}" style="border:1px solid #718096;transform:scale(${Math.min(1, 580 / width)});transform-origin:top left" src="/GAME/?testScene=${encodeURIComponent(scene)}&safe=${url.searchParams.get('safe') === '1' ? '1' : '0'}&child=${url.searchParams.get('child') === '1' ? '1' : '0'}"></iframe><script>addEventListener('message', e => { if(e.origin === location.origin && e.source === document.getElementById('preview').contentWindow && e.data && ['ratioOK','cleanupOK','memoryCleanupOK','pacingOK'].some(key => typeof e.data[key] === 'boolean')) document.getElementById('results').textContent=JSON.stringify(e.data); });</script></body></html>`);
         return;
@@ -28,7 +28,7 @@ http.createServer((req, res) => {
             let html = bytes.toString().replace(/<script src="https:[^"]+"><\/script>/g, '');
             html = html.replace("if ('serviceWorker' in navigator)", 'if (false)');
             const requestedScene = url.searchParams.get('testScene');
-            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'choices', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age');
+            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'childpages', 'choices', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age');
             const safe = url.searchParams.get('safe') === '1';
             const mode = url.searchParams.get('child') === '1' ? 'child' : 'adult';
             if (url.searchParams.get('layout') === 'before') html = html.replace('<link rel="stylesheet" href="css/dialogue-layout.css">', '');
@@ -45,6 +45,7 @@ http.createServer((req, res) => {
                         document.getElementById('age-select-dialog').style.display = 'none';
                         showScene(scene === 'menu' ? 'level-select' : 'game-container');
                     }
+                    if (scene === 'childpages') { await import('/GAME/tests/child-dialogue-probe.js'); return; }
                     if (scene === 'dialogue') {
                         DialogueSystem.loadChapter({ id:'layout', background:'assets/images/shared/market-background.webp', dialogue:[{
                             name:${JSON.stringify(actorName)}, text:${JSON.stringify(sample === 'long' ? '紅磚市場不只有好吃的肉圓，還有許多陪伴大家長大的老店。待會我們一起去找找香料、認識做料理會用到的食材，再把買好的東西帶回家。慢慢看、慢慢選，準備好了再出發吧！' : '歡迎來到北斗紅磚市場！今天讓我們一起逛老街、找美食，認識這裡的人與故事，看看會有什麼新發現吧！')}, characterImage:${JSON.stringify('assets/images/characters/'+actor+'.png')}

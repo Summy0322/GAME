@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>小朋友版對話分頁草稿</title>
+<style>body{font:16px/1.6 system-ui;background:#f4efe7;color:#302b28;padding:16px}pre{white-space:pre-wrap}.frames{display:flex;flex-wrap:wrap;gap:12px}iframe{border:1px solid #a78b60}</style>
+<h1>小朋友版對話分頁草稿</h1><p>保留原文，長對話按「下一頁」接續。以下各畫面使用實際注音字型。</p><pre id="results">檢查中…</pre><div class="frames" id="frames"></div>
+<script>
+const results=[],jobs=new Map();
+function report(){document.querySelector('#results').textContent=JSON.stringify({allDone:jobs.size===0,allOK:jobs.size===0&&results.every(r=>r.ok),results},null,2)}
+addEventListener('message',e=>{if(e.origin!==location.origin||!e.data.childPagesScan||!jobs.has(e.source))return;const job=jobs.get(e.source);clearTimeout(job.timer);jobs.delete(e.source);results.push({...job.size,...e.data});report()});
+for(const [w,h] of [[844,390],[640,360],[568,320],[390,844],[1280,720]]){
+ const host=document.createElement('div'),frame=document.createElement('iframe');host.style.cssText='position:relative;width:'+w*.55+'px;height:'+h*.55+'px;overflow:hidden';frame.width=w;frame.height=h;frame.style.cssText='position:absolute;transform:scale(.55);transform-origin:top left';frame.src='/GAME/?testScene=childpages&child=1&safe=1';host.appendChild(frame);document.querySelector('#frames').appendChild(host);const source=frame.contentWindow,timer=setTimeout(()=>{if(jobs.delete(source)){results.push({w,h,ok:false,error:'timeout'});report()}},60000);jobs.set(source,{size:{w,h},timer});
+}
+</script></html>
