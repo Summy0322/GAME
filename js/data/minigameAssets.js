@@ -35,7 +35,7 @@
             'shield.png',
             'aoe_line.png'
         ];
-        if (levelNum >= 2) files.push('heavy_enemy.png');
+        if (levelNum === 3) files.push('heavy_enemy.png');
         return files.map((f) => base + f);
     }
 
@@ -47,8 +47,12 @@
             return MEMORY_CARD_URLS.slice();
         },
 
-        /** 防禦遊戲預載：一次載入 1–3 關所需圖檔 */
-        getDefensePreloadUrls: function () {
+        /** 指定關卡時僅載入該小關；省略參數則保留完整清單供工具使用。 */
+        getDefensePreloadUrls: function (level) {
+            if (level !== undefined) {
+                const number = Number(level);
+                return Number.isInteger(number) && number >= 1 && number <= 3 ? defenseLevelUrls(number) : [];
+            }
             const out = [];
             for (let L = 1; L <= 3; L++) {
                 out.push(...defenseLevelUrls(L));

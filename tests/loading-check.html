@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>首次載入檢查</title>
+<style>body{font:18px/1.6 system-ui;background:#f4efe7;color:#302b28;padding:20px}iframe{width:960px;height:540px;border:0}pre{white-space:pre-wrap}</style>
+<h1>首次載入檢查</h1><pre id="result">檢查中…</pre><iframe src="../" title="正式遊戲首頁"></iframe>
+<script>
+(async()=>{
+try {
+ await navigator.serviceWorker.register('/GAME/sw.js');
+ await navigator.serviceWorker.ready;
+ const cache=await caches.open('game-v25'),keys=await cache.keys();
+ const assets=keys.filter(r=>new URL(r.url).pathname.includes('/assets/'));
+ const backgrounds=[];
+ for(const src of ['../assets/images/title/background.webp','../assets/images/shared/market-background.webp']) {
+   const image=new Image();image.src=src;await image.decode();
+   backgrounds.push({src,width:image.naturalWidth,height:image.naturalHeight});
+ }
+ document.querySelector('#result').textContent=JSON.stringify({ok:keys.length>20&&assets.length===0,precacheFiles:keys.length,precacheAssets:assets.length,backgrounds},null,2);
+}catch(error){document.querySelector('#result').textContent='FAIL: '+error.message;}
+})();
+</script></html>

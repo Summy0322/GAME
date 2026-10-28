@@ -1,7 +1,7 @@
 // js/data/chapter2_teen.js
 const chapter2TeenData = {
     id: 'chapter2_teen',
-    background: 'assets/images/ch2/background.png',
+    background: 'assets/images/shared/market-background.webp',
     
     // ✅ 定義卡片圖庫資料（6張卡片）
     cardGallery: [
