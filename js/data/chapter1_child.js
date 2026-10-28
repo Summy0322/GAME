@@ -37,7 +37,7 @@ window.Chapter1_Child = {
         {
             id: 'start',
             type: 'narration',
-            text: '歡迎來到紅磚市場！\n這裡有好多有趣故事\n和小任務。\n快跟著阿斗仔一起出發吧！',
+            text: '歡迎來到紅磚市場！這裡有好多有趣故事和小任務。快跟著阿斗仔一起出發吧！',
             speed: 60,
             next: 'intro_level1'
         },
@@ -60,7 +60,7 @@ window.Chapter1_Child = {
         {
             id: 'level1_story1',
             name: '阿斗仔',
-            text: '以前這裡有牛墟，還有臨時市場。\n大家會來賣牛、賣農具，清早很熱鬧。',
+            text: '以前這裡有牛墟，還有臨時市場。大家會來賣牛、賣農具，清早很熱鬧。',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_reply2'
         },
