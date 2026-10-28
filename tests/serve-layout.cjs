@@ -10,7 +10,7 @@ http.createServer((req, res) => {
         const width = Math.max(280, Math.min(2560, Number(url.searchParams.get('w')) || 844));
         const height = Math.max(200, Math.min(1600, Number(url.searchParams.get('h')) || 390));
         const requestedScene = url.searchParams.get('scene');
-        const scene = ['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age';
+        const scene = ['age', 'menu', 'dialogue', 'choices', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age';
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.end(`<!doctype html><html style="overflow-x:hidden"><head><title>Layout check</title></head><body style="margin:16px;background:#25303a;color:white;font:16px sans-serif"><p>${width} × ${height} · ${scene.replace(/[^a-z]/g, '')}</p><pre id="results" style="white-space:pre-wrap">Checking…</pre><iframe id="preview" title="遊戲預覽" width="${width}" height="${height}" style="border:1px solid #718096;transform:scale(${Math.min(1, 580 / width)});transform-origin:top left" src="/GAME/?testScene=${encodeURIComponent(scene)}&safe=${url.searchParams.get('safe') === '1' ? '1' : '0'}&child=${url.searchParams.get('child') === '1' ? '1' : '0'}"></iframe><script>addEventListener('message', e => { if(e.origin === location.origin && e.source === document.getElementById('preview').contentWindow && e.data && ['ratioOK','cleanupOK','memoryCleanupOK','pacingOK'].some(key => typeof e.data[key] === 'boolean')) document.getElementById('results').textContent=JSON.stringify(e.data); });</script></body></html>`);
         return;
@@ -28,7 +28,7 @@ http.createServer((req, res) => {
             let html = bytes.toString().replace(/<script src="https:[^"]+"><\/script>/g, '');
             html = html.replace("if ('serviceWorker' in navigator)", 'if (false)');
             const requestedScene = url.searchParams.get('testScene');
-            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age');
+            const scene = JSON.stringify(['age', 'menu', 'dialogue', 'choices', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age');
             const safe = url.searchParams.get('safe') === '1';
             const mode = url.searchParams.get('child') === '1' ? 'child' : 'adult';
             if (url.searchParams.get('layout') === 'before') html = html.replace('<link rel="stylesheet" href="css/dialogue-layout.css">', '');
@@ -53,6 +53,14 @@ http.createServer((req, res) => {
                     if (scene === 'dialogue') {
                         Typewriter.stopTyping();
                         document.getElementById('dialogue-text').textContent = ${JSON.stringify(sample === 'long' ? '紅磚市場不只有好吃的肉圓，還有許多陪伴大家長大的老店。待會我們一起去找找香料、認識做料理會用到的食材，再把買好的東西帶回家。慢慢看、慢慢選，準備好了再出發吧！' : '歡迎來到北斗紅磚市場！我是阿斗仔，今天就讓我陪你一起逛老街、找美食，認識這裡的人與故事吧！')};
+                    }
+                    if (scene === 'choices') {
+                        const chapter = window.gameMode === 'child' ? chapter2ChildData : chapter2TeenData;
+                        const line = chapter.dialogue.find(line => line.options?.length === 3);
+                        Typewriter.showDialogue('阿斗仔', line.text, line.characterImage);
+                        Typewriter.stopTyping();
+                        document.getElementById('dialogue-text').textContent = line.text;
+                        Typewriter.showOptions(line.options);
                     }
                     if (scene === 'defensepace') {
                         const game = DefenseGameV2;
@@ -145,6 +153,18 @@ http.createServer((req, res) => {
                                     buttons.every(b => b.scrollHeight <= b.clientHeight + 1 && b.scrollWidth <= b.clientWidth + 1) &&
                                     document.getElementById('dialogue-text').scrollHeight <= document.getElementById('dialogue-text').clientHeight + 1;
                                 reports.push({id:question.id,ok});
+                            }
+                            const chapter = window.gameMode === 'child' ? chapter2ChildData : chapter2TeenData;
+                            for (const line of chapter.dialogue.filter(line => line.options?.length === 3)) {
+                                document.getElementById('dialogue-text').textContent = line.text;
+                                Typewriter.showOptions(line.options);
+                                const options = document.getElementById('options-container');
+                                const buttons = [...options.querySelectorAll('button')];
+                                const ok = buttons.length === 3 && options.scrollHeight <= options.clientHeight + 1 &&
+                                    options.scrollWidth <= options.clientWidth + 1 &&
+                                    options.getBoundingClientRect().bottom <= document.getElementById('dialog-box').getBoundingClientRect().top &&
+                                    buttons.every(b => b.getBoundingClientRect().height >= 44 && b.scrollHeight <= b.clientHeight + 1 && b.scrollWidth <= b.clientWidth + 1);
+                                reports.push({id:'story-three-'+line.id,ok});
                             }
                             parent.postMessage({layoutScan:true,ok:reports.every(r=>r.ok),count:reports.length,failures:reports.filter(r=>!r.ok)},location.origin);
                             return;

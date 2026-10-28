@@ -6,7 +6,7 @@
 <main><h1>對話比例比較</h1><p>同一段台詞、同一個角色。左邊是原版，右邊是比例調整草稿。</p>
 <nav>
 <label for="device">裝置<select id="device"><option value="1280,720">桌機 1280 × 720</option><option value="844,390">手機橫向 844 × 390</option><option value="1024,768">平板 1024 × 768</option></select></label>
-<label for="sample">畫面<select id="sample"><option value="short">一般台詞</option><option value="long">較長台詞</option><option value="quiz">四個問答選項</option></select></label>
+<label for="sample">畫面<select id="sample"><option value="short">一般台詞</option><option value="long">較長台詞</option><option value="quiz">四個問答選項</option><option value="choices">第二章三個對話選項</option></select></label>
 <label for="mode">模式<select id="mode"><option value="0">青年版</option><option value="1">小朋友版</option></select></label>
 <label for="actor">角色<select id="actor"><option value="阿斗仔">阿斗仔</option><option value="mom">媽媽</option><option value="herbal_owner">中藥行老闆</option><option value="knife_smith">刀行師傅</option><option value="grocery_owner">雜貨店老闆</option></select></label>
 </nav>
@@ -16,6 +16,6 @@
 <script>
 const $=id=>document.getElementById(id);
 function size(){const [width,height]=$('device').value.split(',').map(Number);document.querySelectorAll('.stage').forEach(stage=>{const scale=stage.clientWidth/width;stage.style.height=(height*scale)+'px';stage.querySelector('iframe').style.cssText='width:'+width+'px;height:'+height+'px;transform:scale('+scale+')'})}
-function render(){const sample=$('sample').value;for(const layout of ['before','after']){const q=new URLSearchParams({testScene:sample==='quiz'?'quiz':'dialogue',sample,child:$('mode').value,actor:$('actor').value,layout,safe:$('device').value==='844,390'?'1':'0'});const url='/GAME/?'+q;$(layout).src=url;$(layout+'Link').href=url}size();$('status').textContent='可切換裝置、長台詞、角色與模式比較；放大查看可直接操作。'}
+function render(){const sample=$('sample').value;for(const layout of ['before','after']){const q=new URLSearchParams({testScene:sample==='quiz'?'quiz':sample==='choices'?'choices':'dialogue',sample,child:$('mode').value,actor:$('actor').value,layout,safe:$('device').value==='844,390'?'1':'0'});const url='/GAME/?'+q;$(layout).src=url;$(layout+'Link').href=url}size();$('status').textContent='可切換裝置、長台詞、角色與模式比較；放大查看可直接操作。'}
 document.querySelectorAll('select').forEach(s=>s.addEventListener('change',render));window.addEventListener('resize',size);render();
 </script></html>
