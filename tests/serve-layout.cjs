@@ -31,6 +31,10 @@ http.createServer((req, res) => {
             const scene = JSON.stringify(['age', 'menu', 'dialogue', 'defense', 'memory', 'quiz', 'cleanup', 'memorycleanup', 'defensepace'].includes(requestedScene) ? requestedScene : 'age');
             const safe = url.searchParams.get('safe') === '1';
             const mode = url.searchParams.get('child') === '1' ? 'child' : 'adult';
+            if (url.searchParams.get('layout') === 'before') html = html.replace('<link rel="stylesheet" href="css/dialogue-layout.css">', '');
+            const sample = url.searchParams.get('sample') === 'long' ? 'long' : 'short';
+            const actor = ['mom','herbal_owner','knife_smith','grocery_owner'].includes(url.searchParams.get('actor')) ? url.searchParams.get('actor') : '阿斗仔';
+            const actorName = {mom:'媽媽',herbal_owner:'中藥行老闆',knife_smith:'刀行師傅',grocery_owner:'雜貨店老闆','阿斗仔':'阿斗仔'}[actor];
             html = html.replace('</body>', `<script>
                 window.addEventListener('load', async () => {
                     ${safe ? "document.documentElement.style.cssText='--safe-left:44px;--safe-right:44px;--safe-bottom:21px'" : ''};
@@ -43,8 +47,12 @@ http.createServer((req, res) => {
                     }
                     if (scene === 'dialogue') {
                         DialogueSystem.loadChapter({ id:'layout', background:'assets/images/ch1/background.png', dialogue:[{
-                            name:'阿斗仔', character:'阿斗仔', text:'這是一段測試對話，用來確認不同螢幕大小下，角色與對話框的位置維持穩定。較長的內容應該可以在對話框內捲動閱讀，不會超出遊戲舞台。'.repeat(5), characterImage:'assets/images/characters/阿斗仔.png'
+                            name:${JSON.stringify(actorName)}, text:${JSON.stringify(sample === 'long' ? '紅磚市場不只有好吃的肉圓，還有許多陪伴大家長大的老店。待會我們一起去找找香料、認識做料理會用到的食材，再把買好的東西帶回家。慢慢看、慢慢選，準備好了再出發吧！' : '歡迎來到北斗紅磚市場！今天讓我們一起逛老街、找美食，認識這裡的人與故事，看看會有什麼新發現吧！')}, characterImage:${JSON.stringify('assets/images/characters/'+actor+'.png')}
                         }] });
+                    }
+                    if (scene === 'dialogue') {
+                        Typewriter.stopTyping();
+                        document.getElementById('dialogue-text').textContent = ${JSON.stringify(sample === 'long' ? '紅磚市場不只有好吃的肉圓，還有許多陪伴大家長大的老店。待會我們一起去找找香料、認識做料理會用到的食材，再把買好的東西帶回家。慢慢看、慢慢選，準備好了再出發吧！' : '歡迎來到北斗紅磚市場！我是阿斗仔，今天就讓我陪你一起逛老街、找美食，認識這裡的人與故事吧！')};
                     }
                     if (scene === 'defensepace') {
                         const game = DefenseGameV2;
@@ -121,7 +129,26 @@ http.createServer((req, res) => {
                     }
                     if (scene === 'defense') { DefenseGameV2.start({level:1,onComplete(){}}); }
                     if (scene === 'memory') { MemoryGameV2.start({level:1,onComplete(){}}); }
-                    setTimeout(() => {
+                    setTimeout(async () => {
+                        await document.fonts.ready;
+                        if (${url.searchParams.get('scan') === '1'} && scene === 'quiz') {
+                            Typewriter.stopTyping();
+                            const reports = [];
+                            for (const question of QuizQuestions.questions) {
+                                document.getElementById('dialogue-text').textContent = question.text;
+                                Typewriter.showOptions(question.options.map(opt => ({...opt,action:'quiz_answer'})));
+                                const options = document.getElementById('options-container');
+                                const buttons = [...options.querySelectorAll('button')];
+                                const dialog = document.getElementById('dialog-box');
+                                const ok = buttons.length === 4 && options.scrollHeight <= options.clientHeight + 1 &&
+                                    options.getBoundingClientRect().bottom <= dialog.getBoundingClientRect().top &&
+                                    buttons.every(b => b.scrollHeight <= b.clientHeight + 1 && b.scrollWidth <= b.clientWidth + 1) &&
+                                    document.getElementById('dialogue-text').scrollHeight <= document.getElementById('dialogue-text').clientHeight + 1;
+                                reports.push({id:question.id,ok});
+                            }
+                            parent.postMessage({layoutScan:true,ok:reports.every(r=>r.ok),count:reports.length,failures:reports.filter(r=>!r.ok)},location.origin);
+                            return;
+                        }
                         const wrapper = document.getElementById('game-wrapper').getBoundingClientRect();
                         const selectors = scene === 'age' ? ['#age-child','#age-adult'] : scene === 'menu' ? ['#chapter1-btn','#chapter2-btn','#chapter3-btn','.reset-progress-btn'] : scene === 'dialogue' ? ['#dialog-box','#character-image'] : scene === 'defense' ? ['#defense-stage','#defense-player'] : scene === 'memory' ? ['.memory-panel','#memory-grid'] : scene === 'quiz' ? ['#options-container', '#options-container button:nth-child(1)', '#options-container button:nth-child(2)', '#options-container button:nth-child(3)', '#options-container button:nth-child(4)'] : [];
                         const contained = selectors.every(selector => {

@@ -1,6 +1,6 @@
 // sw.js - Service Worker
 // 快取名稱（更新版本時記得修改）
-const CACHE_NAME = 'game-v15';
+const CACHE_NAME = 'game-v19';
 
 // 需要快取的檔案列表（您的遊戲所有核心檔案）
 const urlsToCache = [
@@ -10,6 +10,7 @@ const urlsToCache = [
   '/GAME/css/defense-game.css',
   '/GAME/css/memory-game.css',
   '/GAME/css/viewport.css',
+  '/GAME/css/dialogue-layout.css',
   '/GAME/js/main.js',
   '/GAME/js/core/LoadingManager.js',
   '/GAME/js/core/MinigameSession.js',
