@@ -40,7 +40,10 @@ window.GameMusic = {
                 if (this.player === player && generation === this.generation)
                     this.needsGesture = error.name === 'NotAllowedError';
             });
-        } catch (_) { /* 音樂失敗不阻擋遊戲。 */ }
+        } catch (error) {
+            if (this.player === player && generation === this.generation)
+                this.needsGesture = error.name === 'NotAllowedError';
+        }
     },
     stop(owner) {
         if (!owner) {
@@ -112,6 +115,9 @@ window.GameMusic = {
         this.bound = true;
         const retry = () => { if (this.needsGesture) this.play(); };
         document.addEventListener('pointerdown', retry, {passive:true});
+        // 手機的有效啟動手勢可能在放開手指／click 時才成立。
+        document.addEventListener('touchend', retry, {passive:true});
+        document.addEventListener('click', retry);
         document.addEventListener('keydown', retry);
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
