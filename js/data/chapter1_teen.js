@@ -37,7 +37,7 @@ window.Chapter1_Teen = {
         {
             id: 'start',
             type: 'narration',
-            text: '歡迎來到紅磚市場的時光任務。\n接下來，你將一步步走進市場的過去\n，從熱鬧的清晨，到重要的轉折時刻。\n準備好了就跟著阿斗仔出發，進入第一關吧。',
+            text: '歡迎來到紅磚市場的時光任務。接下來，你將一步步走進市場的過去，從熱鬧的清晨，到重要的轉折時刻。準備好了就跟著阿斗仔出發，進入第一關吧。',
             speed: 60, 
             next: 'intro_level1',
         },
@@ -46,7 +46,7 @@ window.Chapter1_Teen = {
         {
             id: 'intro_level1',
             name: '阿斗仔',
-            text: '先別急著往前走，你聽——牛叫聲、叫賣聲，還有蒸籠冒熱氣的聲音。\n這裡不是現在的紅磚市場，而是更早以前的臨時市場和牛墟。',
+            text: '先別急著往前走，你聽——牛叫聲、叫賣聲，還有蒸籠冒熱氣的聲音。這裡不是現在的紅磚市場，而是更早以前的臨時市場和牛墟。',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'player_reply1'
         },
