@@ -160,7 +160,8 @@ http.createServer((req, res) => {
                                 Typewriter.showOptions(line.options);
                                 const options = document.getElementById('options-container');
                                 const buttons = [...options.querySelectorAll('button')];
-                                const ok = buttons.length === 3 && options.scrollHeight <= options.clientHeight + 1 &&
+                                const ok = buttons.length === 3 &&
+                                    buttons.every(b => Math.abs(b.getBoundingClientRect().width - buttons[0].getBoundingClientRect().width) < 1) && options.scrollHeight <= options.clientHeight + 1 &&
                                     options.scrollWidth <= options.clientWidth + 1 &&
                                     options.getBoundingClientRect().bottom <= document.getElementById('dialog-box').getBoundingClientRect().top &&
                                     buttons.every(b => b.getBoundingClientRect().height >= 44 && b.scrollHeight <= b.clientHeight + 1 && b.scrollWidth <= b.clientWidth + 1);
