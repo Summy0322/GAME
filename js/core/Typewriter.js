@@ -11,6 +11,7 @@ const Typewriter = {
 
     stopTyping: function() {
         this.typingRun++;
+        if (typeof AudioManager !== 'undefined') AudioManager.stopDialogueChirp?.();
         if (this.typingInterval !== null) clearInterval(this.typingInterval);
         this.typingInterval = null;
     },
@@ -164,11 +165,8 @@ const Typewriter = {
                 displayText += cleanText[index];
                 this.dialogueText.textContent = displayText;
 
-                // 音效（每3字一次）
-                if (index % 3 === 0) {
-                    if (typeof AudioManager !== 'undefined') {
-                        AudioManager.playSFX('assets/sounds/sfx-blipmale.wav', 0.1);
-                    }
+                if (typeof AudioManager !== 'undefined') {
+                    AudioManager.playDialogueChirp?.(cleanText[index]);
                 }
 
                 index++;

@@ -2,12 +2,56 @@
 const AudioManager = {
     bgMusic: null,
     sfxPlayer: null,
+    chirpContext: null,
+    chirpNodes: new Set(),
+    chirpLastTime: -Infinity,
+    dialogueVolume: 0.30,
+    unlockDialogueAudio: function() {
+        try {
+            const Audio = window.AudioContext || window.webkitAudioContext;
+            if (!Audio) return;
+            if (!this.chirpContext || this.chirpContext.state === 'closed') this.chirpContext = new Audio();
+            if (this.chirpContext.state !== 'running') this.chirpContext.resume().catch(() => {});
+        } catch (_) { /* 音訊不可用不影響文字。 */ }
+    },
+    playDialogueChirp: function(char) {
+        const ctx = this.chirpContext;
+        if (!/[\p{L}\p{N}]/u.test(char) || document.hidden || !ctx || ctx.state !== 'running' ||
+            this.sfxPlayer?.muted || this.dialogueVolume <= 0 || ctx.currentTime - this.chirpLastTime < 0.075) return;
+        try {
+            const now = ctx.currentTime, oscillator = ctx.createOscillator(), gain = ctx.createGain();
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(660, now);
+            oscillator.frequency.exponentialRampToValueAtTime(990, now + 0.04);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.18 * this.dialogueVolume, now + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+            oscillator.connect(gain); gain.connect(ctx.destination);
+            this.chirpNodes.add(oscillator);
+            oscillator.onended = () => { this.chirpNodes.delete(oscillator); oscillator.disconnect(); gain.disconnect(); };
+            oscillator.start(now); oscillator.stop(now + 0.045);
+            this.chirpLastTime = now;
+        } catch (_) { /* 不延後補播，避免冒出舊對話音。 */ }
+    },
+    stopDialogueChirp: function() {
+        for (const oscillator of this.chirpNodes) { try { oscillator.stop(); } catch (_) {} }
+        this.chirpNodes.clear();
+        this.chirpLastTime = -Infinity;
+    },
     
     init: function() {
         console.log('🔧 AudioManager 初始化');
         
         // 直接獲取元素，不依賴 DOMContentLoaded
         this._initElements();
+        if (!this.dialogueEventsBound) {
+            this.dialogueEventsBound = true;
+            const unlock = () => this.unlockDialogueAudio();
+            document.addEventListener('pointerdown', unlock, {passive:true});
+            document.addEventListener('keydown', unlock);
+            document.addEventListener('visibilitychange', () => { if (document.hidden) this.stopDialogueChirp(); });
+            window.addEventListener('pagehide', () => this.stopDialogueChirp());
+        }
     },
     
     _initElements: function() {
@@ -140,6 +184,8 @@ const AudioManager = {
     },
     
     setSFXVolume: function(vol) {
+        this.dialogueVolume = Math.max(0, Math.min(1, vol));
+        if (this.dialogueVolume === 0) this.stopDialogueChirp();
         if (!this.sfxPlayer) return;
         this.sfxPlayer.volume = Math.max(0, Math.min(1, vol));
     }
