@@ -3,7 +3,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.png':'image/png', '.jpg':'image/jpeg', '.mp3':'audio/mpeg', '.mp4':'video/mp4', '.ttf':'font/ttf' };
+const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.webp':'image/webp', '.png':'image/png', '.jpg':'image/jpeg', '.mp3':'audio/mpeg', '.mp4':'video/mp4', '.ttf':'font/ttf' };
 http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname === '/preview') {
@@ -46,7 +46,7 @@ http.createServer((req, res) => {
                         showScene(scene === 'menu' ? 'level-select' : 'game-container');
                     }
                     if (scene === 'dialogue') {
-                        DialogueSystem.loadChapter({ id:'layout', background:'assets/images/ch1/background.png', dialogue:[{
+                        DialogueSystem.loadChapter({ id:'layout', background:'assets/images/shared/market-background.webp', dialogue:[{
                             name:${JSON.stringify(actorName)}, text:${JSON.stringify(sample === 'long' ? '紅磚市場不只有好吃的肉圓，還有許多陪伴大家長大的老店。待會我們一起去找找香料、認識做料理會用到的食材，再把買好的東西帶回家。慢慢看、慢慢選，準備好了再出發吧！' : '歡迎來到北斗紅磚市場！今天讓我們一起逛老街、找美食，認識這裡的人與故事，看看會有什麼新發現吧！')}, characterImage:${JSON.stringify('assets/images/characters/'+actor+'.png')}
                         }] });
                     }

@@ -24,7 +24,7 @@ const GameEngine = {
                 return [...new Set(MinigameAssets.getMemoryPreloadUrls())];
             }
             if (minigameName === 'defense') {
-                const urls = MinigameAssets.getDefensePreloadUrls();
+                const urls = MinigameAssets.getDefensePreloadUrls(options?.level || 1);
                 if (window.Logger) window.Logger.info(`📦 防禦遊戲預載入 ${urls.length} 張圖片`);
                 return [...new Set(urls)];
             }

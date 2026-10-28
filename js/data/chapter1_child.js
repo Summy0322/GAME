@@ -1,7 +1,7 @@
 // js/data/chapter1_child.js
 window.Chapter1_Child = {
     id: 'chapter1_child',
-    background: 'assets/images/ch1/background.png',
+    background: 'assets/images/shared/market-background.webp',
     
     // ✅ 紀錄三個關卡的通關狀態
     gameProgress: {

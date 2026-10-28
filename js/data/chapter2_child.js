@@ -1,7 +1,7 @@
 // js/data/chapter2_child.js
 const chapter2ChildData = {
     id: 'chapter2_child',
-    background: 'assets/images/ch2/background.png',
+    background: 'assets/images/shared/market-background.webp',
     
     // ✅ 定義卡片圖庫資料
     cardGallery: [

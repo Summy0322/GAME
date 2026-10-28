@@ -308,7 +308,7 @@ html {
 
 /* 標題畫面背景 - 修改為圖片按鈕風格 */
 #start-menu {
-    background-image: url('assets/images/title/background.png') !important;
+    background-image: url('assets/images/title/background.webp') !important;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
