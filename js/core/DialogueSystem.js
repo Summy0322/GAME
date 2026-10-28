@@ -785,13 +785,15 @@ const DialogueSystem = {
             return;
         }
         
-        // 開始第一題
+        // 第一題顯示後才啟動音樂，前導對話不播放。
         this.showQuizQuestion();
+        window.GameMusic?.start('quiz');
     },
 
     // 顯示一題問答
     showQuizQuestion: function() {
         if (this.currentQuizIndex >= this.currentQuizQuestions.length) {
+            window.GameMusic?.stop('quiz');
             // 所有題目答完
             console.log(`📊 問答完成！答對 ${this.quizScore} / ${this.currentQuizQuestions.length} 題`);
             if (this.quizCallback) {

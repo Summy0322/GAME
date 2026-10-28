@@ -205,3 +205,18 @@ test('memory: every referenced sound exists in the game assets', () => {
         assert.equal(fs.existsSync(path.join(root, match[1])), true, match[1]);
     }
 });
+
+
+test('dragging music starts with the game UI and stops on completion or close; payment stays silent', () => {
+    for(const name of ['InteractSystem','PaymentSystem']) {
+        const env=prepare(name), calls=[];
+        env.window.GameMusic={start:(...args)=>calls.push(['start',...args]),stop:(...args)=>calls.push(['stop',...args])};
+        assert.equal(calls.length,0);
+        env.game.startForTest(()=>{});
+        if(name==='InteractSystem')assert.ok(calls.some(c=>c[0]==='start'&&c[1]==='interact'));
+        else assert.equal(calls.length,0);
+        env.game.close();
+        if(name==='InteractSystem')assert.deepEqual(calls.at(-1),['stop','interact']);
+        else assert.equal(calls.length,0);
+    }
+});

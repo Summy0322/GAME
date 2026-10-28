@@ -213,6 +213,7 @@ const MemoryGameV2 = {
         window.addEventListener('resize', this.handleResize);
         
         // 開始動畫和遊戲流程
+        window.GameMusic?.start('memory');
         this.startGameSequence(needMemorize);
     },
 
@@ -1116,6 +1117,7 @@ const MemoryGameV2 = {
      * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
      */
     stop: function () {
+        window.GameMusic?.stop('memory');
         this.gameActive = false;
         this.canFlip = false;
         if (this.session) this.session.dispose();
@@ -1142,6 +1144,7 @@ const MemoryGameV2 = {
     // 結束遊戲
     endGame: function(isWin) {
         if (!this.gameActive) return;
+        window.GameMusic?.stop('memory');
         this.gameActive = false;
         this.canFlip = false;
         if (this.session) this.session.dispose();
