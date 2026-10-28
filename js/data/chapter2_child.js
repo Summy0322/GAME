@@ -121,16 +121,9 @@ const chapter2ChildData = {
             ]
         },
         {
-            id: "show_gallery_intro",
+            id: 'show_gallery_intro',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "這些圖案都記住了嗎？等一下要回答問題喔！",
-            next: "show_gallery_intro_part2"
-        },
-        {
-            id: "show_gallery_intro_part2",
-            name: '阿斗仔',
-            text: "答對越多題，遊戲會越簡單！",
+            text: '這些圖案都記住了嗎？等一下要回答問題喔！答對越多題，遊戲會越簡單！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -172,20 +165,13 @@ const chapter2ChildData = {
             get text() {
                 const score = window.Chapter2_Child?.quizScore || 0;
                 if (score === 0) {
-                    return '這次沒答對，沒有減免機會，還是能挑戰喔！';
+                    return '這次沒答對，沒有減免機會，但還是能挑戰遊戲喔！要再試一次嗎？';
                 } else if (score === 1) {
-                    return '你答對 1 題！獲得 1 次懲罰減免機會！';
+                    return '你答對1題，獲得1次懲罰減免！要再答一次爭取減免，還是開始遊戲？';
                 } else {
-                    return '你答對 2 題！獲得 2 次懲罰減免機會！';
+                    return '太厲害了！你答對2題，獲得2次懲罰減免機會！直接開始遊戲吧！';
                 }
             },
-            next: 'quiz_result_choices'
-        },
-        {
-            id: 'quiz_result_choices',
-            name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: '要再答一次爭取減免，還是開始遊戲？',
             options: [
                 {
                     text: '再回答一次',
@@ -216,16 +202,9 @@ const chapter2ChildData = {
         
         // ========== 成功結局 ==========
         {
-            id: "success_ending",
+            id: 'success_ending',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "太棒了！你把這些記憶一一找回來了，",
-            next: "success_ending_part2"
-        },
-        {
-            id: "success_ending_part2",
-            name: '阿斗仔',
-            text: "這就是屬於你的老街故事。",
+            text: '太棒了！你把這些記憶一一找回來了，這就是屬於你的老街故事。',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'final_message'
         },

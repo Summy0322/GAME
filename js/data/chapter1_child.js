@@ -58,16 +58,9 @@ window.Chapter1_Child = {
             next: 'level1_story1'
         },
         {
-            id: "level1_story1",
+            id: 'level1_story1',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "以前這裡有牛墟，還有臨時市場。",
-            next: "level1_story1_part2"
-        },
-        {
-            id: "level1_story1_part2",
-            name: '阿斗仔',
-            text: "大家會來賣牛、賣農具，清早很熱鬧。",
+            text: '以前這裡有牛墟，還有臨時市場。大家會來賣牛、賣農具，清早很熱鬧。',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_reply2'
         },
@@ -79,16 +72,9 @@ window.Chapter1_Child = {
             next: 'level1_story2'
         },
         {
-            id: "level1_story2",
+            id: 'level1_story2',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "對呀！你看，市場阿桑正在蒸肉圓呢。",
-            next: "level1_story2_part2"
-        },
-        {
-            id: "level1_story2_part2",
-            name: '阿斗仔',
-            text: "可是肉圓太滑了，一不小心就四處飛出去啦！",
+            text: '對呀！你看，市場阿桑正在蒸肉圓呢。可是肉圓太滑了，一不小心就四處飛出去啦！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_reply3'
         },
@@ -100,16 +86,9 @@ window.Chapter1_Child = {
             next: 'level1_challenge'
         },
         {
-            id: "level1_challenge",
+            id: 'level1_challenge',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "現在就要請你來幫忙！快拿碗或盤子，",
-            next: "level1_challenge_part2"
-        },
-        {
-            id: "level1_challenge_part2",
-            name: '阿斗仔',
-            text: "把飛出去的肉圓接住，幫阿桑保住今天的早餐吧！",
+            text: '現在就要請你來幫忙！快拿碗或盤子，把飛出去的肉圓接住，幫阿桑保住今天的早餐吧！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -146,16 +125,9 @@ window.Chapter1_Child = {
             next: 'intro_level2'
         },
         {
-            id: "level1_fail",
+            id: 'level1_fail',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "沒關係，肉圓滑掉了可以再試一次。",
-            next: "level1_fail_part2"
-        },
-        {
-            id: "level1_fail_part2",
-            name: '阿斗仔',
-            text: "要再挑戰一次嗎？還是先往前走？",
+            text: '沒關係，肉圓滑掉了可以再試一次。要再挑戰一次嗎？還是先往前走？',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -195,27 +167,13 @@ window.Chapter1_Child = {
             id: "level2_story1",
             name: '阿斗仔',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "因為人越來越多，",
+            text: "因為人越來越多，大家就一起蓋了一座真正的紅磚市場。",
             next: "level2_story1_part2"
         },
         {
             id: "level2_story1_part2",
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "大家就一起蓋了一座紅磚市場。",
-            next: "level2_story1_part3"
-        },
-        {
-            id: "level2_story1_part3",
-            name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "本來這裡很熱鬧，",
-            next: "level2_story1_part4"
-        },
-        {
-            id: "level2_story1_part4",
-            name: '阿斗仔',
-            text: "可是後來發生了一場大火。",
+            text: "本來這裡很熱鬧，可是後來發生了一場大火。",
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_scared'
         },
@@ -230,27 +188,13 @@ window.Chapter1_Child = {
             id: "level2_story2",
             name: '阿斗仔',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "是啊，市場裡有些地方被燒黑了，",
+            text: "是啊，市場裡有些地方被燒黑了，還留下燒焦的痕跡。",
             next: "level2_story2_part2"
         },
         {
             id: "level2_story2_part2",
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "還留下燒焦的痕跡。可是別怕，",
-            next: "level2_story2_part3"
-        },
-        {
-            id: "level2_story2_part3",
-            name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "這一關你不是來看火災的，",
-            next: "level2_story2_part4"
-        },
-        {
-            id: "level2_story2_part4",
-            name: '阿斗仔',
-            text: "你是來幫忙守護市場的！",
+            text: "可是別怕，這一關你不是來看火災的，你是來幫忙守護市場的！",
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_help'
         },
@@ -262,23 +206,9 @@ window.Chapter1_Child = {
             next: 'level2_challenge'
         },
         {
-            id: "level2_challenge",
+            id: 'level2_challenge',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "火團一直掉下來了！",
-            next: "level2_challenge_part2"
-        },
-        {
-            id: "level2_challenge_part2",
-            name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "你要用水球和水牆把火團擋住，",
-            next: "level2_challenge_part3"
-        },
-        {
-            id: "level2_challenge_part3",
-            name: '阿斗仔',
-            text: "不讓它繼續破壞市場！",
+            text: '火團一直掉下來了！你要用水球和水牆把火團擋住，不讓它繼續破壞市場！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -294,16 +224,9 @@ window.Chapter1_Child = {
             ]
         },
         {
-            id: "level2_complete",
+            id: 'level2_complete',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "太棒了！你成功守住市場了！",
-            next: "level2_complete_part2"
-        },
-        {
-            id: "level2_complete_part2",
-            name: '阿斗仔',
-            text: "這樣我們就有機會把它重新修好！",
+            text: '太棒了！你成功守住市場了！這樣我們就有機會把它重新修好！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_proud'
         },
@@ -322,16 +245,9 @@ window.Chapter1_Child = {
             next: 'intro_level3'
         },
         {
-            id: "level2_fail",
+            id: 'level2_fail',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "火勢太猛了...沒關係，我們可以再試一次，",
-            next: "level2_fail_part2"
-        },
-        {
-            id: "level2_fail_part2",
-            name: '阿斗仔',
-            text: "市場還等著我們保護呢！要再挑戰一次嗎？",
+            text: '火勢太猛了...沒關係，我們可以再試一次，市場還等著我們保護呢！要再挑戰一次嗎？',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -354,16 +270,9 @@ window.Chapter1_Child = {
         
         // ========== 第三關：現在的樣子 ==========
         {
-            id: "intro_level3",
+            id: 'intro_level3',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "現在的紅磚市場，雖然沒有以前那麼熱鬧，",
-            next: "intro_level3_part2"
-        },
-        {
-            id: "intro_level3_part2",
-            name: '阿斗仔',
-            text: "可是它還是好好站在這裡。",
+            text: '現在的紅磚市場，雖然沒有以前那麼熱鬧，可是它還是好好站在這裡。',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_question'
         },
@@ -375,16 +284,9 @@ window.Chapter1_Child = {
             next: 'level3_story1'
         },
         {
-            id: "level3_story1",
+            id: 'level3_story1',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "沒錯！每一塊紅磚，都在告訴我們以前的故事。",
-            next: "level3_story1_part2"
-        },
-        {
-            id: "level3_story1_part2",
-            name: '阿斗仔',
-            text: "這裡不只是市場，也是北斗很重要的記憶喔！",
+            text: '沒錯！每一塊紅磚，都在告訴我們以前的故事。這裡不只是市場，也是北斗很重要的記憶喔！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_understand'
         },
@@ -396,16 +298,9 @@ window.Chapter1_Child = {
             next: 'level3_challenge'
         },
         {
-            id: "level3_challenge",
+            id: 'level3_challenge',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "最後一關！豆乳快要完成了，但是黃豆一直亂跳！",
-            next: "level3_challenge_part2"
-        },
-        {
-            id: "level3_challenge_part2",
-            name: '阿斗仔',
-            text: "快來幫我用篩子接住黃豆，做出好喝的豆乳！",
+            text: '最後一關！豆乳快要完成了，但是黃豆一直亂跳！快來幫我用篩子接住黃豆，做出好喝的豆乳！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -421,30 +316,16 @@ window.Chapter1_Child = {
             ]
         },
         {
-            id: "level3_complete",
+            id: 'level3_complete',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "🎉 太厲害了！你完成了所有任務！",
-            next: "level3_complete_part2"
-        },
-        {
-            id: "level3_complete_part2",
-            name: '阿斗仔',
-            text: "豆乳也做好了！",
+            text: '🎉 太厲害了！你完成了所有任務！豆乳也做好了！',
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'kid_celebrate'
         },
         {
-            id: "kid_celebrate",
+            id: 'kid_celebrate',
             name: '小朋友',
-            characterImage: 'assets/images/characters/non_character.png',
-            text: "哇～我成功了！",
-            next: "kid_celebrate_part2"
-        },
-        {
-            id: "kid_celebrate_part2",
-            name: '小朋友',
-            text: "謝謝阿斗仔帶我認識紅磚市場！",
+            text: '哇～我成功了！謝謝阿斗仔帶我認識紅磚市場！',
             characterImage: 'assets/images/characters/non_character.png',
             // ✅ 根據通關進度動態決定跳轉目標（參考 teen 版）
             get next() {
@@ -456,16 +337,9 @@ window.Chapter1_Child = {
             }
         },
         {
-            id: "level3_fail",
+            id: 'level3_fail',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "研磨失敗了...沒關係，豆乳可以重新磨。",
-            next: "level3_fail_part2"
-        },
-        {
-            id: "level3_fail_part2",
-            name: '阿斗仔',
-            text: "要再試一次嗎？還是要去看看結局？",
+            text: '研磨失敗了...沒關係，豆乳可以重新磨。要再試一次嗎？還是要去看看結局？',
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
@@ -492,27 +366,13 @@ window.Chapter1_Child = {
             id: "good_ending",
             name: '阿斗仔',
             characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "🎉 太厲害了！三個任務你都完成了！",
+            text: "🎉 太厲害了！三個任務你都完成了！你保住肉圓，也守住了大火中的市場！",
             next: "good_ending_part2"
         },
         {
             id: "good_ending_part2",
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "你保護了肉圓、守住了大火中的市場、",
-            next: "good_ending_part3"
-        },
-        {
-            id: "good_ending_part3",
-            name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "還做出了好喝的豆乳！你是最棒的小幫手！",
-            next: "good_ending_part4"
-        },
-        {
-            id: "good_ending_part4",
-            name: '阿斗仔',
-            text: "紅磚市場會永遠記得你喔！",
+            text: "你還做出了好喝的豆乳！你是最棒的小幫手，紅磚市場會永遠記得你喔！",
             characterImage: 'assets/images/characters/阿斗仔.png',
             next: 'final_thanks'
         },
@@ -528,16 +388,9 @@ window.Chapter1_Child = {
         
         // ========== 最終感謝 ==========
         {
-            id: "final_thanks",
+            id: 'final_thanks',
             name: '阿斗仔',
-            characterImage: 'assets/images/characters/阿斗仔.png',
-            text: "紅磚市場的大門永遠為你打開喔！",
-            next: "final_thanks_part2"
-        },
-        {
-            id: "final_thanks_part2",
-            name: '阿斗仔',
-            text: "下次再來聽更多故事吧！拜拜～",
+            text: '紅磚市場的大門永遠為你打開喔！下次再來聽更多故事吧！拜拜～',
             characterImage: 'assets/images/characters/阿斗仔.png'
         }
     ]
