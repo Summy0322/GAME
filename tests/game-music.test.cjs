@@ -51,6 +51,21 @@ test('missing audio fails silently and volume zero pauses',()=>{
     p.onerror();assert.equal(music.owner,null);assert.equal(p.src,'');
 });
 
+test('mobile touchend and click retry blocked music, including synchronous rejection',async()=>{
+    for (const gesture of ['touchend','click']) {
+        const {music,events}=fixture();
+        music.start('memory');
+        await new Promise(setImmediate);
+        const p=music.player;
+        p.play=()=>{throw {name:'NotAllowedError'}};
+        music.play();assert.equal(music.needsGesture,true);
+        p.play=()=>{p.plays++;return Promise.resolve()};
+        events[gesture]();await new Promise(setImmediate);
+        assert.equal(p.plays,2);assert.equal(music.needsGesture,false);
+        music.stop();events[gesture]();assert.equal(music.player,null);
+    }
+});
+
 
 test('quiz music begins after the first question and stops before the story callback',()=>{
     const calls=[],window={GameMusic:{start:k=>calls.push('start:'+k),fadeOut:k=>calls.push('fade:'+k)}};
