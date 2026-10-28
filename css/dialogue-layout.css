@@ -106,3 +106,25 @@ body.child-mode #dialogue-text { font-size: 27px; line-height: 1.8; }
 
 #options-container button:hover { background: #ffdda0; color: #4a2c1a; }
 #options-container button:focus-visible { outline-color: #82452f; }
+
+/* 一般對話三選項：上排兩個、下排一個寬按鈕，一次看完。 */
+#options-container:has(> button:nth-child(3):last-child) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: clamp(6px, 1.3cqh, 12px);
+    max-height: none;
+    overflow: visible;
+}
+#options-container:has(> button:nth-child(3):last-child) > button {
+    flex: 0 0 calc((100% - clamp(6px, 1.3cqh, 12px)) / 2);
+    width: calc((100% - clamp(6px, 1.3cqh, 12px)) / 2);
+    max-width: none;
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+#options-container:has(> button:nth-child(3):last-child) > button:last-child {
+    flex-basis: 100%;
+    width: 100%;
+}
