@@ -32,8 +32,8 @@
     color: #ffe6a7;
 }
 #character-container {
-    bottom: 22%;
-    height: 72%;
+    bottom: 0;
+    height: 80%;
     overflow: hidden;
 }
 #character-image {
