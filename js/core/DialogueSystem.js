@@ -20,6 +20,7 @@ const DialogueSystem = {
     narrationContainer: null,
     narrationText: null,
     namingSession: 0,
+    dialogueRun: 0,
 
     clearNamingDialog: function() {
         this.namingSession++;
@@ -71,6 +72,8 @@ const DialogueSystem = {
     },
     
     loadChapter: function(chapterData) {
+        this.dialogueRun++;
+        window.DialogueSkip?.clear();
         if (window.Logger) window.Logger.info('📖 載入章節:', chapterData?.id || chapterData);
 
         // ✅ 重置旁白相關變數
@@ -153,6 +156,8 @@ const DialogueSystem = {
     },
     
     showDialogue: async function() {
+        const run = ++this.dialogueRun;
+        window.DialogueSkip?.clear();
         if (window.Logger) window.Logger.debug('💬 顯示對話，索引:', this.currentIndex, '總長度:', this.currentDialogue.length);
         
         // 檢查對話陣列
@@ -169,6 +174,7 @@ const DialogueSystem = {
         const line = this.currentDialogue[this.currentIndex];
         this.clearNamingDialog();
         console.log('📝 當前對話行:', line);
+        window.DialogueSkip?.bindStory(this);
 
         // ✅ 新增：如果對話有指定背景，就更換背景
         if (line.background && this.gameBackground) {
@@ -550,6 +556,7 @@ const DialogueSystem = {
             line.namePosition || 'left',
             currentMode === 'child' ? 'child-mode-text' : ''
         );
+        if (run !== this.dialogueRun) return;
         
         // 對話顯示完成後的處理
         if (line.gallery && line.gallery.length > 0) {
@@ -563,6 +570,7 @@ const DialogueSystem = {
                 GallerySystem.open(line.gallery, 0);
                 
                 const checkGalleryClosed = setInterval(() => {
+                    if (run !== this.dialogueRun) { clearInterval(checkGalleryClosed); return; }
                     if (!GallerySystem.isActive) {
                         clearInterval(checkGalleryClosed);
                         this.continueAfterGallery(line);
@@ -581,6 +589,7 @@ const DialogueSystem = {
             }
             
             const selectedOption = await this.typewriter.showOptions(line.options);
+            if (run !== this.dialogueRun) return;
             
             if (selectedOption.gallery && selectedOption.gallery.length > 0) {
                 console.log('🖼️ 選項帶有相簿，先開啟圖文展示');
@@ -593,6 +602,7 @@ const DialogueSystem = {
                     GallerySystem.open(selectedOption.gallery, 0);
                     
                     const checkGalleryClosed = setInterval(() => {
+                        if (run !== this.dialogueRun) { clearInterval(checkGalleryClosed); return; }
                         if (!GallerySystem.isActive) {
                             clearInterval(checkGalleryClosed);
                             console.log('🖼️ 相簿已關閉，繼續執行選項動作');
@@ -625,6 +635,8 @@ const DialogueSystem = {
     },
     
     handleOption: async function(option) {
+        this.dialogueRun++;
+        window.DialogueSkip?.clear();
         console.log('🎯 處理選項:', option);
         
         // 清空選項
@@ -739,6 +751,7 @@ const DialogueSystem = {
 
     // ✅ 在這裡添加 continueAfterGallery 方法
     continueAfterGallery: function(line) {
+        const run = this.dialogueRun;
         console.log('🖼️ 相簿已關閉，繼續對話流程');
         
         // 檢查原本的對話行後續處理
@@ -753,6 +766,7 @@ const DialogueSystem = {
             // 注意：這裡需要用 async/await，但 continueAfterGallery 不是 async
             // 解決方案：使用 Promise 或直接呼叫 typewriter.showOptions
             this.typewriter.showOptions(line.options).then(async (selectedOption) => {
+                if (run !== this.dialogueRun) return;
                 await this.handleOption(selectedOption);
             });
         } else if (line.next) {
@@ -781,6 +795,7 @@ const DialogueSystem = {
 
     // 開始問答測驗
     startQuiz: function(questionRange, questionCount, onComplete) {
+        window.DialogueSkip?.clear();
         console.log('📝 開始問答測驗，範圍:', questionRange, '抽題數:', questionCount);
         
         this.quizScore = 0;
@@ -920,6 +935,7 @@ const DialogueSystem = {
     },
     
     startMinigame: function(minigameName, returnToConfig, level, extraOptions = {}) {
+        window.DialogueSkip?.clear();
         console.log('🎮 DialogueSystem 請求啟動小遊戲:', minigameName, '關卡:', level);
         
         // ✅ 儲存關卡編號，用於通關時自動記錄
@@ -1026,6 +1042,8 @@ const DialogueSystem = {
     },
     
     endDialogue: function(isManualExit = false) {
+        this.dialogueRun++;
+        window.DialogueSkip?.clear();
         console.log('🔚 對話結束, isManualExit:', isManualExit);
         this.clearNamingDialog();
         if (window.GameEngine) window.GameEngine.stopMinigame();

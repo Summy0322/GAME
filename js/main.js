@@ -55,6 +55,7 @@ function showAgeSelect() {
 
 // ===== 場景切換函數（全域）=====
 function showScene(sceneId) {
+    if (sceneId !== 'game-container') window.DialogueSkip?.clear();
     if (window.Logger) window.Logger.info('切換場景到:', sceneId);
     
     if (typeof SceneManager !== 'undefined' && SceneManager.show) {

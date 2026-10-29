@@ -20,6 +20,14 @@ const CollectionSystem = {
     completeBtn: null,
     backgroundDiv: null,
     dialogueOverlay: null,
+    dialogueRun: 0,
+    cancelDialogueWait: null,
+    clearDialogueSkip: function() {
+        this.dialogueRun++;
+        this.cancelDialogueWait?.();
+        this.cancelDialogueWait = null;
+        window.DialogueSkip?.clear();
+    },
     
     // 物品資料
     items: [],
@@ -479,6 +487,7 @@ const CollectionSystem = {
     
     // 顯示地圖模式
     showMapMode: function() {
+        this.clearDialogueSkip();
         if (this.mapContainer) {
             this.mapContainer.style.display = 'block';
         }
@@ -514,6 +523,7 @@ const CollectionSystem = {
     
     // 小遊戲模式
     showGameMode: function() {
+        this.clearDialogueSkip();
         if (this.mapContainer) {
             this.mapContainer.style.display = 'none';
         }
@@ -708,7 +718,16 @@ const CollectionSystem = {
 
     // 顯示有選項的對話（防止重複觸發）
     showDialogueWithOptions: async function(dialogue, onStartGame) {
+        this.clearDialogueSkip();
+        const run = this.dialogueRun;
         let gameStarted = false;
+        const start = () => {
+            if (gameStarted || run !== this.dialogueRun || !this.isActive) return;
+            gameStarted = true;
+            this.clearDialogueSkip();
+            window.Typewriter?.clear();
+            if (onStartGame) onStartGame();
+        };
         
         if (typeof Typewriter !== 'undefined') {
             // ✅ 需要載入的圖片清單
@@ -737,6 +756,7 @@ const CollectionSystem = {
             }
             
             // ✅ 圖片載入完成後，切換到對話模式
+            if (run !== this.dialogueRun || !this.isActive) return;
             this.showDialogueMode();
             this.hideShopLoading();
             
@@ -748,6 +768,7 @@ const CollectionSystem = {
             }
             
             // ✅ 等待對話顯示完成（打字完成 + 玩家點擊）
+            window.DialogueSkip?.bind(start);
             await Typewriter.showDialogue(
                 dialogue.name || '老闆',
                 dialogue.text,
@@ -758,6 +779,7 @@ const CollectionSystem = {
             );
             
             // ✅ 對話完成後，才顯示選項按鈕
+            if (run !== this.dialogueRun || !this.isActive) return;
             if (dialogue.options && dialogue.options.length > 0) {
                 const optionsContainer = document.getElementById('options-container');
                 if (optionsContainer) {
@@ -784,12 +806,7 @@ const CollectionSystem = {
                             const indicator = document.getElementById('typing-complete-indicator');
                             if (indicator) indicator.remove();
                             
-                            if (!gameStarted) {
-                                gameStarted = true;
-                                console.log('玩家選擇:', opt.text);
-                                console.log('進入遊戲');
-                                if (onStartGame) onStartGame();
-                            }
+                            start();
                         };
                         
                         optionsContainer.appendChild(btn);
@@ -893,6 +910,15 @@ const CollectionSystem = {
 
     // 依序顯示對話（每句都會等玩家點擊）- 使用 DialogueSystem
     showDialogueSequence: async function(dialogues, onComplete) {
+        this.clearDialogueSkip();
+        const run = this.dialogueRun;
+        const finish = () => {
+            if (run !== this.dialogueRun || !this.isActive) return;
+            this.clearDialogueSkip();
+            window.Typewriter?.clear();
+            if (onComplete) onComplete();
+        };
+        window.DialogueSkip?.bind(finish);
         for (let i = 0; i < dialogues.length; i++) {
             const dialogue = dialogues[i];
             
@@ -923,15 +949,19 @@ const CollectionSystem = {
             );
             
             // 等待玩家點擊
+            if (run !== this.dialogueRun || !this.isActive) return;
             await new Promise((resolve) => {
                 const onClick = () => {
                     document.removeEventListener('click', onClick);
+                    this.cancelDialogueWait = null;
                     resolve();
                 };
+                this.cancelDialogueWait = () => document.removeEventListener('click', onClick);
                 document.addEventListener('click', onClick);
             });
+            if (run !== this.dialogueRun || !this.isActive) return;
         }
-        if (onComplete) onComplete();
+        finish();
     },
     
     // 播放蒐集動畫
@@ -1082,6 +1112,8 @@ const CollectionSystem = {
     
     // 顯示前言劇情（使用 DialogueSystem 的對話機制）
     showIntroDialogue: function(dialogue) {
+        this.clearDialogueSkip();
+        const run = this.dialogueRun;
         if (this.hotspotsContainer) {
             this.hotspotsContainer.style.pointerEvents = 'none';
         }
@@ -1089,6 +1121,9 @@ const CollectionSystem = {
         this.showDialogueMode();
         
         const onComplete = () => {
+            if (run !== this.dialogueRun || !this.isActive) return;
+            this.clearDialogueSkip();
+            window.Typewriter?.clear();
             this.showMapMode();
             if (this.hotspotsContainer) {
                 this.hotspotsContainer.style.pointerEvents = 'auto';
@@ -1096,6 +1131,7 @@ const CollectionSystem = {
         };
         
         if (window.DialogueSystem && window.DialogueSystem.typewriter) {
+            window.DialogueSkip?.bind(onComplete);
             window.DialogueSystem.typewriter.showDialogue(
                 dialogue.name || '阿斗仔',
                 dialogue.text,
@@ -1104,6 +1140,7 @@ const CollectionSystem = {
                 'left',
                 ''
             ).then(() => {
+                if (run !== this.dialogueRun || !this.isActive) return;
                 // 等待點擊
                 const gameContainer = document.getElementById('game-container');
                 if (gameContainer) {
@@ -1112,10 +1149,11 @@ const CollectionSystem = {
                         onComplete();
                     };
                     gameContainer.addEventListener('click', onClick);
-                    setTimeout(() => {
+                    const timer = setTimeout(() => {
                         gameContainer.removeEventListener('click', onClick);
                         onComplete();
                     }, 10000);
+                    this.cancelDialogueWait = () => { clearTimeout(timer); gameContainer.removeEventListener('click', onClick); };
                 } else {
                     onComplete();
                 }
@@ -1249,6 +1287,7 @@ const CollectionSystem = {
     
     // 關閉蒐集系統
     close: function() {
+        this.clearDialogueSkip();
         console.log('🗺️ 關閉蒐集模式');
         
         this.isActive = false;

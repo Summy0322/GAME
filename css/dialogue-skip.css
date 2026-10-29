@@ -1,0 +1,39 @@
+#dialogue-skip {
+    position: absolute;
+    top: 3%;
+    right: 3%;
+    z-index: 11000;
+    margin: 0;
+    min-width: 56px;
+    min-height: 44px;
+    padding: 4px 14px;
+    border: 2px solid #e6b77b;
+    border-radius: 24px;
+    background: #fff4df;
+    color: #704322;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1;
+}
+#dialogue-skip[hidden] { display: none; }
+#audio-settings .skip-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #ffffff40; padding-top: 8px; margin-top: 8px; font-size: 18px; }
+.skip-setting-row small { display: block; font-size: 12px; color: #e6d5bd; }
+#audio-settings #skip-setting-toggle { padding: 4px 14px; border-radius: 22px; font-size: 16px; }
+.skip-dialog { box-sizing: border-box; width: min(90vw, 480px); max-height: 94dvh; padding: 22px; border: 3px solid #e67e22; border-radius: 20px; background: #2c3e50; color: #fff; font-family: inherit; text-align: center; box-shadow: 0 12px 40px #0005; }
+.skip-dialog::backdrop { background: #000a; }
+.skip-dialog h2 { margin: 0 0 12px; font-size: 24px; }
+.skip-dialog p { margin: 10px 0; font-size: 18px; }
+.skip-dialog label { display: block; margin: 10px 0 6px; }
+#skip-password { box-sizing: border-box; width: 100%; min-height: 44px; font-size: 18px; padding: 6px 12px; border: 2px solid #e67e22; border-radius: 10px; }
+#skip-password-error { color: #ffd49e; font-size: 16px; min-height: 22px; }
+.skip-dialog-actions { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+.skip-dialog button { min-height: 44px; margin: 0; padding: 8px 18px; border-radius: 24px; background: #e67e22; color: #fff; font: inherit; }
+.skip-dialog .skip-later { background: #687d8a; }
+.skip-dialog :focus-visible { outline: 3px solid #ffd700; outline-offset: 3px; }
+@media (max-height: 450px) { .skip-dialog { padding: 12px 20px; } .skip-dialog h2 { font-size: 22px; margin-bottom: 6px; } .skip-dialog p { margin: 6px 0; } }
+@media (max-height: 400px) and (min-width: 501px) {
+    #audio-settings { padding: 10px 16px 12px; }
+    #audio-settings h2 { margin-bottom: 4px; line-height: 36px; }
+    #audio-settings .audio-setting-row { margin: 4px 0; }
+    #audio-settings .skip-setting-row { margin-top: 4px; padding-top: 4px; font-size: 16px; }
+}

@@ -12,6 +12,7 @@ const SceneManager = {
     },
     
     show: function(sceneId) {
+        if (sceneId !== 'game-container') window.DialogueSkip?.clear();
         window.GameMusic?.stop();
         if (window.Logger) window.Logger.info('SceneManager 顯示場景:', sceneId);
         
