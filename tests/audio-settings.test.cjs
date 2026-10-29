@@ -51,6 +51,9 @@ test('channel mute is independent and master mute locks both child rows while pr
     s.set('sfx',.4);s.set('music',.6);
     nodes.get('audio-sfx-mute').handlers.click();
     assert.equal(a.sfxPlayer.volume,0);assert.equal(m.volume,.12);
+    assert.equal(nodes.get('audio-sfx').disabled,true);
+    assert.equal(nodes.get('audio-sfx-mute').disabled,false);
+    assert.equal(nodes.get('audio-music').disabled,false);
     s.set('muted',true);
     for(const name of ['sfx','music']) {
         assert.equal(nodes.get(`audio-${name}`).disabled,true);
@@ -63,7 +66,13 @@ test('channel mute is independent and master mute locks both child rows while pr
     assert.equal(s.values.sfx,.4);assert.equal(s.values.music,.6);
     assert.equal(s.values.sfxMuted,true);assert.equal(a.sfxPlayer.volume,0);assert.equal(m.volume,.12);
     assert.equal(nodes.get('audio-music').disabled,false);
+    assert.equal(nodes.get('audio-sfx').disabled,true);
     const restored=fixture(storage.get(s.key));assert.equal(restored.settings.values.sfxMuted,true);
     nodes.get('audio-sfx-mute').handlers.click();assert.ok(Math.abs(a.sfxPlayer.volume-.28)<1e-9);
+    assert.equal(nodes.get('audio-sfx').disabled,false);
     nodes.get('audio-music-mute').handlers.click();assert.equal(m.volume,0);assert.ok(a.sfxPlayer.volume>0);
+    assert.equal(nodes.get('audio-music').disabled,true);
+    assert.equal(nodes.get('audio-music-mute').disabled,false);
+    nodes.get('audio-music-mute').handlers.click();
+    assert.equal(nodes.get('audio-music').disabled,false);assert.equal(s.values.music,.6);
 });

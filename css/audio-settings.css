@@ -42,6 +42,7 @@
 .audio-setting-row input { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; margin: 0; min-height: 44px; accent-color: #d66b1c; cursor: pointer; }
 #audio-settings .audio-mute-toggle { grid-column: 4; grid-row: 1; width: 44px; height: 44px; font-size: 24px; display: grid; place-items: center; }
 .audio-row-disabled { opacity: .4; }
+.audio-setting-row input:disabled { opacity: .4; filter: grayscale(1); }
 #audio-settings :disabled { cursor: not-allowed; }
 #audio-settings button[aria-pressed="true"] { background: #884b20; }
 #audio-settings :focus-visible { outline: 3px solid #ffd700; outline-offset: 3px; }
