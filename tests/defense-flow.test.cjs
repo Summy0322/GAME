@@ -134,6 +134,52 @@ test('hitting a stone during the avoidance window still penalizes and removes it
     assert.equal(env.game.mistakes, 1);
 });
 
+test('a stone hit first cancels its hold but leaves time to finish all real targets in every level and mode', () => {
+    for (const mode of ['adult','child']) for (const level of [1,2,3]) {
+        const env = fixture(mode, level);
+        const attack = env.enter({type:'MULTI_MIXED',dirs:['up','left','right'],correctDirs:['up','left'],wrongDirs:['right'],wait:4000});
+        env.game.handleSwipe('right');env.tick(600);
+        assert.equal(attack.finished,undefined,'stone alone must not end the wave');
+        assert.ok(attack.multiTimeout,'remaining targets retain their deadline');
+        env.game.handleSwipe('up');env.tick(600);
+        assert.equal(attack.finished,undefined,'second target still needs an answer');
+        env.game.handleSwipe('left');env.tick(599);
+        assert.equal(attack.finished,undefined,'wait for the final impact');
+        env.tick(1);
+        assert.equal(attack.finished,true,'no stone hold after the final impact');
+        assert.equal(env.elements['defense-wait-meter'].hidden,true);
+        assert.equal(env.game.score,2*env.game.scoreTable.MIXED_CORRECT+env.game.scoreTable.MIXED_WRONG);
+        assert.equal(env.game.mistakes,1);
+        const score=env.game.score;env.tick(5000);assert.equal(env.game.score,score);
+    }
+});
+
+test('a stone hit during the hold ends after its impact without starting another hold',()=>{
+    const env=fixture('child');
+    const attack=env.enter({type:'MULTI_MIXED',dirs:['left','right'],correctDirs:['left'],wrongDirs:['right'],wait:4000});
+    env.game.handleSwipe('left');env.tick(600);
+    assert.ok(attack.avoidTimer);
+    env.game.handleSwipe('right');env.tick(599);assert.equal(attack.finished,undefined);
+    env.tick(1);assert.equal(attack.finished,true);assert.equal(env.game.score,20);
+});
+
+test('untouched stones still require avoidance, even after a different stone was hit',()=>{
+    const env=fixture();
+    const attack=env.enter({type:'MULTI_MIXED',dirs:['up','left','right'],correctDirs:['up'],wrongDirs:['left','right'],wait:4000});
+    env.game.handleSwipe('left');env.tick(600);env.game.handleSwipe('up');env.tick(600);
+    assert.equal(attack.finished,undefined);assert.ok(attack.avoidTimer);
+    env.tick(env.game.levelConfig.flow.avoidHold);assert.equal(attack.finished,true);
+    assert.equal(env.game.score,env.game.scoreTable.MIXED_CORRECT+env.game.scoreTable.MIXED_WRONG+env.game.scoreTable.MIXED_AVOID);
+});
+
+test('hitting a stone never grants extra time or excuses a missed real target',()=>{
+    const env=fixture();
+    const attack=env.enter({type:'MULTI_MIXED',dirs:['left','right'],correctDirs:['left'],wrongDirs:['right'],wait:4000});
+    env.game.handleSwipe('right');env.tick(3999);assert.equal(attack.finished,undefined);
+    env.tick(1);assert.equal(attack.finished,true);assert.equal(env.game.mistakes,2);
+    assert.equal(env.game.score,env.game.scoreTable.MIXED_WRONG-Math.abs(env.game.scoreTable.TIME_OUT_PENALTY));
+});
+
 test('missing a correct direction preserves the full deadline and timeout penalty', () => {
     const env = fixture();
     const attack = env.enter({type:'MULTI_MIXED',dirs:['up','left','right'],correctDirs:['up','left'],wrongDirs:['right'],wait:4000});

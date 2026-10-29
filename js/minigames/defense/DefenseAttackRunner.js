@@ -176,6 +176,12 @@ window.DefenseAttackRunnerMixin = {
             this.finishAttack();
             return;
         }
+        // 已誤打的石頭沒有剩餘避讓時間；仍先等全部正確目標及命中動畫完成。
+        const remainingStones = attack.wrongDirsList.filter(dir => !attack.swipedDirs.includes(dir));
+        if (remainingStones.length === 0) {
+            this.resolveFlowMixed(attack);
+            return;
+        }
         const hold = this.levelConfig.flow.avoidHold;
         this.msg.innerText = `${this.levelConfig.flow.targetName}都處理好了，留意石頭！`;
         this.showAvoidanceProgress(hold);
