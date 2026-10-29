@@ -19,6 +19,18 @@ const DialogueSystem = {
     narrationTimer: null,
     narrationContainer: null,
     narrationText: null,
+    namingSession: 0,
+
+    clearNamingDialog: function() {
+        this.namingSession++;
+        const container = document.getElementById?.('naming-container');
+        if (!container) return;
+        const input = document.getElementById('player-name-input');
+        const button = document.getElementById('naming-confirm-btn');
+        if (input) input.onkeypress = null;
+        if (button) button.onclick = null;
+        container.remove();
+    },
     
     init: function() {
         if (window.Logger) window.Logger.info('🔧 DialogueSystem 初始化');
@@ -83,6 +95,7 @@ const DialogueSystem = {
             return;
         }
         
+        this.clearNamingDialog();
         this.currentChapter = chapterData;
         this.currentDialogue = chapterData.dialogue;
         this.currentIndex = 0;
@@ -154,6 +167,7 @@ const DialogueSystem = {
         }
         
         const line = this.currentDialogue[this.currentIndex];
+        this.clearNamingDialog();
         console.log('📝 當前對話行:', line);
 
         // ✅ 新增：如果對話有指定背景，就更換背景
@@ -277,8 +291,10 @@ const DialogueSystem = {
             
             const input = document.getElementById('player-name-input');
             const confirmBtn = document.getElementById('naming-confirm-btn');
+            const namingSession = this.namingSession;
             
             const confirmName = () => {
+                if (namingSession !== this.namingSession) return;
                 let playerName = input.value.trim();
                 if (playerName === '') {
                     playerName = '小旅人';
@@ -290,7 +306,7 @@ const DialogueSystem = {
                 }
                 
                 // 關閉命名畫面
-                namingContainer.style.display = 'none';
+                this.clearNamingDialog();
                 
                 // 恢復對話框顯示
                 if (this.dialogBox) this.dialogBox.style.display = 'block';
@@ -1011,6 +1027,7 @@ const DialogueSystem = {
     
     endDialogue: function(isManualExit = false) {
         console.log('🔚 對話結束, isManualExit:', isManualExit);
+        this.clearNamingDialog();
         if (window.GameEngine) window.GameEngine.stopMinigame();
 
         // ✅ 清除旁白打字計時器
