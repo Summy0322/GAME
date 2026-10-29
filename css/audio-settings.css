@@ -1,0 +1,39 @@
+#settings-open {
+    position: absolute;
+    top: 3%;
+    right: 3%;
+    min-height: 44px;
+    padding: 8px 20px;
+    border: 2px solid #e6b77b;
+    border-radius: 24px;
+    background: #fff4df;
+    color: #704322;
+    font-size: clamp(16px, 2cqh, 22px);
+    cursor: pointer;
+}
+#audio-settings {
+    box-sizing: border-box;
+    width: min(90vw, 520px);
+    max-height: 90dvh;
+    padding: 22px 28px;
+    border: 3px solid #e67e22;
+    border-radius: 20px;
+    background: #2c3e50;
+    color: #fff;
+    font-family: inherit;
+    box-shadow: 0 12px 40px #0005;
+}
+#audio-settings::backdrop { background: #0009; }
+#audio-settings h2 { margin: 0 0 16px; text-align: center; font-size: 26px; }
+.audio-setting-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; margin: 12px 0; font-size: 18px; }
+.audio-setting-row input { grid-column: 1 / -1; width: 100%; margin: 0; min-height: 36px; accent-color: #d66b1c; cursor: pointer; }
+.audio-settings-actions { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+#audio-settings button { min-height: 44px; padding: 8px 22px; border: 0; border-radius: 24px; background: #e67e22; color: #fff; font: inherit; cursor: pointer; }
+#audio-settings button[aria-pressed="true"] { background: #884b20; }
+#audio-settings :focus-visible { outline: 3px solid #ffd700; outline-offset: 3px; }
+@media (max-height: 450px) {
+    #audio-settings { padding: 12px 22px; }
+    #audio-settings h2 { margin-bottom: 4px; font-size: 22px; }
+    .audio-setting-row { margin: 4px 0; font-size: 16px; gap: 0 12px; }
+    .audio-settings-actions { margin-top: 8px; }
+}

@@ -6,6 +6,16 @@ const AudioManager = {
     chirpNodes: new Set(),
     chirpLastTime: -Infinity,
     dialogueVolume: 0.30,
+    sfxVolume: 0.7,
+    bgVolume: 0.5,
+    currentSFXVolume: 0.7,
+    applySettings: function() {
+        const sfx = window.AudioSettings?.factor('sfx') ?? 1;
+        const music = window.AudioSettings?.factor('music') ?? 1;
+        if (this.bgMusic) this.bgMusic.volume = this.bgVolume * music;
+        if (this.sfxPlayer) this.sfxPlayer.volume = this.currentSFXVolume * sfx;
+        if (sfx === 0) this.stopDialogueChirp();
+    },
     unlockDialogueAudio: function() {
         try {
             const Audio = window.AudioContext || window.webkitAudioContext;
@@ -17,14 +27,14 @@ const AudioManager = {
     playDialogueChirp: function(char) {
         const ctx = this.chirpContext;
         if (!/[\p{L}\p{N}]/u.test(char) || document.hidden || !ctx || ctx.state !== 'running' ||
-            this.sfxPlayer?.muted || this.dialogueVolume <= 0 || ctx.currentTime - this.chirpLastTime < 0.075) return;
+            this.sfxPlayer?.muted || this.dialogueVolume <= 0 || (window.AudioSettings?.factor('sfx') ?? 1) === 0 || ctx.currentTime - this.chirpLastTime < 0.075) return;
         try {
             const now = ctx.currentTime, oscillator = ctx.createOscillator(), gain = ctx.createGain();
             oscillator.type = 'triangle';
             oscillator.frequency.setValueAtTime(660, now);
             oscillator.frequency.exponentialRampToValueAtTime(990, now + 0.04);
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.18 * this.dialogueVolume, now + 0.004);
+            gain.gain.linearRampToValueAtTime(0.18 * this.dialogueVolume * (window.AudioSettings?.factor('sfx') ?? 1), now + 0.004);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
             oscillator.connect(gain); gain.connect(ctx.destination);
             this.chirpNodes.add(oscillator);
@@ -87,12 +97,12 @@ const AudioManager = {
         
         // 設定預設音量
         if (this.bgMusic) {
-            this.bgMusic.volume = 0.5;
+            this.bgMusic.volume = this.bgVolume * (window.AudioSettings?.factor('music') ?? 1);
             console.log('✅ bgMusic 音量設定為 0.5');
         }
         
         if (this.sfxPlayer) {
-            this.sfxPlayer.volume = 0.7;
+            this.sfxPlayer.volume = this.currentSFXVolume * (window.AudioSettings?.factor('sfx') ?? 1);
             console.log('✅ sfxPlayer 音量設定為 0.7');
         }
         
@@ -117,7 +127,7 @@ const AudioManager = {
         try {
             this.bgMusic.src = src;
             this.bgMusic.loop = loop;
-            this.bgMusic.volume = 0.5;
+            this.bgMusic.volume = this.bgVolume * (window.AudioSettings?.factor('music') ?? 1);
             
             const playPromise = this.bgMusic.play();
             if (playPromise !== undefined) {
@@ -155,7 +165,8 @@ const AudioManager = {
         
         // 設定新的音效來源
         player.src = src;
-        player.volume = volume;
+        this.currentSFXVolume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : this.sfxVolume));
+        this.applySettings();
 
         // 嘗試播放並處理回傳的 Promise
         const playPromise = player.play();
@@ -179,15 +190,17 @@ const AudioManager = {
     },
     
     setBGMVolume: function(vol) {
-        if (!this.bgMusic) return;
-        this.bgMusic.volume = Math.max(0, Math.min(1, vol));
+        if (!Number.isFinite(vol)) return;
+        this.bgVolume = Math.max(0, Math.min(1, vol));
+        this.applySettings();
     },
     
     setSFXVolume: function(vol) {
+        if (!Number.isFinite(vol)) return;
         this.dialogueVolume = Math.max(0, Math.min(1, vol));
         if (this.dialogueVolume === 0) this.stopDialogueChirp();
-        if (!this.sfxPlayer) return;
-        this.sfxPlayer.volume = Math.max(0, Math.min(1, vol));
+        this.sfxVolume = this.currentSFXVolume = Math.max(0, Math.min(1, vol));
+        this.applySettings();
     }
 };
 

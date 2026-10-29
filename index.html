@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="css/interact-system.css">
     <link rel="stylesheet" href="css/viewport.css">
     <link rel="stylesheet" href="css/dialogue-layout.css">
+    <link rel="stylesheet" href="css/audio-settings.css">
 
     <!-- Swiper.js CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -57,6 +58,7 @@
 
         <!-- 起始頁面 -->
         <div id="start-menu" class="scene">
+            <button id="settings-open" type="button">⚙ 設定</button>
             <!-- 背景由 CSS 控制，這裡放置 UI 元素 -->
             <div class="title-container">
                 <img src="assets/images/title/title.png" alt="標題" class="start-title-img">
@@ -117,6 +119,14 @@
             <button class="back-btn" onclick="showScene('level-select')" style="display:none;">返回選單</button>
         </div>
         
+        <dialog id="audio-settings" aria-labelledby="audio-settings-title">
+            <h2 id="audio-settings-title">聲音設定</h2>
+            <div class="audio-setting-row"><label for="audio-master">整體音量</label><output id="audio-master-value" for="audio-master">100%</output><input id="audio-master" type="range" min="0" max="100" value="100"></div>
+            <div class="audio-setting-row"><label for="audio-sfx">音效與對話音</label><output id="audio-sfx-value" for="audio-sfx">100%</output><input id="audio-sfx" type="range" min="0" max="100" value="100"></div>
+            <div class="audio-setting-row"><label for="audio-music">背景音樂</label><output id="audio-music-value" for="audio-music">100%</output><input id="audio-music" type="range" min="0" max="100" value="100"></div>
+            <div class="audio-settings-actions"><button id="audio-mute" type="button" aria-pressed="false">全部靜音</button><button id="settings-close" type="button">完成</button></div>
+        </dialog>
+
         <!-- 音效控制（隱藏） -->
         <audio id="bg-music" loop></audio>
         <audio id="sfx-player"></audio>
@@ -146,6 +156,7 @@
     <script src="js/core/GameEngine.js"></script>
     <script src="js/core/AudioManager.js"></script>
     <script src="js/core/GameMusic.js"></script>
+    <script src="js/core/AudioSettings.js"></script>
     <script src="js/core/SceneManager.js"></script>
     
     <!-- 2. Typewriter 要在 DialogueSystem 之前 -->
