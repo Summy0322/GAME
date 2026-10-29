@@ -58,7 +58,7 @@
 
         <!-- 起始頁面 -->
         <div id="start-menu" class="scene">
-            <button id="settings-open" type="button" aria-label="聲音設定" title="聲音設定">⚙</button>
+            <button id="settings-open" type="button" aria-label="聲音設定" title="聲音設定"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65c-.61.25-1.18.58-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.13.22.4.31.61.22l2.49-1c.51.4 1.08.73 1.69.98l.38 2.65A.49.49 0 0 0 10 22h4a.49.49 0 0 0 .49-.42l.38-2.65a7.3 7.3 0 0 0 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7"/></svg></button>
             <!-- 背景由 CSS 控制，這裡放置 UI 元素 -->
             <div class="title-container">
                 <img src="assets/images/title/title.png" alt="標題" class="start-title-img">
@@ -120,11 +120,11 @@
         </div>
         
         <dialog id="audio-settings" aria-labelledby="audio-settings-title">
+            <button id="settings-close" type="button" aria-label="關閉聲音設定">×</button>
             <h2 id="audio-settings-title">聲音設定</h2>
             <div id="audio-master-row" class="audio-setting-row"><label for="audio-master">整體音量</label><output id="audio-master-value" for="audio-master">100%</output><input id="audio-master" type="range" min="0" max="100" value="100"><button id="audio-master-mute" class="audio-mute-toggle" type="button" aria-label="開啟整體音量靜音" aria-pressed="false">🔊</button></div>
             <div id="audio-sfx-row" class="audio-setting-row"><label for="audio-sfx">音效與對話音</label><output id="audio-sfx-value" for="audio-sfx">100%</output><input id="audio-sfx" type="range" min="0" max="100" value="100"><button id="audio-sfx-mute" class="audio-mute-toggle" type="button" aria-label="開啟音效與對話音靜音" aria-pressed="false">🔊</button></div>
             <div id="audio-music-row" class="audio-setting-row"><label for="audio-music">背景音樂</label><output id="audio-music-value" for="audio-music">100%</output><input id="audio-music" type="range" min="0" max="100" value="100"><button id="audio-music-mute" class="audio-mute-toggle" type="button" aria-label="開啟背景音樂靜音" aria-pressed="false">🔊</button></div>
-            <div class="audio-settings-actions"><button id="settings-close" type="button">完成</button></div>
         </dialog>
 
         <!-- 音效控制（隱藏） -->
