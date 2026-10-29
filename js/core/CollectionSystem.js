@@ -917,6 +917,7 @@ const CollectionSystem = {
             
             GameEngine.startMinigame('interact', {
                 ...gameConfigCopy,
+                requiredBackground: hotspot.dialogue?.background,
                 onComplete: (success) => {
                     if (!this.isActive || collectionRun !== this.collectionRun) return;
                     console.log(`🎮 遊戲結果回调: ${success ? '成功' : '失敗'}`);

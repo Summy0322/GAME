@@ -544,6 +544,24 @@ function lockChapter(chapterId) {
 
 // 重新遊玩時恢復三章開放的初始狀態
 function resetAllChapters() {
+    window.LoadingManager?.cancel?.();
+    window.CollectionSystem?.close();
+    window.GameEngine?.stopMinigame();
+    if (window.DialogueSystem?.currentChapter) window.DialogueSystem.endDialogue(true);
+    for (const chapter of [window.Chapter1_Child, window.Chapter1_Teen]) chapter?.resetProgress();
+    for (const chapter of [window.Chapter2_Child, window.Chapter2_Teen]) if (chapter) chapter.quizScore = 0;
+    for (const chapter of [window.Chapter3_Child, window.Chapter3_Teen]) {
+        if (!chapter) continue;
+        chapter.money = 20;
+        chapter.shopStatus = {herbal: false, knife: false, grocery: false};
+        chapter.playerName = '小旅人';
+        chapter.triggerMoneyUpdate();
+    }
+    if (window.CollectionSystem) {
+        window.CollectionSystem.collectedItems = [];
+        window.CollectionSystem.onCompleteCallback = null;
+        window.CollectionSystem.pendingCallback = null;
+    }
     chapterStatus.chapter1 = 'open';
     chapterStatus.chapter2 = 'open';
     chapterStatus.chapter3 = 'open';
