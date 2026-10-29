@@ -127,6 +127,8 @@ const MemoryGameV2 = {
         
         this.gameActive = true;
         this.onCompleteCallback = options.onComplete;
+        this.onRetryCallback = options.onRetry;
+        this.playerMode = options.gameMode || window.gameMode || 'adult';
 
         // ✅ 讀取懲罰減免次數
         this.penaltyRedemption = options.penaltyRedemption || 0;
@@ -137,6 +139,7 @@ const MemoryGameV2 = {
         // ✅ 讀取模式設定
         this.gameMode = options.gameType || 'time';      // 'time' 或 'attempts'
         this.lightMode = options.lightMode || 'both';   // 'none', 'red', 'both'
+        if (this.playerMode === 'child' && this.lightMode === 'red') this.lightMode = 'none';
         
         // ✅ 讀取是否要記憶階段（預設 true）
         const needMemorize = options.needMemorize !== false;
@@ -918,26 +921,31 @@ const MemoryGameV2 = {
     checkMatch: function() {
         this.canFlip = false;
         this.moves++;
+        const [card1, card2] = this.flippedCards;
+        const isMatch = (card1.dataset.symbol === card2.dataset.symbol);
         
         // ✅ 限次數模式：每次配對嘗試（無論成功或失敗）都扣 1 次
         if (this.gameMode === 'attempts') {
-            this.attemptsLeft = Math.max(0, this.attemptsLeft - 1);
+            // 小朋友版取消連錯額外扣次後，答題減免改為保護一般配錯的機會。
+            const redeemMistake = this.playerMode === 'child' && !isMatch && this.redeemedCount < this.penaltyRedemption;
+            if (redeemMistake) {
+                this.redeemedCount++;
+                this.statusText.innerText = '🛡️ 答題獎勵：這次不扣機會！';
+            } else this.attemptsLeft = Math.max(0, this.attemptsLeft - 1);
             this.updateStats();
             
             // 檢查次數是否耗盡
-            if (this.attemptsLeft <= 0) {
+            if (this.attemptsLeft <= 0 && !isMatch) {
                 this.endGame(false);
                 return;
             }
         }
         
-        const [card1, card2] = this.flippedCards;
-        const isMatch = (card1.dataset.symbol === card2.dataset.symbol);
         
         // 判斷是否啟用綠燈系統（只要 lightMode === 'both' 就啟用）
         const isGreenEnabled = (this.lightMode === 'both');
         // 判斷是否啟用紅燈系統（只要 lightMode !== 'none' 就啟用紅燈計數和懲罰）
-        const isRedEnabled = (this.lightMode !== 'none');
+        const isRedEnabled = (this.lightMode !== 'none' && this.playerMode !== 'child');
         
         if (isMatch) {
             // ✅ 配對成功：紅燈歸零（僅當紅燈啟用時）
@@ -993,6 +1001,8 @@ const MemoryGameV2 = {
                 
                 if (this.matchedPairs === this.totalPairs) {
                     this.endGame(true);
+                } else if (this.gameMode === 'attempts' && this.attemptsLeft === 0) {
+                    this.endGame(false);
                 }
             }, 500);
         } else {
@@ -1092,14 +1102,29 @@ const MemoryGameV2 = {
             <div style="font-size: ${resultScoreFontSize}px; color: #ffd700; margin-bottom: ${15 * scale}px; text-align: center;">配對: ${this.matchedPairs} / ${this.totalPairs}</div>
             <div style="font-size: ${resultScoreFontSize * 0.8}px; color: #ffaa00; margin-bottom: ${30 * scale}px; text-align: center;">步數: ${this.moves}</div>
             ${extraInfo}
-            <button id="memory-result-btn" style="padding: ${resultBtnPadding}px ${resultBtnPadding * 2}px; font-size: ${resultBtnFontSize}px; background: linear-gradient(145deg, #e67e22, #d35400); color: white; border: none; border-radius: ${10 * scale}px; cursor: pointer; font-weight: bold;">繼續</button>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                ${!isWin && this.onRetryCallback ? `<button id="memory-retry-btn" style="min-height:44px;padding:10px 24px;font-size:${resultBtnFontSize}px;background:#f4c77d;color:#4a2c1a;border:2px solid #c8893f;border-radius:10px;cursor:pointer">再試一次</button>` : ''}
+                <button id="memory-result-btn" style="min-height:44px;padding: ${resultBtnPadding}px ${resultBtnPadding * 2}px; font-size: ${resultBtnFontSize}px; background: linear-gradient(145deg, #e67e22, #d35400); color: white; border: none; border-radius: ${10 * scale}px; cursor: pointer; font-weight: bold;">${isWin ? '繼續' : '回到故事'}</button>
+            </div>
         `;
         
         this.container.appendChild(overlay);
+        const resultContainer = this.container;
+        const callback = this.onCompleteCallback;
+        const retry = this.onRetryCallback;
+        let resultChosen = false;
+        const retryBtn = document.getElementById('memory-retry-btn');
+        if (retryBtn) retryBtn.onclick = () => {
+            if (resultChosen || this.container !== resultContainer) return;
+            resultChosen = true;
+            retryBtn.disabled = true;
+            retry?.();
+        };
         
         const resultBtn = document.getElementById('memory-result-btn');
         resultBtn.onclick = () => {
-            const callback = this.onCompleteCallback;
+            if (resultChosen || this.container !== resultContainer) return;
+            resultChosen = true;
             this.stop();
             if (callback) callback(isWin);
         };
@@ -1134,6 +1159,7 @@ const MemoryGameV2 = {
         }
         this.container = null;
         this.onCompleteCallback = null;
+        this.onRetryCallback = null;
         this.cards = [];
         this.flippedCards = [];
         this.strikeLights = [];

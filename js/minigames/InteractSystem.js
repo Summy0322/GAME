@@ -614,7 +614,7 @@ const InteractSystem = {
         element.style.zIndex = this.currentMaxZIndex;
     },
     
-    isPointInDropZone: function(x, y) {
+    isPointInDropZone: function(x, y, pointerType = 'mouse') {
         const zones = document.querySelectorAll('.interact-drop-zone');
         for (const zone of zones) {
             const rect = zone.getBoundingClientRect();
@@ -622,6 +622,19 @@ const InteractSystem = {
                 return zone;
             }
         }
+        if (!['touch', 'pen'].includes(pointerType)) return null;
+        const padding = Math.min(24, Math.max(12, (this.currentScale || 1) * 32));
+        let nearest = null, distance = Infinity, tied = false;
+        for (const zone of zones) {
+            const rect = zone.getBoundingClientRect();
+            const dx = Math.max(rect.left - x, 0, x - rect.right);
+            const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+            if (dx > padding || dy > padding) continue;
+            const squared = dx * dx + dy * dy;
+            if (squared < distance) { nearest = zone; distance = squared; tied = false; }
+            else if (squared === distance) tied = true;
+        }
+        if (!tied) return nearest;
         return null;
     },
     
@@ -658,13 +671,13 @@ const InteractSystem = {
             element.style.cursor = 'grabbing';
             
             this.updateDragLabelPosition(this.dragLabel, e.clientX, e.clientY);
-            this.highlightDropZones(e.clientX, e.clientY);
+            this.highlightDropZones(e.clientX, e.clientY, e.pointerType);
         };
         
         const onPointerUp = (e) => {
             if (!isDraggingLocal) return;
             
-            const targetZone = this.isPointInDropZone(e.clientX, e.clientY);
+            const targetZone = this.isPointInDropZone(e.clientX, e.clientY, e.pointerType);
             const isCorrect = this.checkCorrectDrop(targetZone, element, itemData);
             
             if (targetZone && isCorrect && element.getAttribute('data-matched') !== 'true') {
@@ -858,11 +871,11 @@ const InteractSystem = {
         }
     },
     
-    highlightDropZones: function(x, y) {
+    highlightDropZones: function(x, y, pointerType = 'mouse') {
         const zones = document.querySelectorAll('.interact-drop-zone');
+        const target = this.isPointInDropZone(x, y, pointerType);
         zones.forEach(zone => {
-            const rect = zone.getBoundingClientRect();
-            const isOver = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+            const isOver = zone === target;
             
             if (isOver) {
                 zone.classList.add('highlight');
