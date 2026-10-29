@@ -60,9 +60,10 @@ test('channel mute is independent and master mute locks both child rows while pr
         assert.equal(nodes.get(`audio-${name}-mute`).disabled,true);
         assert.equal(nodes.get(`audio-${name}-row`).classList['audio-row-disabled'],true);
     }
-    assert.equal(nodes.get('audio-master').disabled,false);
+    assert.equal(nodes.get('audio-master').disabled,true);
     assert.equal(nodes.get('audio-master-mute').disabled,false);
     s.set('muted',false);
+    assert.equal(nodes.get('audio-master').disabled,false);
     assert.equal(s.values.sfx,.4);assert.equal(s.values.music,.6);
     assert.equal(s.values.sfxMuted,true);assert.equal(a.sfxPlayer.volume,0);assert.equal(m.volume,.12);
     assert.equal(nodes.get('audio-music').disabled,false);

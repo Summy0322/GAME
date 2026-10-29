@@ -27,7 +27,7 @@ window.AudioSettings = {
             input.value = Math.round(this.values[name] * 100);
             document.getElementById(`audio-${name}-value`).textContent = `${input.value}%`;
             const locked = name !== 'master' && this.values.muted;
-            input.disabled = locked || (name !== 'master' && this.values[`${name}Muted`]);
+            input.disabled = this.values.muted || (name !== 'master' && this.values[`${name}Muted`]);
             document.getElementById(`audio-${name}-row`).classList.toggle('audio-row-disabled', locked);
             const mute = document.getElementById(`audio-${name}-mute`);
             const muted = this.values[name === 'master' ? 'muted' : `${name}Muted`];
