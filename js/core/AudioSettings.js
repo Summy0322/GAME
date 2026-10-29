@@ -1,12 +1,12 @@
 // 音量以原本的混音為基準，100% 保留既有音量。
 window.AudioSettings = {
     key: 'redbrick.audio.v1',
-    values: {master: 1, sfx: 1, music: 1, muted: false},
+    values: {master: 1, sfx: 1, music: 1, muted: false, sfxMuted: false, musicMuted: false},
     factor(channel) {
-        return this.values.muted ? 0 : this.values.master * this.values[channel];
+        return this.values.muted || this.values[`${channel}Muted`] ? 0 : this.values.master * this.values[channel];
     },
     set(name, value) {
-        if (name === 'muted') this.values.muted = value === true;
+        if (['muted', 'sfxMuted', 'musicMuted'].includes(name)) this.values[name] = value === true;
         else if (['master', 'sfx', 'music'].includes(name) && Number.isFinite(value))
             this.values[name] = Math.max(0, Math.min(1, value));
         else return;
@@ -26,11 +26,17 @@ window.AudioSettings = {
             if (!input) continue;
             input.value = Math.round(this.values[name] * 100);
             document.getElementById(`audio-${name}-value`).textContent = `${input.value}%`;
-        }
-        const mute = document.getElementById('audio-mute');
-        if (mute) {
-            mute.setAttribute('aria-pressed', String(this.values.muted));
-            mute.textContent = this.values.muted ? '解除靜音' : '全部靜音';
+            const locked = name !== 'master' && this.values.muted;
+            input.disabled = locked;
+            document.getElementById(`audio-${name}-row`).classList.toggle('audio-row-disabled', locked);
+            const mute = document.getElementById(`audio-${name}-mute`);
+            const muted = this.values[name === 'master' ? 'muted' : `${name}Muted`];
+            const label = {master:'整體音量', sfx:'音效與對話音', music:'背景音樂'}[name];
+            mute.disabled = locked;
+            mute.setAttribute('aria-pressed', String(muted));
+            mute.setAttribute('aria-label', `${muted ? '解除' : '開啟'}${label}靜音`);
+            mute.title = `${muted ? '解除' : '開啟'}靜音`;
+            mute.textContent = muted ? '🔇' : '🔊';
         }
     },
     init() {
@@ -40,6 +46,8 @@ window.AudioSettings = {
                 for (const name of ['master', 'sfx', 'music'])
                     if (Number.isFinite(saved[name])) this.values[name] = Math.max(0, Math.min(1, saved[name]));
                 this.values.muted = saved.muted === true;
+                this.values.sfxMuted = saved.sfxMuted === true;
+                this.values.musicMuted = saved.musicMuted === true;
             }
         } catch (_) {}
         const dialog = document.getElementById('audio-settings');
@@ -48,9 +56,11 @@ window.AudioSettings = {
         open.addEventListener('click', () => { this.render(); dialog.showModal(); close.focus(); });
         close.addEventListener('click', () => dialog.close());
         dialog.addEventListener('close', () => open.focus());
-        document.getElementById('audio-mute').addEventListener('click', () => this.set('muted', !this.values.muted));
-        for (const name of ['master', 'sfx', 'music'])
+        for (const name of ['master', 'sfx', 'music']) {
             document.getElementById(`audio-${name}`).addEventListener('input', event => this.set(name, Number(event.target.value) / 100));
+            const key = name === 'master' ? 'muted' : `${name}Muted`;
+            document.getElementById(`audio-${name}-mute`).addEventListener('click', () => this.set(key, !this.values[key]));
+        }
         this.apply();
         this.render();
     }
