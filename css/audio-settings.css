@@ -1,14 +1,17 @@
 #settings-open {
     position: absolute;
-    top: 3%;
-    right: 3%;
+    bottom: 3%;
+    left: 3%;
+    width: 48px;
+    height: 48px;
     min-height: 44px;
-    padding: 8px 20px;
+    padding: 0;
     border: 2px solid #e6b77b;
     border-radius: 24px;
     background: #fff4df;
     color: #704322;
-    font-size: clamp(16px, 2cqh, 22px);
+    font-size: 28px;
+    line-height: 1;
     cursor: pointer;
 }
 #audio-settings {
