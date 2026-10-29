@@ -8,7 +8,7 @@ function fixture() {
     for(const [,id] of fs.readFileSync('index.html','utf8').matchAll(/id="([^"]+)"/g))nodes.set(id,element());
     const document={getElementById:id=>nodes.get(id)||null,addEventListener(k,fn){events[k]=fn;},removeEventListener(){},createElement:element,head:element(),body:element()};
     const writer={showDialogue:()=>new Promise(()=>{}),showOptions:()=>new Promise(()=>{}),clear(){this.clears=(this.clears||0)+1;}};
-    const games=[],window={Typewriter:writer,gameMode:'adult'};
+    const games=[],window={Typewriter:writer,gameMode:'adult',dispatchEvent(){}};
     const context=vm.createContext({window,document,Typewriter:writer,console:{log(){},warn(){},error(){}},
         setTimeout(fn){timers.set(++timer,fn);return timer;},clearTimeout(id){timers.delete(id);},setInterval(fn){timers.set(++timer,fn);return timer;},clearInterval(id){timers.delete(id);},
         Image:class{set src(v){this.onload?.();}},CustomEvent:class{},GameEngine:{startMinigame(name,options){games.push({name,options});}}});
@@ -18,6 +18,7 @@ function fixture() {
 }
 const click=(nodes,id)=>nodes.get(id).handlers.click({stopPropagation(){}});
 function chapter(f,number,mode) {
+    f.window.gameMode=mode==='child'?'child':'adult';
     vm.runInContext(fs.readFileSync(`js/data/chapter${number}_${mode}.js`,'utf8'),f.context);
     const c=f.window[`Chapter${number}_${mode==='child'?'Child':'Teen'}`];
     f.system.currentChapter=c;f.system.currentDialogue=c.dialogue;f.system.currentIndex=0;
@@ -39,14 +40,58 @@ test('confirmation supports cancel, ignores stale targets and repeated confirmat
     click(f.nodes,'dialogue-skip');f.skip.clear();click(f.nodes,'skip-confirm-play');assert.equal(calls,0);
     f.skip.bind(()=>calls++);click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');click(f.nodes,'skip-confirm-play');assert.equal(calls,1);
 });
-test('all six chapter scripts have valid skip targets, while naming and malformed loops are not skipped',()=>{
+test('all six chapter scripts have valid skip targets including chapter 3 default-name entry; malformed loops stop',()=>{
     for(const mode of ['child','teen'])for(const number of [1,2,3]){
         const f=fixture(),c=chapter(f,number,mode);
-        if(number===3){assert.equal(f.skip.plan(f.system),null);f.system.currentIndex=1;}
         const p=f.skip.plan(f.system);assert.ok(p,`${c.id} target`);
         assert.equal(p.option.action,number===1?'minigame':number===2?'quiz':'collection');
     }
     const f=fixture();f.system.currentDialogue=[{id:'loop',next:'loop'}];assert.equal(f.skip.plan(f.system),null);
+});
+test('chapter 3 sequential skips play every real shop, charge once and bypass all collection animations in both modes',()=>{
+    for(const mode of ['child','teen']){
+        const f=fixture(),data=chapter(f,3,mode);f.skip.enabled=true;
+        vm.runInContext(fs.readFileSync('js/core/CollectionSystem.js','utf8'),f.context);
+        const c=f.window.CollectionSystem,config=data.dialogue.find(line=>line.id==='collection_intro').options[0].collectionConfig;
+        c.mapContainer={style:{}};c.overlay={style:{}};
+        for(const method of ['updateMoneyDisplay','buildItemsDisplay','buildHotspots','hideShopLoading','hideSimpleLoading','enableClicksAfterLoading'])c[method]=()=>{};
+        c.collectImagesToPreload=()=>[];
+        let animation=0,ended=0,returned=0;
+        c.playCollectionAnimationKeepDialogue=()=>animation++;
+        f.system.onChapterComplete=()=>ended++;
+        c.open({...config,skipToFirstShop:true},()=>returned++);
+        assert.equal(f.games.length,1);assert.equal(c.hotspots[c.currentCollectingIndex].shopId,'herbal');
+        for(const [position,id,money] of [[0,'herbal',15],[1,'knife',10],[2,'grocery',6]]){
+            assert.equal(c.hotspots[c.currentCollectingIndex].shopId,id);
+            assert.equal(f.games[position].name,'interact');assert.equal(ended,0);
+            f.games[position].options.onComplete(true);
+            assert.equal(data.money,money);assert.equal(data.shopStatus[id],true);
+            click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-later');
+            assert.equal(f.games.length,position+1);assert.equal(ended,0);
+            click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');
+            assert.equal(c.collectedItems[position],true);
+        }
+        assert.equal(f.games.length,3);assert.equal(ended,1);assert.equal(returned,1);assert.equal(animation,0);assert.equal(c.isActive,false);
+        // 已結束遊戲的舊回呼不會重複扣錢、開啟店家或觸發結尾。
+        f.games[2].options.onComplete(true);assert.equal(data.money,6);assert.equal(ended,1);
+    }
+});
+test('chapter 3 skip resumes the next unfinished shop and map returns do not mark an item complete',()=>{
+    const f=fixture(),data=chapter(f,3,'child');f.skip.enabled=true;
+    vm.runInContext(fs.readFileSync('js/core/CollectionSystem.js','utf8'),f.context);
+    const c=f.window.CollectionSystem,config=data.dialogue.find(line=>line.id==='collection_intro').options[0].collectionConfig;
+    c.mapContainer={style:{}};c.overlay={style:{}};
+    for(const method of ['updateMoneyDisplay','buildItemsDisplay','buildHotspots','hideShopLoading','hideSimpleLoading','enableClicksAfterLoading','showMessage'])c[method]=()=>{};
+    c.collectImagesToPreload=()=>[];
+    data.markShopComplete('knife');
+    c.open({...config,skipToFirstShop:true},()=>{});
+    assert.equal(c.hotspots[c.currentCollectingIndex].shopId,'herbal');
+    f.games[0].options.onComplete(false);
+    assert.equal(data.money,15);assert.equal(data.shopStatus.herbal,false);assert.equal(c.collectedItems[0],false);
+    assert.ok(f.skip.context);click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');
+    assert.equal(c.hotspots[c.currentCollectingIndex].shopId,'herbal');
+    f.games[1].options.onComplete(true);click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');
+    assert.equal(c.hotspots[c.currentCollectingIndex].shopId,'grocery');assert.equal(data.money,10);
 });
 test('chapter 1 skips story between all three real games and completes only after the ending confirmation',()=>{
     for(const mode of ['child','teen']){

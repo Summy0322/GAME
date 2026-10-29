@@ -4,9 +4,9 @@ window.DialogueSkip = {
     enabled: false,
     context: null,
     pending: null,
-    bind(callback, ending = false) {
+    bind(callback, ending = false, message = null) {
         this.clear();
-        this.context = {callback, ending};
+        this.context = {callback, ending, message};
         this.render();
     },
     clear() {
@@ -32,7 +32,7 @@ window.DialogueSkip = {
         while (index >= 0 && index < data.length && !seen.has(index)) {
             seen.add(index);
             const line = data[index];
-            if (line.type === 'naming') return null;
+            if (line.type === 'naming' && !/^chapter3_/.test(system.currentChapter?.id || '')) return null;
             if (line.background) background = line.background;
             const options = line.options || [];
             let option;
@@ -64,6 +64,7 @@ window.DialogueSkip = {
             if (run !== system.dialogueRun) return;
             system.dialogueRun++;
             system.typewriter?.clear();
+            system.clearNamingDialog();
             if (system.narrationTimer) clearTimeout(system.narrationTimer);
             system.narrationTimer = null;
             if (system.narrationContainer) system.narrationContainer.style.display = 'none';
@@ -73,7 +74,8 @@ window.DialogueSkip = {
             system.currentIndex = target.index;
             if (target.background && system.gameBackground)
                 system.gameBackground.style.backgroundImage = `url('${target.background}')`;
-            system.handleOption(target.option);
+            system.handleOption(target.option.action === 'collection'
+                ? {...target.option, skipToFirstShop: true} : target.option);
         }, target.ending);
     },
     init() {
@@ -83,8 +85,8 @@ window.DialogueSkip = {
             event.stopPropagation();
             if (!this.enabled || !this.context) return;
             this.pending = this.context;
-            document.getElementById('skip-confirm-text').textContent = this.context.ending
-                ? '要跳過剩餘對話，完成本章嗎？' : '要跳過對話，直接進行小遊戲嗎？';
+            document.getElementById('skip-confirm-text').textContent = this.context.message || (this.context.ending
+                ? '要跳過剩餘對話，完成本章嗎？' : '要跳過對話，直接進行小遊戲嗎？');
             document.getElementById('skip-confirm-play').textContent = this.context.ending ? '完成本章' : '直接遊玩';
             dialog.showModal();
             document.getElementById('skip-confirm-later').focus();

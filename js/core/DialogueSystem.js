@@ -695,7 +695,7 @@ const DialogueSystem = {
             }
             
             if (typeof CollectionSystem !== 'undefined') {
-                CollectionSystem.open(option.collectionConfig, () => {
+                CollectionSystem.open({...option.collectionConfig, skipToFirstShop: option.skipToFirstShop === true}, () => {
                     console.log('✅ 蒐集模式完成');
                     if (option.returnTo) {
                         this.goToNode(option.returnTo);
