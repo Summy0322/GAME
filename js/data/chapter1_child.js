@@ -131,7 +131,7 @@ window.Chapter1_Child = {
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
-                    text: '再試一次',
+                    text: '再挑戰一次',
                     action: 'minigame',
                     minigame: 'defense',
                     level: 1,
@@ -141,7 +141,7 @@ window.Chapter1_Child = {
                     }
                 },
                 {
-                    text: '繼續往下一關',
+                    text: '繼續故事',
                     action: 'goto',
                     target: 'intro_level2'
                 }
@@ -251,7 +251,7 @@ window.Chapter1_Child = {
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
-                    text: '再試一次',
+                    text: '再挑戰一次',
                     action: 'minigame',
                     minigame: 'defense',
                     level: 2,
@@ -261,7 +261,7 @@ window.Chapter1_Child = {
                     }
                 },
                 {
-                    text: '繼續往下一關',
+                    text: '繼續故事',
                     action: 'goto',
                     target: 'intro_level3'
                 }
@@ -343,7 +343,7 @@ window.Chapter1_Child = {
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
-                    text: '再試一次',
+                    text: '再挑戰一次',
                     action: 'minigame',
                     minigame: 'defense',
                     level: 3,
@@ -353,7 +353,7 @@ window.Chapter1_Child = {
                     }
                 },
                 {
-                    text: '前往結局',
+                    text: '繼續故事',
                     action: 'goto',
                     // ✅ 根據通關進度動態決定跳轉目標（參考 teen 版）
                     target: 'normal_ending'

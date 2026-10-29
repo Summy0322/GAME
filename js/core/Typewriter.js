@@ -216,6 +216,8 @@ const Typewriter = {
             this.optionsContainer.innerHTML = '';
             this.optionsContainer.classList.toggle('quiz-options',
                 options.length === 4 && options.every(opt => opt.action === 'quiz_answer'));
+            this.optionsContainer.classList.toggle('story-retry-options',
+                options.length === 2 && options[0].text === '再挑戰一次' && options[1].text === '繼續故事');
             this.optionsContainer.style.display = 'flex';
             
             options.forEach((opt, index) => {
@@ -236,7 +238,7 @@ const Typewriter = {
                     
                     // 清除選項
                     this.optionsContainer.innerHTML = '';
-                    this.optionsContainer.classList.remove('quiz-options');
+                    this.optionsContainer.classList.remove('quiz-options', 'story-retry-options');
                     this.optionsContainer.style.display = 'none';
                     
                     // 移除完成指示器
@@ -259,7 +261,7 @@ const Typewriter = {
         this.npcName.innerText = '';
         this.dialogueText.innerText = '';
         this.optionsContainer.innerHTML = '';
-        this.optionsContainer.classList.remove('quiz-options');
+        this.optionsContainer.classList.remove('quiz-options', 'story-retry-options');
         this.optionsContainer.style.display = 'none';
         
         // 清除完成指示器
@@ -273,3 +275,4 @@ const Typewriter = {
 
 // 確保全域可用
 window.Typewriter = Typewriter;
+
