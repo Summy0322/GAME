@@ -542,6 +542,22 @@
     }
 }
 
+/* 只標示曾翻過且可配對的一組卡背，不翻牌或揭露未看過的答案。 */
+.memory-card.memory-known-hint::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: rgba(255,255,255,.42);
+    box-shadow: inset 0 0 0 3px #fff4be;
+    animation: memory-known-pulse .7s ease-in-out 3;
+}
+@keyframes memory-known-pulse { 0%,100% { opacity:0; } 50% { opacity:1; } }
+@media (prefers-reduced-motion: reduce) {
+    .memory-card.memory-known-hint::after { animation:none; opacity:.6; }
+}
+
 /* 手機直立提示 */
 @media (orientation: portrait) and (max-width: 1024px) {
     .memory-game-container::before {

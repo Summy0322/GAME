@@ -217,12 +217,19 @@ const chapter2ChildData = {
             characterImage: 'assets/images/characters/阿斗仔.png',
             options: [
                 {
-                    text: '重來一次',
-                    action: 'goto',
-                    target: 'show_gallery_intro'
+                    text: '再挑戰一次',
+                    action: 'minigame',
+                    minigame: 'memory',
+                    cardCount: 10,
+                    gameType: 'attempts',
+                    lightMode: 'red',
+                    needMemorize: false,
+                    totalAttempts: 20,
+                    get penaltyRedemption() { return window.MemoryGameV2?.penaltyRedemption || 0; },
+                    returnTo: { success: 'success_ending', fail: 'fail_options' }
                 },
                 {
-                    text: '結束旅程',
+                    text: '繼續故事',
                     action: 'goto',
                     target: 'fail_ending'
                 }

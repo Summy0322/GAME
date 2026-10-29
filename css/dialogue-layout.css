@@ -107,6 +107,17 @@ body.child-mode #dialogue-text { font-size: 27px; line-height: 1.8; }
 #options-container button:hover { background: #ffdda0; color: #4a2c1a; }
 #options-container button:focus-visible { outline-color: #82452f; }
 
+/* 再挑戰與繼續故事沿用結算按鈕的橘色風格。 */
+#options-container.story-retry-options button {
+    background: linear-gradient(145deg, #e67e22, #d35400);
+    color: white;
+    border-color: #e67e22;
+}
+#options-container.story-retry-options button:hover {
+    background: #d35400;
+    color: white;
+}
+
 /* 一般對話三選項：三個等寬按鈕，上排兩個、下排置中，一次看完。 */
 #options-container:has(> button:nth-child(3):last-child) {
     flex-direction: row;
@@ -125,3 +136,4 @@ body.child-mode #dialogue-text { font-size: 27px; line-height: 1.8; }
     white-space: normal;
     overflow-wrap: anywhere;
 }
+

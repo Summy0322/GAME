@@ -109,10 +109,6 @@ const GameEngine = {
             const startOptions = {
                 ...options,
                 gameMode: options && (options.gameMode === 'child' || options.gameMode === 'adult') ? options.gameMode : gameMode,
-                onRetry: () => {
-                    if (completed || sessionId !== this.loadRequestId) return;
-                    this.startMinigame(minigameName, options);
-                },
                 onComplete: (success) => {
                     if (completed || sessionId !== this.loadRequestId) return;
                     completed = true;

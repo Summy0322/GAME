@@ -290,7 +290,6 @@ const DefenseGameV2 = {
         
         this.gameActive = true;
         this.onCompleteCallback = options.onComplete;
-        this.onRetryCallback = options.onRetry;
         this.currentLevel = options.level || 1;
         
         this.shieldCooldown = { up: false, down: false, left: false, right: false };
@@ -319,7 +318,6 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function () {
-        this.onRetryCallback = null;
         window.GameMusic?.stop('defense');
         this.sessionId = (this.sessionId || 0) + 1;
         this.gameActive = false;
@@ -523,37 +521,13 @@ const DefenseGameV2 = {
         this.resultMistakes = document.getElementById('result-mistakes');
         this.resultBtn = document.getElementById('result-btn');
         
-        const resultSession = this.sessionId;
-        const retry = this.onRetryCallback;
-        let resultChosen = false;
         const finishGame = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (resultChosen || resultSession !== this.sessionId) return;
-            resultChosen = true;
             this.closeResultAndComplete(this.gameResult);
         };
         this.resultBtn.addEventListener('click', finishGame);
         this.resultBtn.addEventListener('touchstart', finishGame, { passive: false });
-        this.retryBtn = document.createElement('button');
-        this.retryBtn.type = 'button';
-        this.retryBtn.textContent = '再試一次';
-        this.retryBtn.style.cssText = `display:none;min-height:44px;padding:10px 24px;font-size:${resultBtnFontSize}px;background:#f4c77d;color:#4a2c1a;border:2px solid #c8893f;border-radius:10px;cursor:pointer`;
-        const retryBtn = this.retryBtn;
-        this.retryBtn.onclick = event => {
-            event.stopPropagation();
-            if (resultChosen || resultSession !== this.sessionId) return;
-            resultChosen = true;
-            retryBtn.disabled = true;
-            retry?.();
-        };
-        const resultActions = document.createElement('div');
-        resultActions.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
-        this.resultOverlay.insertBefore(resultActions, this.resultBtn);
-        resultActions.appendChild(this.retryBtn);
-        resultActions.appendChild(this.resultBtn);
-        this.resultBtn.style.minHeight = '44px';
-        this.resultBtn.style.padding = '10px 24px';
         
         this.scaledSizes = { enemy: enemySize, projectile: projSize, heavySequence: seqSize };
         this.scaledPositions = { up: posUp, down: posDown, left: posLeft, right: posRight };
@@ -1252,11 +1226,6 @@ const DefenseGameV2 = {
 
         // ✅ 儲存結果，供 closeResultAndComplete 使用
         this.gameResult = isSuccess;
-        if (this.retryBtn) {
-            this.retryBtn.style.display = !isSuccess && this.onRetryCallback ? 'block' : 'none';
-            this.retryBtn.disabled = false;
-        }
-        if (this.resultBtn) this.resultBtn.textContent = isSuccess ? '繼續' : '回到故事';
         
         if (this.resultOverlay) {
             this.resultOverlay.style.display = 'flex';
