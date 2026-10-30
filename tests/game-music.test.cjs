@@ -11,8 +11,19 @@ function fixture() {
     }};
     const window={addEventListener(type,fn){events[type]=fn}};
     vm.runInNewContext(fs.readFileSync('js/core/GameMusic.js','utf8'),{window,document:doc,performance:{now:()=>now},setTimeout(fn){const id=++next;timers.set(id,fn);return id},clearTimeout(id){timers.delete(id)}});
-    return {music:window.GameMusic,doc,events,players,timers,tick(ms){now+=ms;const jobs=[...timers];timers.clear();for(const [,fn] of jobs)fn()}};
+    return {window,music:window.GameMusic,doc,events,players,timers,tick(ms){now+=ms;const jobs=[...timers];timers.clear();for(const [,fn] of jobs)fn()}};
 }
+test('paused gameplay music cannot restart from gestures, visibility changes or a late play promise',async()=>{
+    const {window,music,events,doc}=fixture();music.start('memory');const p=music.player;
+    window.GamePause={paused:true};await Promise.resolve();assert.equal(p.pauses,1);
+    music.play();events.pointerdown();doc.hidden=false;events.visibilitychange();assert.equal(p.plays,1);
+    window.GamePause.paused=false;music.play();assert.equal(p.plays,2);
+});
+test('pagehide during an active pause session retains the track position for browser restoration',()=>{
+    const {window,music,events}=fixture();music.start('interact');const player=music.player;
+    window.GamePause={owner:{},paused:true};events.pagehide();assert.equal(music.player,player);assert.equal(player.src,music.tracks.walk);assert.equal(player.pauses,1);
+    window.GamePause.paused=false;music.play();assert.equal(player.plays,2);
+});
 test('loading controller and user gestures during dialogue do not start music',()=>{
     const {events,players}=fixture();events.pointerdown();events.keydown();events.visibilitychange();
     assert.equal(players.length,0);

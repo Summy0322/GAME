@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 
-function fixture(mode = 'adult', level = 1) {
+function fixture(mode = 'adult', level = 1, virtualClock = false) {
     let now = 10000, next = 0;
     const timers = new Map();
     const elements = {
@@ -24,6 +24,10 @@ function fixture(mode = 'adult', level = 1) {
     vm.runInContext(read('js/minigames/defense/DefenseAttackRunner.js'), context);
     vm.runInContext(read('js/minigames/DefenseGameV2.js'), context);
     const game = context.window.DefenseGameV2;
+    if (virtualClock) {
+        vm.runInContext(read('js/core/GameClock.js'),context);
+        game.pauseClock = new context.window.GameClock();
+    }
     Object.assign(game, {gameActive:true, sessionId:1, score:0, mistakes:0, lastSwipeTime:0,
         levelConfig:context.DefenseLevels[level][mode], currentLevel:level,
         state:game.states.IDLE, msg:{}, scoreEl:{}, attackQueue:[]});
@@ -100,6 +104,22 @@ test('stone waiting lasts the configured duration and scores only once', () => {
         env.game.finishAttack();
         assert.equal(env.game.score, 50);
         assert.equal(env.elements['defense-wait-meter'].hidden, true);
+    }
+});
+test('paused real defense waves preserve stone hold and pending impact time in both modes and all sublevels',()=>{
+    for(const mode of ['adult','child'])for(const level of [1,2,3]){
+        const env=fixture(mode,level,true),game=env.game;
+        const pattern=game.levelConfig.attackPatterns.find(a=>a.type==='DECOY');
+        const stone=env.enter(pattern);env.tick(400);game.pauseClock.pause();env.tick(20000);
+        assert.equal(game.score,0);assert.equal(stone.finished,undefined);
+        game.pauseClock.resume();env.tick(pattern.wait-401);assert.equal(game.score,0);env.tick(1);assert.equal(game.score,50);
+        game.pauseClock.dispose();
+        const mixed=fixture(mode,level,true),g=mixed.game;
+        const attack=mixed.enter({type:'MULTI_MIXED',dirs:['left','right'],correctDirs:['left'],wrongDirs:['right'],wait:4000});
+        g.handleSwipe('left');mixed.tick(300);g.pauseClock.pause();mixed.tick(20000);assert.equal(attack.pendingShots,1);
+        g.pauseClock.resume();mixed.tick(300);assert.equal(attack.pendingShots,0);assert.equal(attack.finished,undefined);
+        const hold=g.levelConfig.flow.avoidHold;mixed.tick(hold-1);assert.equal(attack.finished,undefined);mixed.tick(1);assert.equal(attack.finished,true);assert.equal(g.score,100);
+        g.pauseClock.dispose();
     }
 });
 

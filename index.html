@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/audio-settings.css">
     <link rel="stylesheet" href="css/dialogue-skip.css">
     <link rel="stylesheet" href="css/game-settings.css">
+    <link rel="stylesheet" href="css/game-pause.css">
 
     <!-- Swiper.js CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -154,6 +155,11 @@
             <div class="skip-dialog-actions"><button id="skip-confirm-later" type="button" class="skip-later">稍後</button><button id="skip-confirm-play" type="button">直接遊玩</button></div>
         </dialog>
 
+        <button id="game-pause-button" type="button" aria-label="暫停遊戲" hidden>Ⅱ</button>
+        <div id="game-pause-overlay" role="dialog" aria-modal="true" aria-labelledby="game-pause-status" hidden>
+            <h2 id="game-pause-status" aria-live="polite">遊戲已暫停</h2>
+            <div class="game-pause-actions"><button id="game-pause-resume" type="button">繼續遊戲</button><button id="game-pause-exit" type="button">返回章節選擇</button></div>
+        </div>
         <!-- 音效控制（隱藏） -->
         <audio id="bg-music" loop></audio>
         <audio id="sfx-player"></audio>
@@ -180,6 +186,8 @@
     <script src="js/data/minigameAssets.js"></script>
     <script src="js/core/LoadingManager.js"></script>
     <script src="js/core/MinigameSession.js"></script>
+    <script src="js/core/GameClock.js"></script>
+    <script src="js/core/GamePause.js"></script>
     <script src="js/core/GameEngine.js"></script>
     <script src="js/core/AudioManager.js"></script>
     <script src="js/core/GameMusic.js"></script>

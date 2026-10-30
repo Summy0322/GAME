@@ -1,0 +1,11 @@
+#game-pause-button { position:absolute;top:3%;right:3%;z-index:18000;margin:0;width:48px;height:44px;padding:0;border-radius:24px;background:#e67e22;color:white;font-size:26px; }
+#game-pause-button[data-game="interact"] { right:140px; }
+#game-pause-button[data-game="defense"] { right:190px; }
+#game-pause-overlay { position:absolute;inset:0;z-index:20000;background:#203140;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3cqh;color:white; }
+#game-pause-button[hidden], #game-pause-overlay[hidden] { display:none; }
+#game-pause-status { margin:0;font-size:clamp(20px,5cqh,36px); }
+.game-pause-actions { display:flex;gap:2cqw; }
+.game-pause-actions button { min-height:44px;margin:0;padding:8px 20px;border-radius:24px;font-size:clamp(16px,3cqh,22px);background:#e67e22; }
+.game-pause-actions button:disabled { opacity:.55;cursor:wait; }
+#game-pause-exit { background:#687d8a; }
+#game-pause-overlay :focus-visible { outline:3px solid #ffd700;outline-offset:3px; }

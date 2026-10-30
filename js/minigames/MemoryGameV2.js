@@ -719,7 +719,7 @@ const MemoryGameV2 = {
         this.rightStreak = 0;
         
         if (this.timer) {
-            clearInterval(this.timer);
+            this.session.clearTimer(this.timer);
             this.timer = null;
         }
         
@@ -880,7 +880,7 @@ const MemoryGameV2 = {
         this.timeLeft = this.gameTime;
         this.updateStats();
         
-        this.timer = setInterval(() => {
+        this.timer = this.session.interval(() => {
             if (!this.gameActive) return;
             
             this.timeLeft--;
@@ -905,7 +905,7 @@ const MemoryGameV2 = {
 
     stopKnownHints: function() {
         this.hintRun = (this.hintRun || 0) + 1;
-        if (this.hintTimer) clearTimeout(this.hintTimer);
+        if (this.hintTimer) this.session.clearTimer(this.hintTimer);
         this.hintTimer = null;
         this.clearKnownHint();
     },
@@ -946,6 +946,7 @@ const MemoryGameV2 = {
 
     // 處理卡片點擊
     handleCardClick: function(card) {
+        if (window.GamePause?.paused) return;
         if (!this.canFlip || this.isMemorizing) return;
         if (card.classList.contains('is-flipped')) return;
         if (card.classList.contains('matched')) return;
@@ -1175,6 +1176,7 @@ const MemoryGameV2 = {
      * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
      */
     stop: function () {
+        window.GamePause?.end(this);
         this.stopKnownHints();
         this.seenCards = new Set();
         window.GameMusic?.stop('memory');
@@ -1186,7 +1188,7 @@ const MemoryGameV2 = {
             this.handleResize = null;
         }
         if (this.timer) {
-            clearInterval(this.timer);
+            this.session.clearTimer(this.timer);
             this.timer = null;
         }
         if (this.container && this.container.parentNode) {
@@ -1203,6 +1205,7 @@ const MemoryGameV2 = {
 
     // 結束遊戲
     endGame: function(isWin) {
+        window.GamePause?.end(this);
         if (!this.gameActive) return;
         this.stopKnownHints();
         window.GameMusic?.fadeOut('memory');
@@ -1220,7 +1223,7 @@ const MemoryGameV2 = {
         }
         
         if (this.timer) {
-            clearInterval(this.timer);
+            this.session.clearTimer(this.timer);
             this.timer = null;
         }
         

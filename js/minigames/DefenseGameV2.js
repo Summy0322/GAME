@@ -2,6 +2,14 @@
 // 防禦遊戲 V2 - 支援年齡模式雙版本
 
 const DefenseGameV2 = {
+    get clock() {
+        return this.pauseClock || {
+            now:()=>typeof performance !== 'undefined' ? performance.now() : Date.now(),
+            setTimeout:(...args)=>setTimeout(...args), clearTimeout:id=>clearTimeout(id),
+            setInterval:(...args)=>setInterval(...args), clearInterval:id=>clearInterval(id),
+            requestAnimationFrame:fn=>requestAnimationFrame(fn), cancelAnimationFrame:id=>cancelAnimationFrame(id)
+        };
+    },
     // ========== 狀態定義 ==========
     states: {
         IDLE: 'IDLE',
@@ -161,13 +169,13 @@ const DefenseGameV2 = {
     
     clearAllTimers: function() {
         this.timers.forEach(t => {
-            if (t) clearTimeout(t);
+            if (t) this.clock.clearTimeout(t);
         });
         this.timers = [];
         
         ['up', 'down', 'left', 'right'].forEach(dir => {
             if (this.lightIntervals[dir]) {
-                clearInterval(this.lightIntervals[dir]);
+                this.clock.clearInterval(this.lightIntervals[dir]);
                 this.lightIntervals[dir] = null;
             }
         });
@@ -199,6 +207,7 @@ const DefenseGameV2 = {
     
     // ========== 初始化 ==========
     start: function(options) {
+        this.pauseClock?.dispose();
         // ✅ 加入這兩行
         this.sessionId = (this.sessionId || 0) + 1;
         const currentSession = this.sessionId;
@@ -210,14 +219,14 @@ const DefenseGameV2 = {
         }
         // 清除所有計時器
         if (this.timers) {
-            this.timers.forEach(t => { if (t) clearTimeout(t); });
+            this.timers.forEach(t => { if (t) this.clock.clearTimeout(t); });
             this.timers = [];
         }
         
         if (this.aoeTimers) {
             this.aoeTimers.forEach(t => {
-                if (t && t.id) clearInterval(t.id);
-                if (t && t.id) clearTimeout(t.id);
+                if (t && t.id) this.clock.clearInterval(t.id);
+                if (t && t.id) this.clock.clearTimeout(t.id);
             });
             this.aoeTimers = [];
         }
@@ -226,20 +235,20 @@ const DefenseGameV2 = {
         if (this.lightIntervals) {
             ['up', 'down', 'left', 'right'].forEach(dir => {
                 if (this.lightIntervals[dir]) {
-                    clearInterval(this.lightIntervals[dir]);
+                    this.clock.clearInterval(this.lightIntervals[dir]);
                     this.lightIntervals[dir] = null;
                 }
             });
         }
         
         if (this.trailInterval) {
-            clearInterval(this.trailInterval);
+            this.clock.clearInterval(this.trailInterval);
             this.trailInterval = null;
         }
         
         // 取消動畫
         if (this.currentAnimationId) {
-            cancelAnimationFrame(this.currentAnimationId);
+            this.clock.cancelAnimationFrame(this.currentAnimationId);
             this.currentAnimationId = null;
         }
         
@@ -291,6 +300,7 @@ const DefenseGameV2 = {
         this.gameActive = true;
         this.onCompleteCallback = options.onComplete;
         this.currentLevel = options.level || 1;
+        this.pauseClock = window.GameClock ? new window.GameClock() : null;
         
         this.shieldCooldown = { up: false, down: false, left: false, right: false };
         
@@ -305,7 +315,7 @@ const DefenseGameV2 = {
         this.initEventListeners();
         this.initTrailCanvas();
         
-        this.trailInterval = setInterval(() => {
+        this.trailInterval = this.clock.setInterval(() => {
             this.updateTrail();
         }, 16);
         
@@ -318,6 +328,8 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function () {
+        window.GamePause?.end(this);
+        this.pauseClock?.dispose();
         window.GameMusic?.stop('defense');
         this.sessionId = (this.sessionId || 0) + 1;
         this.gameActive = false;
@@ -331,31 +343,31 @@ const DefenseGameV2 = {
         }
         if (this.timers) {
             this.timers.forEach((t) => {
-                if (t) clearTimeout(t);
+                if (t) this.clock.clearTimeout(t);
             });
             this.timers = [];
         }
         if (this.aoeTimers) {
             this.aoeTimers.forEach((t) => {
-                if (t && t.id) clearInterval(t.id);
-                if (t && t.id) clearTimeout(t.id);
+                if (t && t.id) this.clock.clearInterval(t.id);
+                if (t && t.id) this.clock.clearTimeout(t.id);
             });
             this.aoeTimers = [];
         }
         if (this.lightIntervals) {
             ['up', 'down', 'left', 'right'].forEach((dir) => {
                 if (this.lightIntervals[dir]) {
-                    clearInterval(this.lightIntervals[dir]);
+                    this.clock.clearInterval(this.lightIntervals[dir]);
                     this.lightIntervals[dir] = null;
                 }
             });
         }
         if (this.trailInterval) {
-            clearInterval(this.trailInterval);
+            this.clock.clearInterval(this.trailInterval);
             this.trailInterval = null;
         }
         if (this.currentAnimationId) {
-            cancelAnimationFrame(this.currentAnimationId);
+            this.clock.cancelAnimationFrame(this.currentAnimationId);
             this.currentAnimationId = null;
         }
         if (this.container && this.container.parentNode) {
@@ -586,9 +598,9 @@ const DefenseGameV2 = {
         const bouncePattern = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0]; // 1=跳, 0=停
         let patternIndex = 0;
         
-        const bounceInterval = setInterval(() => {
+        const bounceInterval = this.clock.setInterval(() => {
             if (!enemyObj.isAnimating || !enemyObj.element || !enemyObj.element.parentNode) {
-                clearInterval(bounceInterval);
+                this.clock.clearInterval(bounceInterval);
                 return;
             }
             
@@ -607,7 +619,7 @@ const DefenseGameV2 = {
                         const offsetY = Math.sin(progress * Math.PI) * bounceHeight;
                         enemyObj.element.style.transform = `translate(-50%, calc(-50% - ${offsetY}px))`;
                         bounceStep++;
-                        requestAnimationFrame(animateBounce);
+                        this.clock.requestAnimationFrame(animateBounce);
                     } else {
                         // 恢復原位
                         enemyObj.element.style.transform = `translate(-50%, -50%)`;
@@ -627,7 +639,7 @@ const DefenseGameV2 = {
         if (enemyObj) {
             enemyObj.isAnimating = false;
             if (enemyObj.animationId) {
-                clearInterval(enemyObj.animationId);
+                this.clock.clearInterval(enemyObj.animationId);
                 enemyObj.animationId = null;
             }
             // 恢復原始位置
@@ -681,7 +693,7 @@ const DefenseGameV2 = {
             bounceStep++;
             
             if (bounceStep < maxStep) {
-                requestAnimationFrame(animateBounce);
+                this.clock.requestAnimationFrame(animateBounce);
             } else {
                 // 動畫結束，回到原位並標記為停止
                 seqObj.element.style.transform = `translate(-50%, -50%)`;
@@ -689,7 +701,7 @@ const DefenseGameV2 = {
             }
         };
         
-        requestAnimationFrame(animateBounce);
+        this.clock.requestAnimationFrame(animateBounce);
     },
 
     // ✅ 停止所有重擊方塊的跳動動畫
@@ -710,6 +722,7 @@ const DefenseGameV2 = {
     },
     
     handleSwipe: function(dir) {
+        if (window.GamePause?.paused) return;
         if (!this.gameActive) return;
         
         if (this.state === this.states.AOE_ACTIVE) {
@@ -717,8 +730,8 @@ const DefenseGameV2 = {
             return;
         }
         
-        if (Date.now() - this.lastSwipeTime < 200) return;
-        this.lastSwipeTime = Date.now();
+        if (this.clock.now() - this.lastSwipeTime < 200) return;
+        this.lastSwipeTime = this.clock.now();
         if (this.levelConfig.flow && (this.state === this.states.MULTI || this.state === this.states.MULTI_MIXED)) {
             this.handleFlowSwipe(dir);
             return;
@@ -726,7 +739,7 @@ const DefenseGameV2 = {
         
         // ========== 重擊攻擊的特殊處理 ==========
         if (this.currentAttack && this.currentAttack.type === 'HEAVY') {
-            const now = Date.now();
+            const now = this.clock.now();
             
             // ✅ 檢查盾牌是否已經用過（一次攻擊只能開一次）
             if (this.isShieldActive) {
@@ -757,12 +770,12 @@ const DefenseGameV2 = {
             this.isShieldActive = true;
             
             // 盾牌持續 0.5 秒後消失
-            setTimeout(() => {
+            this.clock.setTimeout(() => {
                 this.isShieldActive = false;
                 console.log(`🛡️ 盾牌消失`);
                 
                 // ✅ 設定盾牌 CD（1.5 秒）
-                this.shieldEndTime = Date.now() + 1500;
+                this.shieldEndTime = this.clock.now() + 1500;
                 console.log(`⏰ 盾牌進入 CD，1.5 秒後可再次使用`);
             }, 500);
             
@@ -791,7 +804,7 @@ const DefenseGameV2 = {
                         pointer-events: none;
                     `;
                     this.stage.appendChild(successText);
-                    setTimeout(() => successText.remove(), 600);
+                    this.clock.setTimeout(() => successText.remove(), 600);
                     
                     // 清除飛行中的方塊
                     this.heavyProjectiles.forEach(p => p?.remove());
@@ -799,7 +812,7 @@ const DefenseGameV2 = {
                     
                     // 清除點亮間隔
                     if (this.lightIntervals && this.lightIntervals[dir]) {
-                        clearInterval(this.lightIntervals[dir]);
+                        this.clock.clearInterval(this.lightIntervals[dir]);
                         this.lightIntervals[dir] = null;
                     }
                     
@@ -820,7 +833,7 @@ const DefenseGameV2 = {
                 this.showWarning(`提前開啟防護罩！`);
                 
                 // ✅ 設定一個計時器，檢查方塊飛行時盾牌是否還在
-                const checkTimer = setTimeout(() => {
+                const checkTimer = this.clock.setTimeout(() => {
                     if (this.state === this.states.HEAVY_FLYING && this.heavyBlockReady && !this.isShieldActive) {
                         // 方塊開始飛了，但盾牌已經消失 → 格擋失敗
                         console.log(`💥 盾牌太早開啟，已消失，格擋失敗！`);
@@ -863,7 +876,7 @@ const DefenseGameV2 = {
                             console.log('✅ 正確方向，等待子彈擊中敵人');
                             this.currentAttack.correctHit = true;
                             if (this.levelConfig.flow && this.currentAttack.timer) {
-                                clearTimeout(this.currentAttack.timer);
+                                this.clock.clearTimeout(this.currentAttack.timer);
                                 this.currentAttack.timer = null;
                             }
                         } else {
@@ -878,7 +891,7 @@ const DefenseGameV2 = {
                         const wrongEnemy = this.enemies.find(e => e.dir === dir);
                         if (wrongEnemy && wrongEnemy.element) {
                             wrongEnemy.element.style.filter = 'drop-shadow(0 0 5px #ff6666)';
-                            setTimeout(() => {
+                            this.clock.setTimeout(() => {
                                 if (wrongEnemy.element) wrongEnemy.element.style.filter = '';
                             }, 200);
                         }
@@ -900,7 +913,7 @@ const DefenseGameV2 = {
                             
                             // 創建投射物並發射
                             const projectile = this.createProjectileAtPlayer(dir);
-                            setTimeout(() => {
+                            this.clock.setTimeout(() => {
                                 if (projectile && projectile.parentNode) {
                                     this.launchProjectileFromPosition(dir, projectile, () => {});
                                 }
@@ -912,10 +925,10 @@ const DefenseGameV2 = {
                             if (this.currentAttack.swipedDirs.length >= this.currentAttack.totalDirs) {
                                 this.currentAttack.resolved = true;
                                 if (this.currentAttack.multiTimeout) {
-                                    clearTimeout(this.currentAttack.multiTimeout);
+                                    this.clock.clearTimeout(this.currentAttack.multiTimeout);
                                     this.currentAttack.multiTimeout = null;
                                 }
-                                setTimeout(() => this.finishAttack(), 600);
+                                this.clock.setTimeout(() => this.finishAttack(), 600);
                             }
                         } else {
                             // ✅ 錯誤方向：不扣分，不記錄，只顯示提示
@@ -926,7 +939,7 @@ const DefenseGameV2 = {
                             const wrongEnemy = this.enemies.find(e => e.dir === dir);
                             if (wrongEnemy && wrongEnemy.element) {
                                 wrongEnemy.element.style.filter = 'drop-shadow(0 0 5px #ff6666)';
-                                setTimeout(() => {
+                                this.clock.setTimeout(() => {
                                     if (wrongEnemy.element) wrongEnemy.element.style.filter = '';
                                 }, 200);
                             }
@@ -948,7 +961,7 @@ const DefenseGameV2 = {
             //     this.showShield(dir);
                 
             //     this.shieldCooldown[dir] = true;
-            //     setTimeout(() => { this.shieldCooldown[dir] = false; }, 1500);
+            //     this.clock.setTimeout(() => { this.shieldCooldown[dir] = false; }, 1500);
                 
             //     if (this.currentAttack && this.currentAttack.dir === dir) {
             //         this.addScore(this.currentAttack.points || this.scoreTable.HEAVY);
@@ -969,7 +982,7 @@ const DefenseGameV2 = {
                         
                         // 清除成功計時器
                         if (this.currentAttack.decoyTimeout) {
-                            clearTimeout(this.currentAttack.decoyTimeout);
+                            this.clock.clearTimeout(this.currentAttack.decoyTimeout);
                             this.currentAttack.decoyTimeout = null;
                         }
                         
@@ -1020,7 +1033,7 @@ const DefenseGameV2 = {
                             
                             // ✅ 創建投射物並立即設定 0.5 秒後發射
                             const projectile = this.createProjectileAtPlayer(dir);
-                            setTimeout(() => {
+                            this.clock.setTimeout(() => {
                                 if (projectile && projectile.parentNode) {
                                     this.launchProjectileFromPosition(dir, projectile, () => {});
                                 }
@@ -1052,7 +1065,7 @@ const DefenseGameV2 = {
                             if (this.currentAttack.swipedDirs.length >= this.currentAttack.totalDirs) {
                                 this.currentAttack.resolved = true;
                                 if (this.currentAttack.multiTimeout) {
-                                    clearTimeout(this.currentAttack.multiTimeout);
+                                    this.clock.clearTimeout(this.currentAttack.multiTimeout);
                                     this.currentAttack.multiTimeout = null;
                                 }
                                 
@@ -1068,7 +1081,7 @@ const DefenseGameV2 = {
                                 }
                                 
                                 // 等待最後一個投射物飛完
-                                setTimeout(() => this.finishAttack(), 600);
+                                this.clock.setTimeout(() => this.finishAttack(), 600);
                             }
                         } else {
                             console.log('該方向已滑動過');
@@ -1092,7 +1105,7 @@ const DefenseGameV2 = {
         warning.textContent = '❌ 方向錯誤';
         warning.style.cssText = 'position:absolute; top:30%; left:50%; transform:translate(-50%,-50%); color:#ff6666; font-size:24px; z-index:150; text-shadow:0 0 5px #000;';
         this.stage.appendChild(warning);
-        setTimeout(() => warning.remove(), 500);
+        this.clock.setTimeout(() => warning.remove(), 500);
     },
 
     // ✅ 重擊格擋失敗的統一處理
@@ -1130,7 +1143,7 @@ const DefenseGameV2 = {
             pointer-events: none;
         `;
         this.stage.appendChild(failText);
-        setTimeout(() => failText.remove(), 600);
+        this.clock.setTimeout(() => failText.remove(), 600);
     },
     
     missAttack: function(reason) {
@@ -1207,7 +1220,7 @@ const DefenseGameV2 = {
         this.stage.appendChild(scorePop);
         
         // 動畫結束後移除
-        setTimeout(() => {
+        this.clock.setTimeout(() => {
             if (scorePop.parentNode) scorePop.remove();
         }, 800);
     },
@@ -1217,6 +1230,7 @@ const DefenseGameV2 = {
     },
     
     showFinalResult: function() {
+        window.GamePause?.end(this);
         window.GameMusic?.fadeOut('defense');
         this.gameActive = false;
         this.clearAllTimers();
@@ -1297,7 +1311,7 @@ const DefenseGameV2 = {
         
         const endX = target.x + (stageRect.width / 2);
         const endY = target.y + (stageRect.height / 2);
-        const startTime = performance.now();
+        const startTime = this.clock.now();
         const duration = 400;
         
         const animate = (now) => {
@@ -1312,7 +1326,7 @@ const DefenseGameV2 = {
             proj.style.top = `${y - size/2}px`;
             
             if (t < 1) {
-                requestAnimationFrame(animate);
+                this.clock.requestAnimationFrame(animate);
             } else {
                 // 投射物到達目標，移除投射物
                 if (proj.parentNode) proj.remove();
@@ -1338,7 +1352,7 @@ const DefenseGameV2 = {
                     }
 
                     // 0.2 秒後移除敵人
-                    setTimeout(() => {
+                    this.clock.setTimeout(() => {
                         if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== currentAttackRef || currentAttackRef.finished) return;
                         if (targetEnemy.element && targetEnemy.element.parentNode) {
                             targetEnemy.element.remove();
@@ -1364,7 +1378,7 @@ const DefenseGameV2 = {
             }
         };
         
-        requestAnimationFrame(animate);
+        this.clock.requestAnimationFrame(animate);
         this.projectiles.push(proj);
     },
 
@@ -1441,7 +1455,7 @@ const DefenseGameV2 = {
         const endX = target.x + (stageRect.width / 2);
         const endY = target.y + (stageRect.height / 2);
         
-        const startTime = performance.now();
+        const startTime = this.clock.now();
         const duration = 400;
         
         projectile.style.filter = 'drop-shadow(0 0 8px #00ffaa)';
@@ -1459,7 +1473,7 @@ const DefenseGameV2 = {
             projectile.style.top = `${y - (this.scaledSizes.projectile / 2)}px`;
             
             if (t < 1) {
-                requestAnimationFrame(animate);
+                this.clock.requestAnimationFrame(animate);
             } else {
                 // 投射物到達目標，移除投射物
                 if (projectile.parentNode) projectile.remove();
@@ -1487,7 +1501,7 @@ const DefenseGameV2 = {
                     }
 
                     // 0.2 秒後移除敵人
-                    setTimeout(() => {
+                    this.clock.setTimeout(() => {
                         if (targetEnemy.element && targetEnemy.element.parentNode) {
                             targetEnemy.element.remove();
                         }
@@ -1512,7 +1526,7 @@ const DefenseGameV2 = {
             }
         };
         
-        requestAnimationFrame(animate);
+        this.clock.requestAnimationFrame(animate);
         this.projectiles.push(projectile);
     },
     
@@ -1521,7 +1535,7 @@ const DefenseGameV2 = {
         // ✅ 重置格擋準備狀態
         this.heavyBlockReady = false;
         if (this.heavyBlockTimeout) {
-            clearTimeout(this.heavyBlockTimeout);
+            this.clock.clearTimeout(this.heavyBlockTimeout);
             this.heavyBlockTimeout = null;
         }
         
@@ -1530,7 +1544,7 @@ const DefenseGameV2 = {
         this.shieldEndTime = 0;
 
         if (this.lightIntervals[dir]) {
-            clearInterval(this.lightIntervals[dir]);
+            this.clock.clearInterval(this.lightIntervals[dir]);
             this.lightIntervals[dir] = null;
         }
         this.heavySequence.forEach(s => { if (s && s.parentNode) s.remove(); });
@@ -1645,10 +1659,10 @@ const DefenseGameV2 = {
         let idx = 0;
         console.log(`開始點亮 ${dir} 方向的重擊，共 ${this.heavySequence.length} 個方塊`);
         
-        this.lightIntervals[dir] = setInterval(() => {
+        this.lightIntervals[dir] = this.clock.setInterval(() => {
             if (!this.gameActive || this.state !== this.states.HEAVY_CHARGING) {
                 if (this.lightIntervals[dir]) {
-                    clearInterval(this.lightIntervals[dir]);
+                    this.clock.clearInterval(this.lightIntervals[dir]);
                     this.lightIntervals[dir] = null;
                 }
                 return;
@@ -1668,7 +1682,7 @@ const DefenseGameV2 = {
                 
                 if (idx === this.heavySequence.length) {
                     if (this.lightIntervals[dir]) {
-                        clearInterval(this.lightIntervals[dir]);
+                        this.clock.clearInterval(this.lightIntervals[dir]);
                         this.lightIntervals[dir] = null;
                     }
                     console.log(`最後一個點亮，觸發 ${dir} 方向衝向玩家`);
@@ -1695,7 +1709,7 @@ const DefenseGameV2 = {
         this.heavyBlockReady = true;
         
         // ✅ 設定超時：如果一段時間沒格擋，自動失敗
-        this.heavyBlockTimeout = setTimeout(() => {
+        this.heavyBlockTimeout = this.clock.setTimeout(() => {
             if (this.heavyBlockReady && this.state === this.states.HEAVY_FLYING && !this.currentAttack?.resolved) {
                 console.log('⏰ 重擊格擋超時！完全沒有格擋');
                 this.heavyBlockFailed('未及時格擋');
@@ -1741,7 +1755,7 @@ const DefenseGameV2 = {
             block.style.zIndex = '35';
             this.heavyProjectiles.push(block);
             
-            const startTime = performance.now();
+            const startTime = this.clock.now();
             const duration = 400;
             
             const animate = (now) => {
@@ -1756,7 +1770,7 @@ const DefenseGameV2 = {
                 block.style.opacity = `${1 - t * 0.5}`;
                 
                 if (t < 1) {
-                    requestAnimationFrame(animate);
+                    this.clock.requestAnimationFrame(animate);
                 } else {
                     block.remove();
                     const index = this.heavyProjectiles.indexOf(block);
@@ -1774,7 +1788,7 @@ const DefenseGameV2 = {
                     }
                 }
             };
-            requestAnimationFrame(animate);
+            this.clock.requestAnimationFrame(animate);
         });
     },
     
@@ -1803,7 +1817,7 @@ const DefenseGameV2 = {
         });
         
         // ✅ 延遲一點點再開始，讓 DOM 更新
-        setTimeout(() => {
+        this.clock.setTimeout(() => {
             this._startAOEMovement(wait);
         }, 50);
     },
@@ -1849,19 +1863,19 @@ const DefenseGameV2 = {
         }
         
         // 儲存 AOE 時間資訊
-        this.aoeStartTime = Date.now();
+        this.aoeStartTime = this.clock.now();
         this.aoeDuration = wait;
         this.aoePushProgress = 0;
         
         let finished = false;
         let animationId = null;
-        const startTime = Date.now();
+        const startTime = this.clock.now();
         const duration = wait;
         
         const success = () => {
             if (finished) return;
             finished = true;
-            if (animationId) cancelAnimationFrame(animationId);
+            if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('✨ AOE 防禦成功！');
             if (this.state === this.states.AOE_ACTIVE) {
                 this.addScore(this.scoreTable.AOE);
@@ -1872,7 +1886,7 @@ const DefenseGameV2 = {
         const fail = () => {
             if (finished) return;
             finished = true;
-            if (animationId) cancelAnimationFrame(animationId);
+            if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('💥 AOE 攻擊命中！');
             if (this.state === this.states.AOE_ACTIVE) {
                 this.mistakes++;
@@ -1889,10 +1903,10 @@ const DefenseGameV2 = {
                 return;
             }
             
-            const elapsed = Date.now() - startTime;
+            const elapsed = this.clock.now() - startTime;
             const actualProgress = Math.min(1, elapsed / duration);
             
-            const now = Date.now();
+            const now = this.clock.now();
             const timeSinceLastRotate = now - (this.lastRotateTime || 0);
             const isRotating = timeSinceLastRotate < 300;
             
@@ -1925,15 +1939,15 @@ const DefenseGameV2 = {
             if (aoeLeft) aoeLeft.style.transform = `translateX(${leftMove}px) translateY(-50%) rotate(90deg)`;
             if (aoeRight) aoeRight.style.transform = `translateX(${rightMove}px) translateY(-50%) rotate(-90deg)`;
             
-            animationId = requestAnimationFrame(animate);
+            animationId = this.clock.requestAnimationFrame(animate);
         };
         
-        animationId = requestAnimationFrame(animate);
+        animationId = this.clock.requestAnimationFrame(animate);
         
         // ✅ 延遲 100ms 再開始碰撞檢測，避免在動畫開始前就碰撞
-        const collisionCheck = setInterval(() => {
+        const collisionCheck = this.clock.setInterval(() => {
             if (finished || this.state !== this.states.AOE_ACTIVE) {
-                clearInterval(collisionCheck);
+                this.clock.clearInterval(collisionCheck);
                 return;
             }
             
@@ -1975,15 +1989,15 @@ const DefenseGameV2 = {
             }
             
             if (collided) {
-                clearInterval(collisionCheck);
-                cancelAnimationFrame(animationId);
+                this.clock.clearInterval(collisionCheck);
+                this.clock.cancelAnimationFrame(animationId);
                 fail();
             }
         }, 100);  // ✅ 延遲 100ms
         
-        const successTimer = setTimeout(() => {
+        const successTimer = this.clock.setTimeout(() => {
             if (!finished && this.state === this.states.AOE_ACTIVE) {
-                clearInterval(collisionCheck);
+                this.clock.clearInterval(collisionCheck);
                 success();
             }
         }, duration);
@@ -1994,10 +2008,11 @@ const DefenseGameV2 = {
     },
 
     handleRotate: function(e) {
+        if (window.GamePause?.paused) return;
         if (this.state !== this.states.AOE_ACTIVE) return;
         
         // ✅ 記錄最後旋轉時間
-        this.lastRotateTime = Date.now();
+        this.lastRotateTime = this.clock.now();
         
         let angle = 0;
         if (e.detail) {
@@ -2026,7 +2041,7 @@ const DefenseGameV2 = {
                 // 計算當前時間進度
                 let timeProgress = 0;
                 if (this.aoeStartTime) {
-                    const elapsed = Date.now() - this.aoeStartTime;
+                    const elapsed = this.clock.now() - this.aoeStartTime;
                     timeProgress = Math.min(1, elapsed / this.aoeDuration);
                 }
                 
@@ -2048,7 +2063,7 @@ const DefenseGameV2 = {
                     const line = document.getElementById(id);
                     if (line) {
                         line.style.filter = 'drop-shadow(0 0 10px #ffaa00)';
-                        setTimeout(() => {
+                        this.clock.setTimeout(() => {
                             if (line) line.style.filter = '';
                         }, 150);
                     }
@@ -2062,13 +2077,13 @@ const DefenseGameV2 = {
         const shield = document.getElementById(`shield-${dir}`);
         if (shield) {
             shield.style.opacity = '0.8';
-            setTimeout(() => { shield.style.opacity = '0'; }, 500);
+            this.clock.setTimeout(() => { shield.style.opacity = '0'; }, 500);
         }
     },
     
     showWarning: function(text) {
         this.msg.style.color = '#ff6666';
-        setTimeout(() => { this.msg.style.color = '#ffd700'; }, 500);
+        this.clock.setTimeout(() => { this.msg.style.color = '#ffd700'; }, 500);
     },
 
     // 顯示紅光特效（擊中錯誤敵人時）
@@ -2097,7 +2112,7 @@ const DefenseGameV2 = {
         flashLayer.style.opacity = '1';
         
         // 0.1 秒後淡出
-        setTimeout(() => {
+        this.clock.setTimeout(() => {
             flashLayer.style.opacity = '0';
         }, 100);
     },
@@ -2122,11 +2137,11 @@ const DefenseGameV2 = {
         ];
         
         let i = 0;
-        const shakeInterval = setInterval(() => {
+        const shakeInterval = this.clock.setInterval(() => {
             el.style.transform = shakes[i];
             i++;
             if (i >= shakes.length) {
-                clearInterval(shakeInterval);
+                this.clock.clearInterval(shakeInterval);
                 el.style.transform = originalTransform;
             }
         }, 50);
@@ -2145,7 +2160,7 @@ const DefenseGameV2 = {
         
         // ✅ 清理軌跡更新循環
         if (this.trailInterval) {
-            clearInterval(this.trailInterval);
+            this.clock.clearInterval(this.trailInterval);
             this.trailInterval = null;
         }
         
@@ -2155,15 +2170,15 @@ const DefenseGameV2 = {
         // ✅ 清理所有 AOE 計時器
         if (this.aoeTimers) {
             this.aoeTimers.forEach(t => {
-                if (t && t.id) clearInterval(t.id);
-                if (t && t.id) clearTimeout(t.id);
+                if (t && t.id) this.clock.clearInterval(t.id);
+                if (t && t.id) this.clock.clearTimeout(t.id);
             });
             this.aoeTimers = [];
         }
         
         // ✅ 清理所有動畫
         if (this.currentAnimationId) {
-            cancelAnimationFrame(this.currentAnimationId);
+            this.clock.cancelAnimationFrame(this.currentAnimationId);
             this.currentAnimationId = null;
         }
         
@@ -2200,7 +2215,7 @@ const DefenseGameV2 = {
         // ✅ 清理 lightIntervals
         ['up', 'down', 'left', 'right'].forEach(dir => {
             if (this.lightIntervals[dir]) {
-                clearInterval(this.lightIntervals[dir]);
+                this.clock.clearInterval(this.lightIntervals[dir]);
                 this.lightIntervals[dir] = null;
             }
         });
@@ -2228,7 +2243,7 @@ const DefenseGameV2 = {
     clearEnemies: function() { 
         // ✅ 先停止所有敵人的跳動動畫
         this.enemies.forEach(e => {
-            if (e.animationId) clearInterval(e.animationId);
+            if (e.animationId) this.clock.clearInterval(e.animationId);
         });
         this.enemies.forEach(e => e.element?.remove()); 
         this.enemies = []; 
@@ -2284,13 +2299,13 @@ const DefenseGameV2 = {
         
         // 清理當前攻擊的計時器
         if (this.currentAttack && this.currentAttack.timer) {
-            clearTimeout(this.currentAttack.timer);
+            this.clock.clearTimeout(this.currentAttack.timer);
             this.currentAttack.timer = null;
         }
         
         // 清理點亮間隔
         if (this.currentLightInterval) {
-            clearInterval(this.currentLightInterval);
+            this.clock.clearInterval(this.currentLightInterval);
             this.currentLightInterval = null;
         }
         
@@ -2298,7 +2313,7 @@ const DefenseGameV2 = {
         if (this.lightIntervals) {
             ['up', 'down', 'left', 'right'].forEach(dir => {
                 if (this.lightIntervals[dir]) {
-                    clearInterval(this.lightIntervals[dir]);
+                    this.clock.clearInterval(this.lightIntervals[dir]);
                     this.lightIntervals[dir] = null;
                 }
             });
@@ -2317,3 +2332,4 @@ Object.assign(
 );
 
 window.DefenseGameV2 = DefenseGameV2;
+

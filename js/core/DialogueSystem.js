@@ -819,11 +819,13 @@ const DialogueSystem = {
         // 第一題顯示後才啟動音樂，前導對話不播放。
         this.showQuizQuestion();
         window.GameMusic?.start('quiz');
+        window.GamePause?.attach(this, 'quiz');
     },
 
     // 顯示一題問答
     showQuizQuestion: function() {
         if (this.currentQuizIndex >= this.currentQuizQuestions.length) {
+            window.GamePause?.end(this);
             window.GameMusic?.fadeOut('quiz');
             // 所有題目答完
             console.log(`📊 問答完成！答對 ${this.quizScore} / ${this.currentQuizQuestions.length} 題`);
@@ -1042,6 +1044,7 @@ const DialogueSystem = {
     },
     
     endDialogue: function(isManualExit = false) {
+        window.GamePause?.end();
         this.dialogueRun++;
         window.DialogueSkip?.clear();
         console.log('🔚 對話結束, isManualExit:', isManualExit);

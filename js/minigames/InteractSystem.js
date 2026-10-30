@@ -734,6 +734,7 @@ const InteractSystem = {
         let originalStyle = '';
 
         element.addEventListener('pointerdown', (e) => {
+            if (window.GamePause?.paused) return;
             if (!this.isActive || this._isCompleting) return;
             // ✅ 如果已經配對成功，不能拖曳
             if (element.getAttribute('data-matched') === 'true') {
@@ -984,6 +985,7 @@ const InteractSystem = {
     
     // 完成遊戲
     completeGame: function() {
+        window.GamePause?.end(this);
         console.log('🎉 遊戲完成！');
         this.isActive = false;
         
@@ -1042,6 +1044,7 @@ const InteractSystem = {
     
     // 關閉遊戲（修正：移除錯誤的方法呼叫）
     close: function() {
+        window.GamePause?.end(this);
         window.GameMusic?.stop('interact');
         console.log('🗺️ 關閉遊戲模式');
         

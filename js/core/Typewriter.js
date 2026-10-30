@@ -160,6 +160,7 @@ const Typewriter = {
         let displayText = '';
 
         const typingInterval = setInterval(() => {
+            if (window.GamePause?.paused) return;
             if (run !== this.typingRun) return;
             if (index < cleanText.length) {
                 displayText += cleanText[index];
