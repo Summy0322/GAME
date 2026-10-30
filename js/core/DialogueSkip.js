@@ -4,9 +4,9 @@ window.DialogueSkip = {
     enabled: false,
     context: null,
     pending: null,
-    bind(callback, ending = false, message = null) {
+    bind(callback, ending = false, message = null, confirmLabel = null) {
         this.clear();
-        this.context = {callback, ending, message};
+        this.context = {callback, ending, message, confirmLabel};
         this.render();
     },
     clear() {
@@ -56,7 +56,8 @@ window.DialogueSkip = {
         return index >= data.length ? {ending: true} : null;
     },
     bindStory(system) {
-        if (!/^chapter[123]_(child|teen)$/.test(system.currentChapter?.id || '')) { this.clear(); return; }
+        const intro = system.currentChapter?.id === 'intro';
+        if (!intro && !/^chapter[123]_(child|teen)$/.test(system.currentChapter?.id || '')) { this.clear(); return; }
         const target = this.plan(system);
         if (!target) { this.clear(); return; }
         const run = system.dialogueRun;
@@ -76,7 +77,7 @@ window.DialogueSkip = {
                 system.gameBackground.style.backgroundImage = `url('${target.background}')`;
             system.handleOption(target.option.action === 'collection'
                 ? {...target.option, skipToFirstShop: true} : target.option);
-        }, target.ending);
+        }, target.ending, intro ? '要跳過介紹，直接前往章節選擇嗎？' : null, intro ? '前往選章' : null);
     },
     init() {
         const button = document.getElementById('dialogue-skip');
@@ -87,7 +88,7 @@ window.DialogueSkip = {
             this.pending = this.context;
             document.getElementById('skip-confirm-text').textContent = this.context.message || (this.context.ending
                 ? '要跳過剩餘對話，完成本章嗎？' : '要跳過對話，直接進行小遊戲嗎？');
-            document.getElementById('skip-confirm-play').textContent = this.context.ending ? '完成本章' : '直接遊玩';
+            document.getElementById('skip-confirm-play').textContent = this.context.confirmLabel || (this.context.ending ? '完成本章' : '直接遊玩');
             dialog.showModal();
             window.GameSettings?.fit(dialog);
             document.getElementById('skip-confirm-later').focus();

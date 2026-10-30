@@ -40,6 +40,19 @@ test('confirmation supports cancel, ignores stale targets and repeated confirmat
     click(f.nodes,'dialogue-skip');f.skip.clear();click(f.nodes,'skip-confirm-play');assert.equal(calls,0);
     f.skip.bind(()=>calls++);click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');click(f.nodes,'skip-confirm-play');assert.equal(calls,1);
 });
+test('intro skip requires enabled mode, confirms chapter selection and never grants chapter completion',()=>{
+    const f=fixture();vm.runInContext(fs.readFileSync('js/data/intro.js','utf8'),f.context);
+    const scenes=[];f.context.showScene=id=>scenes.push(id);
+    f.system.currentChapter=f.window.IntroChapter;f.system.currentDialogue=f.window.IntroChapter.dialogue;
+    let completed=0;f.system.onChapterComplete=()=>completed++;
+    f.skip.bindStory(f.system);assert.equal(f.nodes.get('dialogue-skip').hidden,true);
+    f.skip.enabled=true;f.skip.render();click(f.nodes,'dialogue-skip');
+    assert.equal(f.nodes.get('skip-confirm-play').textContent,'前往選章');
+    assert.equal(f.nodes.get('skip-confirm-text').textContent,'要跳過介紹，直接前往章節選擇嗎？');
+    click(f.nodes,'skip-confirm-later');assert.equal(scenes.length,0);assert.equal(f.system.currentIndex,0);
+    click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');
+    assert.deepEqual(scenes,['level-select']);assert.equal(completed,0);assert.equal(f.games.length,0);assert.equal(f.skip.context,null);
+});
 test('all six chapter scripts have valid skip targets including chapter 3 default-name entry; malformed loops stop',()=>{
     for(const mode of ['child','teen'])for(const number of [1,2,3]){
         const f=fixture(),c=chapter(f,number,mode);
