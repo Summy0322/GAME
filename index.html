@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="css/dialogue-layout.css">
     <link rel="stylesheet" href="css/audio-settings.css">
     <link rel="stylesheet" href="css/dialogue-skip.css">
+    <link rel="stylesheet" href="css/game-settings.css">
 
     <!-- Swiper.js CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -121,12 +122,21 @@
         </div>
         
         <dialog id="audio-settings" aria-labelledby="audio-settings-title">
-            <button id="settings-close" type="button" aria-label="關閉聲音設定">×</button>
-            <h2 id="audio-settings-title">聲音設定</h2>
+            <button id="settings-close" type="button" aria-label="關閉遊戲設定">×</button>
+            <h2 id="audio-settings-title">遊戲設定</h2>
+            <div class="settings-tabs" role="tablist" aria-label="設定分類">
+                <button id="settings-tab-sound" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-sound">聲音</button>
+                <button id="settings-tab-play" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-play" tabindex="-1">遊玩</button>
+            </div>
+            <section id="settings-panel-sound" role="tabpanel" aria-labelledby="settings-tab-sound">
             <div id="audio-master-row" class="audio-setting-row"><label for="audio-master">整體音量</label><output id="audio-master-value" for="audio-master">100%</output><input id="audio-master" type="range" min="0" max="100" value="100"><button id="audio-master-mute" class="audio-mute-toggle" type="button" aria-label="開啟整體音量靜音" aria-pressed="false">🔊</button></div>
             <div id="audio-sfx-row" class="audio-setting-row"><label for="audio-sfx">音效與對話音</label><output id="audio-sfx-value" for="audio-sfx">100%</output><input id="audio-sfx" type="range" min="0" max="100" value="100"><button id="audio-sfx-mute" class="audio-mute-toggle" type="button" aria-label="開啟音效與對話音靜音" aria-pressed="false">🔊</button></div>
             <div id="audio-music-row" class="audio-setting-row"><label for="audio-music">背景音樂</label><output id="audio-music-value" for="audio-music">100%</output><input id="audio-music" type="range" min="0" max="100" value="100"><button id="audio-music-mute" class="audio-mute-toggle" type="button" aria-label="開啟背景音樂靜音" aria-pressed="false">🔊</button></div>
-            <div class="skip-setting-row"><span>跳過對話 <small>本次遊玩有效</small></span><button id="skip-setting-toggle" type="button" aria-pressed="false">密碼解鎖</button></div>
+            </section>
+            <section id="settings-panel-play" role="tabpanel" aria-labelledby="settings-tab-play" hidden>
+                <div class="play-setting-row"><span>是否按章節順序遊玩<small>選「是」：完成前一章後解鎖下一章。<br>選「否」：自由選擇尚未完成的章節。</small></span><button id="chapter-order-toggle" type="button" aria-label="是否按章節順序遊玩" aria-pressed="true">是</button></div>
+                <div class="skip-setting-row"><span>跳過對話 <small>密碼解鎖，本次遊玩有效</small></span><button id="skip-setting-toggle" type="button" aria-pressed="false">密碼解鎖</button></div>
+            </section>
         </dialog>
         <button id="dialogue-skip" type="button" aria-label="跳過對話" title="跳過對話" hidden>&gt;&gt;</button>
         <dialog id="skip-unlock" class="skip-dialog" aria-labelledby="skip-unlock-title">
@@ -174,6 +184,7 @@
     <script src="js/core/AudioManager.js"></script>
     <script src="js/core/GameMusic.js"></script>
     <script src="js/core/AudioSettings.js"></script>
+    <script src="js/core/GameSettings.js"></script>
     <script src="js/core/SceneManager.js"></script>
     
     <!-- 2. Typewriter 要在 DialogueSystem 之前 -->

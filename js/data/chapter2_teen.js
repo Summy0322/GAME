@@ -58,8 +58,8 @@ const chapter2TeenData = {
                 thumb: "assets/images/memory/碗粿.png",
                 fullImage: "assets/images/memory/碗粿.png",
                 title: "碗粿",
-                summary: "...",
-                story: "..."
+                summary: "以米漿盛碗蒸製，搭配餡料的傳統米食。",
+                story: "碗粿以在來米或在來米粉調製米漿，盛入碗中蒸熟。常見的鹹口味會搭配香菇、豬肉、紅蔥頭或蝦米等餡料，各家的配料與調味不盡相同。從米漿到一碗成形的點心，可以認識臺灣傳統米食的製作方式。"
             }
         ],
     

@@ -53,7 +53,7 @@ window.AudioSettings = {
         const dialog = document.getElementById('audio-settings');
         const open = document.getElementById('settings-open');
         const close = document.getElementById('settings-close');
-        open.addEventListener('click', () => { this.render(); dialog.showModal(); close.focus(); });
+        open.addEventListener('click', () => { this.render(); dialog.showModal(); window.GameSettings?.fit(dialog); close.focus(); });
         close.addEventListener('click', () => dialog.close());
         dialog.addEventListener('close', () => open.focus());
         for (const name of ['master', 'sfx', 'music']) {
