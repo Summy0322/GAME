@@ -29,4 +29,11 @@
 #audio-settings .play-setting-row, #audio-settings .skip-setting-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 8px 0; margin: 0; font-size: 20px; }
 #audio-settings .skip-setting-row { border-top: 1px solid #ffffff40; margin-top: 8px; }
 #audio-settings small { display: block; font-size: 14px; line-height: 1.5; color: #e6d5bd; }
-#audio-settings #chapter-order-toggle, #audio-settings #skip-setting-toggle { min-width: 90px; padding: 6px 14px; border-radius: 24px; font-size: 18px; flex: none; }
+#audio-settings #skip-setting-toggle { min-width: 90px; padding: 6px 14px; border-radius: 24px; font-size: 18px; flex: none; }
+.chapter-order-choice { display: flex; flex: none; gap: 4px; padding: 4px; border: 1px solid #e6b77b; border-radius: 28px; background: #203140; }
+.chapter-order-choice label { position: relative; cursor: pointer; }
+.chapter-order-choice input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.chapter-order-choice span { display: grid; place-items: center; width: 60px; height: 44px; border-radius: 24px; color: #e6d5bd; font-size: 18px; }
+.chapter-order-choice input:checked + span { background: #e67e22; color: white; font-weight: bold; box-shadow: 0 2px 5px #0003; }
+.chapter-order-choice input:focus-visible + span { outline: 3px solid #ffd700; outline-offset: 2px; }
+.chapter-order-choice label:hover span { color: white; }

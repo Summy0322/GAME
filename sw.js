@@ -1,5 +1,5 @@
 // 首頁只預存程式；圖片與字型在實際使用後快取，音樂／影片按需載入。
-const CACHE_NAME = 'game-v38';
+const CACHE_NAME = 'game-v39';
 const urlsToCache = [
   "/GAME/",
   "/GAME/index.html",

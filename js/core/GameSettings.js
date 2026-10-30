@@ -8,11 +8,10 @@ window.GameSettings = {
         this.render();
     },
     render() {
-        const button = document.getElementById('chapter-order-toggle');
-        if (button) {
-            button.textContent = this.sequential ? '是' : '否';
-            button.setAttribute('aria-pressed', String(this.sequential));
-        }
+        const yes = document.getElementById('chapter-order-yes');
+        const no = document.getElementById('chapter-order-no');
+        if (yes) yes.checked = this.sequential;
+        if (no) no.checked = !this.sequential;
     },
     selectTab(tab) {
         if (!['sound', 'play'].includes(tab)) return;
@@ -38,7 +37,8 @@ window.GameSettings = {
             const saved = JSON.parse(localStorage.getItem('redbrick.play.v1'));
             if (typeof saved?.sequential === 'boolean') this.sequential = saved.sequential;
         } catch (_) {}
-        document.getElementById('chapter-order-toggle').addEventListener('click', () => this.setSequential(!this.sequential));
+        document.getElementById('chapter-order-yes').addEventListener('change', event => { if (event.target.checked) this.setSequential(true); });
+        document.getElementById('chapter-order-no').addEventListener('change', event => { if (event.target.checked) this.setSequential(false); });
         for (const name of ['sound','play']) {
             const button = document.getElementById(`settings-tab-${name}`);
             button.addEventListener('click', () => this.selectTab(name));

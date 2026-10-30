@@ -134,7 +134,7 @@
             <div id="audio-music-row" class="audio-setting-row"><label for="audio-music">背景音樂</label><output id="audio-music-value" for="audio-music">100%</output><input id="audio-music" type="range" min="0" max="100" value="100"><button id="audio-music-mute" class="audio-mute-toggle" type="button" aria-label="開啟背景音樂靜音" aria-pressed="false">🔊</button></div>
             </section>
             <section id="settings-panel-play" role="tabpanel" aria-labelledby="settings-tab-play" hidden>
-                <div class="play-setting-row"><span>是否按章節順序遊玩<small>選「是」：完成前一章後解鎖下一章。<br>選「否」：自由選擇尚未完成的章節。</small></span><button id="chapter-order-toggle" type="button" aria-label="是否按章節順序遊玩" aria-pressed="true">是</button></div>
+                <div class="play-setting-row"><span id="chapter-order-label">是否按章節順序遊玩<small>選「是」：完成前一章後解鎖下一章。<br>選「否」：自由選擇尚未完成的章節。</small></span><div class="chapter-order-choice" role="radiogroup" aria-labelledby="chapter-order-label"><label><input id="chapter-order-yes" type="radio" name="chapter-order" value="yes" checked><span>是</span></label><label><input id="chapter-order-no" type="radio" name="chapter-order" value="no"><span>否</span></label></div></div>
                 <div class="skip-setting-row"><span>跳過對話 <small>密碼解鎖，本次遊玩有效</small></span><button id="skip-setting-toggle" type="button" aria-pressed="false">密碼解鎖</button></div>
             </section>
         </dialog>
