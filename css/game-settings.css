@@ -37,3 +37,6 @@
 .chapter-order-choice input:checked + span { background: #e67e22; color: white; font-weight: bold; box-shadow: 0 2px 5px #0003; }
 .chapter-order-choice input:focus-visible + span { outline: 3px solid #ffd700; outline-offset: 2px; }
 .chapter-order-choice label:hover span { color: white; }
+.chapter-order-controls { display: flex; align-items: center; gap: 8px; flex: none; }
+#audio-settings #chapter-order-lock { min-width: 104px; padding: 6px 10px; border-radius: 24px; font-size: 16px; }
+.chapter-order-choice input:disabled + span { opacity: .55; cursor: not-allowed; }

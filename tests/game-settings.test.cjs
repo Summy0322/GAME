@@ -25,7 +25,7 @@ test('free-play toggle persists, preserves completion, relocks only unmet chapte
     assert.deepEqual(f.status(),{chapter1:'open',chapter2:'locked',chapter3:'completed'});
     f.window.GameSettings.setSequential(false);vm.runInContext('resetAllChapters()',f.ctx);
     assert.deepEqual(f.status(),{chapter1:'open',chapter2:'open',chapter3:'open'});
-    const again=fixture(f.storage.get('redbrick.play.v1'));assert.equal(again.window.GameSettings.sequential,false);assert.equal(again.status().chapter2,'open');
+    const again=fixture(f.storage.get('redbrick.play.v1'));assert.equal(again.window.GameSettings.sequential,true);assert.equal(again.status().chapter2,'locked');
 });
 test('invalid or unavailable setting storage falls back to ordered play without breaking controls',()=>{
     for(const raw of ['broken','null','{"sequential":"no"}'])assert.equal(fixture(raw).window.GameSettings.sequential,true);
@@ -43,7 +43,19 @@ test('separate yes/no radio controls select explicit values and reflect restored
     assert.equal(f.window.GameSettings.sequential,false);assert.equal(f.get('chapter-order-no').checked,true);assert.equal(f.get('chapter-order-yes').checked,false);assert.equal(f.status().chapter2,'open');
     f.get('chapter-order-no').handlers.change({target:{checked:true}});assert.equal(f.window.GameSettings.sequential,false);
     f.get('chapter-order-yes').handlers.change({target:{checked:true}});assert.equal(f.get('chapter-order-yes').checked,true);assert.equal(f.status().chapter2,'locked');
-    assert.equal(fixture('{"sequential":false}').get('chapter-order-no').checked,true);
+    assert.equal(fixture('{"sequential":false,"locked":true}').get('chapter-order-no').checked,true);
+});
+test('only a locked choice survives reload; unlocking restores default-on behavior on next visit',()=>{
+    const f=fixture();f.window.GameSettings.setSequential(false);
+    assert.equal(fixture(f.storage.get('redbrick.play.v1')).window.GameSettings.sequential,true);
+    f.get('chapter-order-lock').handlers.click();
+    assert.equal(f.get('chapter-order-yes').disabled,true);assert.equal(f.get('chapter-order-no').disabled,true);
+    const locked=fixture(f.storage.get('redbrick.play.v1'));assert.equal(locked.window.GameSettings.sequential,false);assert.equal(locked.status().chapter3,'open');
+    locked.window.GameSettings.setSequential(true);assert.equal(locked.window.GameSettings.sequential,false);
+    locked.get('chapter-order-lock').handlers.click();assert.equal(locked.get('chapter-order-no').disabled,false);
+    assert.equal(locked.window.GameSettings.sequential,false);
+    assert.equal(fixture(locked.storage.get('redbrick.play.v1')).window.GameSettings.sequential,true);
+    assert.equal(fixture('{"sequential":false}').window.GameSettings.sequential,true);
 });
 test('all setting dialogs scale inside the actual 16:9 stage across screen sizes and safe margins',()=>{
     const f=fixture();

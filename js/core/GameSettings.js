@@ -1,10 +1,20 @@
 window.GameSettings = {
     sequential: true,
+    orderLocked: false,
     tab: 'sound',
     setSequential(value) {
+        if (this.orderLocked) return;
         this.sequential = value === true;
-        try { localStorage.setItem('redbrick.play.v1', JSON.stringify({sequential:this.sequential})); } catch (_) {}
+        this.saveOrder();
         window.applyChapterOrder?.();
+        this.render();
+    },
+    saveOrder() {
+        try { localStorage.setItem('redbrick.play.v1', JSON.stringify({sequential:this.sequential, locked:this.orderLocked})); } catch (_) {}
+    },
+    setOrderLocked(value) {
+        this.orderLocked = value === true;
+        this.saveOrder();
         this.render();
     },
     render() {
@@ -12,6 +22,14 @@ window.GameSettings = {
         const no = document.getElementById('chapter-order-no');
         if (yes) yes.checked = this.sequential;
         if (no) no.checked = !this.sequential;
+        if (yes) yes.disabled = this.orderLocked;
+        if (no) no.disabled = this.orderLocked;
+        const lock = document.getElementById('chapter-order-lock');
+        if (lock) {
+            lock.textContent = this.orderLocked ? '🔒 已鎖定' : '🔓 鎖定';
+            lock.setAttribute('aria-pressed', String(this.orderLocked));
+            lock.setAttribute('aria-label', this.orderLocked ? '解除章節順序設定鎖定' : '鎖定並記住章節順序設定');
+        }
     },
     selectTab(tab) {
         if (!['sound', 'play'].includes(tab)) return;
@@ -35,10 +53,12 @@ window.GameSettings = {
     init() {
         try {
             const saved = JSON.parse(localStorage.getItem('redbrick.play.v1'));
-            if (typeof saved?.sequential === 'boolean') this.sequential = saved.sequential;
+            this.orderLocked = saved?.locked === true;
+            if (this.orderLocked && typeof saved?.sequential === 'boolean') this.sequential = saved.sequential;
         } catch (_) {}
         document.getElementById('chapter-order-yes').addEventListener('change', event => { if (event.target.checked) this.setSequential(true); });
         document.getElementById('chapter-order-no').addEventListener('change', event => { if (event.target.checked) this.setSequential(false); });
+        document.getElementById('chapter-order-lock').addEventListener('click', () => this.setOrderLocked(!this.orderLocked));
         for (const name of ['sound','play']) {
             const button = document.getElementById(`settings-tab-${name}`);
             button.addEventListener('click', () => this.selectTab(name));
