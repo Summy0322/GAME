@@ -4,6 +4,7 @@ const GameEngine = {
     loadRequestId: 0,
 
     stopMinigame: function() {
+        window.GamePause?.end();
         window.GameMusic?.stop();
         this.loadRequestId++;
         if (window.MemoryGameV2) window.MemoryGameV2.stop();
@@ -136,6 +137,7 @@ const GameEngine = {
             
             console.log('🎮 啟動小遊戲，onComplete 是否存在:', typeof startOptions.onComplete === 'function');
             Minigame.start(startOptions);
+            window.GamePause?.attach(Minigame, minigameName);
         } else {
             if (window.Logger) window.Logger.error('❌ 找不到小遊戲:', minigameName);
             setTimeout(() => {

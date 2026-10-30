@@ -5,6 +5,7 @@ class MinigameSession {
         this.timeouts = new Set();
         this.nodes = new Set();
         this.disposed = false;
+        this.clock = window.GameClock ? new window.GameClock() : null;
     }
 
     listen(target, type, listener, options = {}) {
@@ -14,7 +15,8 @@ class MinigameSession {
 
     timeout(callback, delay) {
         if (this.disposed) return null;
-        const id = setTimeout(() => {
+        const schedule = this.clock ? this.clock.setTimeout.bind(this.clock) : setTimeout;
+        const id = schedule(() => {
             this.timeouts.delete(id);
             if (!this.disposed) callback();
         }, delay);
@@ -28,11 +30,23 @@ class MinigameSession {
         return node;
     }
 
+    interval(callback, delay) {
+        const schedule = this.clock ? this.clock.setInterval.bind(this.clock) : setInterval;
+        return this.disposed ? null : schedule(() => { if (!this.disposed) callback(); }, delay);
+    }
+
+    clearTimer(id) {
+        if (this.clock) this.clock.clearTimeout(id);
+        else { clearTimeout(id); clearInterval(id); }
+        this.timeouts.delete(id);
+    }
+
     dispose() {
         if (this.disposed) return;
         this.disposed = true;
+        this.clock?.dispose();
         this.controller.abort();
-        this.timeouts.forEach(id => clearTimeout(id));
+        this.timeouts.forEach(id => this.clearTimer(id));
         this.timeouts.clear();
         this.nodes.forEach(node => node.remove());
         this.nodes.clear();

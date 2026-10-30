@@ -29,12 +29,12 @@ window.GameMusic = {
     },
     play() {
         const player = this.player, generation = this.generation;
-        if (!player || !this.owner || document.hidden || this.volume === 0) return;
+        if (!player || !this.owner || document.hidden || window.GamePause?.paused || this.volume === 0) return;
         try {
             const result = player.play();
             result?.then(() => {
                 if ((this.player !== player || generation !== this.generation) && !this.fading.has(player)) player.pause();
-                else if (document.hidden) player.pause();
+                else if (document.hidden || window.GamePause?.paused) player.pause();
                 else this.needsGesture = false;
             }).catch(error => {
                 if (this.player === player && generation === this.generation)
@@ -130,7 +130,10 @@ window.GameMusic = {
             }
             else this.play();
         });
-        window.addEventListener('pagehide', () => this.stop());
+        window.addEventListener('pagehide', () => {
+            if (window.GamePause?.owner) this.player?.pause();
+            else this.stop();
+        });
     }
 };
 window.GameMusic.init();

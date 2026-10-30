@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 function load(file,extra={}){const window={},context={window,document:{getElementById(){return null}},console:{log(){},warn(){}},clearTimeout(){},...extra};vm.runInNewContext(fs.readFileSync(file,'utf8'),context);return {window,context};}
 const card=s=>({dataset:{symbol:s},style:{},classList:{set:new Set(),add(c){this.set.add(c)},remove(c){this.set.delete(c)},contains(c){return this.set.has(c)}}});
 function memory(){const {window,context}=load('js/minigames/MemoryGameV2.js');const game=window.MemoryGameV2,jobs=[];
- Object.assign(game,{playerMode:'child',gameMode:'attempts',lightMode:'red',attemptsLeft:20,moves:0,wrongStreak:0,rightStreak:0,matchedPairs:0,totalPairs:5,penaltyRedemption:0,redeemedCount:0,statusText:{style:{}},session:{timeout(fn){jobs.push(fn)}}});
+ Object.assign(game,{playerMode:'child',gameMode:'attempts',lightMode:'red',attemptsLeft:20,moves:0,wrongStreak:0,rightStreak:0,matchedPairs:0,totalPairs:5,penaltyRedemption:0,redeemedCount:0,statusText:{style:{}},session:{timeout(fn){jobs.push(fn)},clearTimer(){}}});
  game.updateStats=game.updateStrikes=()=>{};game.endGame=win=>game.result=win;
  const pair=match=>{game.flippedCards=[card('a'),card(match?'a':'b')];game.checkMatch();while(jobs.length)jobs.shift()();};return {game,pair,jobs,document:context.document};}
 test('child red-light penalty remains; quiz reward offsets only the extra penalty',()=>{
@@ -27,7 +27,7 @@ test('hint skips card selection, memorization, hidden pages and adult mode',()=>
  document.hidden=false;game.playerMode='adult';game.showKnownPairHint();assert.equal(a.classList.contains('memory-known-hint'),false);
 });
 test('hint schedule waits six seconds and stopping invalidates late callbacks',()=>{
- const {game}=memory(),jobs=[];game.gameActive=true;game.canFlip=true;game.flippedCards=[];game.session={timeout(fn,delay){jobs.push({fn,delay});return jobs.length}};
+ const {game}=memory(),jobs=[];game.gameActive=true;game.canFlip=true;game.flippedCards=[];game.session={timeout(fn,delay){jobs.push({fn,delay});return jobs.length},clearTimer(){}};
  let shown=0;game.showKnownPairHint=()=>shown++;game.startKnownHints();assert.equal(jobs[0].delay,6000);assert.equal(shown,0);jobs[0].fn();assert.equal(shown,1);game.stopKnownHints();jobs[1].fn();assert.equal(shown,1);
 });
 test('both chapters offer story-based retry, and chapter 2 retains actual prior-game rewards',()=>{

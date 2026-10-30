@@ -24,7 +24,7 @@ window.DefenseTrailMixin = {
             x: x,
             y: y,
             life: 1.0,
-            createdAt: Date.now()
+            createdAt: this.clock.now()
         });
 
         if (this.trailPoints.length > 100) {
@@ -66,7 +66,7 @@ window.DefenseTrailMixin = {
     updateTrail: function () {
         if (!this.trailCtx) return;
 
-        const now = Date.now();
+        const now = this.clock.now();
         const duration = 100;
 
         let changed = false;

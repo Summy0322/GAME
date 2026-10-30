@@ -88,7 +88,7 @@ window.DefenseAttackRunnerMixin = {
 
     queueWaveCallback: function(callback, delay, attack = null) {
         const session = this.sessionId;
-        const timer = setTimeout(() => {
+        const timer = this.clock.setTimeout(() => {
             if (!this.gameActive || session !== this.sessionId) return;
             if (attack && (attack !== this.currentAttack || attack.finished)) return;
             callback();
@@ -135,7 +135,7 @@ window.DefenseAttackRunnerMixin = {
             return;
         }
         if (attack.avoidTimer) {
-            clearTimeout(attack.avoidTimer);
+            this.clock.clearTimeout(attack.avoidTimer);
             attack.avoidTimer = null;
             this.showAvoidanceProgress(0);
         }
@@ -165,7 +165,7 @@ window.DefenseAttackRunnerMixin = {
         if (!correctDirs.every(dir => attack.swipedDirs.includes(dir))) return;
         // 全部正確方向已在時限內作答，保留飛行／命中動畫，不再判作逾時。
         if (attack.multiTimeout) {
-            clearTimeout(attack.multiTimeout);
+            this.clock.clearTimeout(attack.multiTimeout);
             attack.multiTimeout = null;
         }
         if (attack.pendingShots > 0 || attack.avoidTimer) return;
@@ -227,7 +227,7 @@ window.DefenseAttackRunnerMixin = {
         if (this.state !== this.states.IDLE) {
             console.log(`狀態不是 IDLE (${this.state})，等待...`);
             const session = this.sessionId;
-            setTimeout(() => {
+            this.clock.setTimeout(() => {
                 if (session !== this.sessionId) return;
                 this.processNextAttack();
             }, 100);
@@ -245,7 +245,7 @@ window.DefenseAttackRunnerMixin = {
         const prepareTime = this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2));
 
         const session = this.sessionId;
-        setTimeout(() => {
+        this.clock.setTimeout(() => {
             if (!this.gameActive || session !== this.sessionId || attack !== this.currentAttack || attack.finished) return;
             this.executeAttack(attack);
         }, prepareTime);
@@ -269,7 +269,7 @@ window.DefenseAttackRunnerMixin = {
             case 'END':
                 console.log('遊戲結束，準備結算');
                 this.setState(this.states.RESULT);
-                setTimeout(() => {
+                this.clock.setTimeout(() => {
                     if (!this.gameActive || this.sessionId !== currentSession) return;
                     this.showFinalResult();
                 }, 500);
@@ -279,7 +279,7 @@ window.DefenseAttackRunnerMixin = {
                 this.setState(this.states.NORMAL);
                 this.spawnEnemy(attack.dir);
 
-                const normalTimer = setTimeout(() => {
+                const normalTimer = this.clock.setTimeout(() => {
                     if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== attack || attack.finished) return;
                     if (this.levelConfig.flow && attack.correctHit) return;
                     if (this.state === this.states.NORMAL && this.currentAttack && !this.currentAttack.resolved) {
@@ -303,7 +303,7 @@ window.DefenseAttackRunnerMixin = {
                 this.currentAttack.totalDirs = attack.dirs.length;
                 attack.dirs.forEach((dir) => this.spawnEnemy(dir));
 
-                this.currentAttack.multiTimeout = setTimeout(() => {
+                this.currentAttack.multiTimeout = this.clock.setTimeout(() => {
                     if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== attack || attack.finished) return;
                     if (this.state === this.states.MULTI && this.currentAttack && !this.currentAttack.resolved) {
                         const notSwiped = this.currentAttack.dirs.filter(
@@ -340,7 +340,7 @@ window.DefenseAttackRunnerMixin = {
                 this.spawnEnemy(attack.dir, true, false);
                 this.showAvoidanceProgress(attack.wait);
 
-                this.currentAttack.decoyTimeout = setTimeout(() => {
+                this.currentAttack.decoyTimeout = this.clock.setTimeout(() => {
                     if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== attack || attack.finished) return;
                     if (this.state === this.states.DECOY && this.currentAttack && !this.currentAttack.resolved) {
                         console.log('✅ DECOY 成功！沒有滑動石頭');
@@ -369,7 +369,7 @@ window.DefenseAttackRunnerMixin = {
                     this.spawnEnemy(dir, false, isWrong);
                 });
 
-                this.currentAttack.multiTimeout = setTimeout(() => {
+                this.currentAttack.multiTimeout = this.clock.setTimeout(() => {
                     if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== attack || attack.finished) return;
                     if (this.levelConfig.flow) {
                         this.resolveFlowMixed(attack);
@@ -422,7 +422,7 @@ window.DefenseAttackRunnerMixin = {
         }
 
         console.log(`設定攻擊計時器，等待 ${wait}ms`);
-        const timer = setTimeout(() => {
+        const timer = this.clock.setTimeout(() => {
             if (
                 (this.state === this.states.NORMAL || this.state === this.states.MULTI) &&
                 this.currentAttack &&
@@ -448,7 +448,7 @@ window.DefenseAttackRunnerMixin = {
 
         this.heavyBlockReady = false;
         if (this.heavyBlockTimeout) {
-            clearTimeout(this.heavyBlockTimeout);
+            this.clock.clearTimeout(this.heavyBlockTimeout);
             this.heavyBlockTimeout = null;
         }
 
@@ -456,7 +456,7 @@ window.DefenseAttackRunnerMixin = {
         this.shieldEndTime = 0;
 
         if (this.currentAttack && this.currentAttack.multiTimeout) {
-            clearTimeout(this.currentAttack.multiTimeout);
+            this.clock.clearTimeout(this.currentAttack.multiTimeout);
             this.currentAttack.multiTimeout = null;
         }
 
@@ -466,13 +466,13 @@ window.DefenseAttackRunnerMixin = {
 
         if (this.aoeTimers) {
             this.aoeTimers.forEach((t) => {
-                if (t) clearTimeout(t);
-                if (t) clearInterval(t);
+                if (t) this.clock.clearTimeout(t);
+                if (t) this.clock.clearInterval(t);
             });
             this.aoeTimers = [];
         }
         if (this.currentAttack && this.currentAttack.timer) {
-            clearTimeout(this.currentAttack.timer);
+            this.clock.clearTimeout(this.currentAttack.timer);
             this.currentAttack.timer = null;
         }
 
@@ -483,7 +483,7 @@ window.DefenseAttackRunnerMixin = {
 
         ['up', 'down', 'left', 'right'].forEach((dir) => {
             if (this.lightIntervals[dir]) {
-                clearInterval(this.lightIntervals[dir]);
+                this.clock.clearInterval(this.lightIntervals[dir]);
                 this.lightIntervals[dir] = null;
             }
         });
@@ -504,7 +504,7 @@ window.DefenseAttackRunnerMixin = {
         console.log(`⏱️ 下一攻擊將在 ${gap}ms 後開始`);
 
         const session = this.sessionId;
-        setTimeout(() => {
+        this.clock.setTimeout(() => {
             if (session !== this.sessionId) return;
             this.processNextAttack();
         }, gap);

@@ -23,7 +23,7 @@ window.DialogueSkip = {
     },
     render() {
         const button = document.getElementById('dialogue-skip');
-        if (button) button.hidden = !this.enabled || !this.context;
+        if (button) button.hidden = !this.enabled || !this.context || !!window.GamePause?.paused;
         const toggle = document.getElementById('skip-setting-toggle');
         if (toggle) {
             toggle.textContent = this.enabled ? '已開啟' : this.unlocked ? '開啟' : '密碼解鎖';
