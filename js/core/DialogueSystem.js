@@ -819,7 +819,6 @@ const DialogueSystem = {
         // 第一題顯示後才啟動音樂，前導對話不播放。
         this.showQuizQuestion();
         window.GameMusic?.start('quiz');
-        window.GamePause?.attach(this, 'quiz');
     },
 
     // 顯示一題問答

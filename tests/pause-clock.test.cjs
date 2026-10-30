@@ -72,10 +72,14 @@ test('hidden tab and portrait auto-pause, visible return stays paused and interr
     f.document.hidden=false;f.portrait(true);pause.continueGame();f.tick(5000);assert.equal(pause.paused,true);
     f.portrait(false);pause.continueGame();f.tick(3000);assert.equal(pause.paused,false);
 });
-test('third-chapter pause cancels dragging without replaying completion and resumes immediately',()=>{
-    const f=fixture(),pause=f.window.GamePause;let canceled=0;
-    pause.attach({container:f.element(),session:{clock:f.clock()},cancelDrag(){canceled++;}},'interact');
-    pause.pause();pause.pause();assert.equal(canceled,1);pause.continueGame();assert.equal(pause.paused,false);
+test('quiz and third chapter never enable manual or automatic pause',()=>{
+    for (const kind of ['quiz','interact']) {
+        const f=fixture(),pause=f.window.GamePause,clock=f.clock();let canceled=0,work=0;
+        pause.attach({container:f.element(),session:{clock},cancelDrag(){canceled++;}},kind);
+        assert.equal(pause.owner,null);assert.equal(f.nodes.get('game-pause-button').hidden,true);
+        clock.setTimeout(()=>work++,1000);f.document.hidden=true;f.emit('visibilitychange');f.portrait(true);pause.pause();f.tick(1000);
+        assert.equal(canceled,0);assert.equal(pause.paused,false);assert.equal(work,1);
+    }
 });
 test('exit or ending invalidates countdown and a stale game cannot dismiss the next pause session',()=>{
     const f=fixture(),pause=f.window.GamePause,first={session:{clock:f.clock()}},second={session:{clock:f.clock()}};

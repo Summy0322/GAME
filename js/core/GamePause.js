@@ -6,6 +6,7 @@ window.GamePause = {
     extraRoots: [],
     attach(owner, kind) {
         this.end();
+        if (!['defense', 'memory'].includes(kind)) return;
         this.owner = owner;
         this.kind = kind;
         this.clock = owner.pauseClock || owner.session?.clock || null;
@@ -55,7 +56,6 @@ window.GamePause = {
             return;
         }
         const generation = this.generation;
-        if (this.kind === 'interact') { this.resume(); return; }
         let remaining = 3;
         const status = document.getElementById('game-pause-status');
         document.getElementById('game-pause-resume').disabled = true;
