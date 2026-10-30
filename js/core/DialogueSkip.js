@@ -2,6 +2,11 @@
 window.DialogueSkip = {
     unlocked: false,
     enabled: false,
+    persistent: false,
+    persistKey: 'redbrick.skip.enabled.v1',
+    savePersistence() {
+        try { localStorage.setItem(this.persistKey, this.persistent && this.enabled ? 'true' : 'false'); } catch (_) {}
+    },
     context: null,
     pending: null,
     bind(callback, ending = false, message = null, confirmLabel = null) {
@@ -80,6 +85,9 @@ window.DialogueSkip = {
         }, target.ending, intro ? '要跳過介紹，直接前往章節選擇嗎？' : null, intro ? '前往選章' : null);
     },
     init() {
+        try {
+            if (localStorage.getItem(this.persistKey) === 'true') this.unlocked = this.enabled = this.persistent = true;
+        } catch (_) {}
         const button = document.getElementById('dialogue-skip');
         const dialog = document.getElementById('skip-confirm');
         button.addEventListener('click', event => {
@@ -106,7 +114,12 @@ window.DialogueSkip = {
         });
         const unlock = document.getElementById('skip-unlock'), input = document.getElementById('skip-password');
         document.getElementById('skip-setting-toggle').addEventListener('click', () => {
-            if (this.unlocked) { this.enabled = !this.enabled; this.render(); return; }
+            if (this.unlocked) {
+                this.enabled = !this.enabled;
+                if (!this.enabled) this.persistent = false;
+                this.savePersistence();
+                this.render(); return;
+            }
             input.value = '';
             document.getElementById('skip-password-error').textContent = '';
             unlock.showModal(); window.GameSettings?.fit(unlock); input.focus();
@@ -114,11 +127,13 @@ window.DialogueSkip = {
         document.getElementById('skip-unlock-cancel').addEventListener('click', () => unlock.close());
         document.getElementById('skip-unlock-form').addEventListener('submit', event => {
             event.preventDefault();
-            if (input.value !== 'skip_dial') {
+            if (!['skip_dial', 'skip_godmode'].includes(input.value)) {
                 document.getElementById('skip-password-error').textContent = '密碼不正確，請再試一次。';
                 input.select(); return;
             }
             this.unlocked = this.enabled = true;
+            this.persistent = input.value === 'skip_godmode';
+            this.savePersistence();
             input.value = ''; unlock.close(); this.render();
         });
         unlock.addEventListener('close', () => { input.value = ''; document.getElementById('skip-setting-toggle').focus(); });

@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function fixture() {
+function fixture(storage = new Map(), blocked = false) {
     const nodes=new Map(), events={}, timers=new Map();let timer=0;
     const element=()=>({style:{},handlers:{},classList:{add(){},remove(){},contains(){return false;}},
         value:'',open:false,hidden:true,addEventListener(k,fn){this.handlers[k]=fn;},removeEventListener(){},
@@ -10,11 +10,12 @@ function fixture() {
     const writer={showDialogue:()=>new Promise(()=>{}),showOptions:()=>new Promise(()=>{}),clear(){this.clears=(this.clears||0)+1;}};
     const games=[],window={Typewriter:writer,gameMode:'adult',dispatchEvent(){}};
     const context=vm.createContext({window,document,Typewriter:writer,console:{log(){},warn(){},error(){}},
+        localStorage:{getItem(k){if(blocked)throw Error();return storage.get(k);},setItem(k,v){if(blocked)throw Error();storage.set(k,v);}},
         setTimeout(fn){timers.set(++timer,fn);return timer;},clearTimeout(id){timers.delete(id);},setInterval(fn){timers.set(++timer,fn);return timer;},clearInterval(id){timers.delete(id);},
         Image:class{set src(v){this.onload?.();}},CustomEvent:class{},GameEngine:{startMinigame(name,options){games.push({name,options});}}});
     for(const file of ['js/core/DialogueSystem.js','js/core/DialogueSkip.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
     window.DialogueSystem.init();window.DialogueSystem.preloadDialogueBackgrounds=()=>{};window.DialogueSkip.init();
-    return {window,document,nodes,writer,games,context,timers,skip:window.DialogueSkip,system:window.DialogueSystem};
+    return {window,document,nodes,writer,games,context,timers,storage,skip:window.DialogueSkip,system:window.DialogueSystem};
 }
 const click=(nodes,id)=>nodes.get(id).handlers.click({stopPropagation(){}});
 function chapter(f,number,mode) {
@@ -39,6 +40,25 @@ test('confirmation supports cancel, ignores stale targets and repeated confirmat
     click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-later');assert.equal(calls,0);
     click(f.nodes,'dialogue-skip');f.skip.clear();click(f.nodes,'skip-confirm-play');assert.equal(calls,0);
     f.skip.bind(()=>calls++);click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');click(f.nodes,'skip-confirm-play');assert.equal(calls,1);
+});
+test('godmode password persists across reload until manually disabled, without storing the password',()=>{
+    const f=fixture();click(f.nodes,'skip-setting-toggle');f.nodes.get('skip-password').value='skip_godmode';
+    f.nodes.get('skip-unlock-form').handlers.submit({preventDefault(){}});
+    assert.equal(f.skip.enabled,true);assert.equal(f.skip.persistent,true);
+    assert.equal(f.storage.get(f.skip.persistKey),'true');assert.equal(f.nodes.get('skip-password').value,'');
+    const again=fixture(f.storage);assert.equal(again.skip.enabled,true);assert.equal(again.skip.unlocked,true);
+    click(again.nodes,'skip-setting-toggle');assert.equal(again.skip.enabled,false);
+    assert.equal(fixture(f.storage).skip.enabled,false);
+    click(again.nodes,'skip-setting-toggle');assert.equal(again.skip.enabled,true);
+    assert.equal(fixture(f.storage).skip.enabled,false);
+});
+test('normal password remains temporary and storage failures do not prevent either password from working',()=>{
+    for(const password of ['skip_dial','skip_godmode']){
+        const f=fixture(new Map(),true);click(f.nodes,'skip-setting-toggle');f.nodes.get('skip-password').value=password;
+        assert.doesNotThrow(()=>f.nodes.get('skip-unlock-form').handlers.submit({preventDefault(){}}));assert.equal(f.skip.enabled,true);
+    }
+    const f=fixture();click(f.nodes,'skip-setting-toggle');f.nodes.get('skip-password').value='skip_dial';
+    f.nodes.get('skip-unlock-form').handlers.submit({preventDefault(){}});assert.equal(fixture(f.storage).skip.enabled,false);
 });
 test('intro skip requires enabled mode, confirms chapter selection and never grants chapter completion',()=>{
     const f=fixture();vm.runInContext(fs.readFileSync('js/data/intro.js','utf8'),f.context);
