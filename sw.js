@@ -1,5 +1,5 @@
 // 首頁只預存程式；圖片與字型在實際使用後快取，音樂／影片按需載入。
-const CACHE_NAME = 'game-v37';
+const CACHE_NAME = 'game-v40';
 const urlsToCache = [
   "/GAME/",
   "/GAME/index.html",
@@ -11,6 +11,7 @@ const urlsToCache = [
   "/GAME/css/dialogue-layout.css",
   "/GAME/css/audio-settings.css",
   "/GAME/css/dialogue-skip.css",
+  "/GAME/css/game-settings.css",
   "/GAME/js/core/Logger.js",
   "/GAME/js/core/ErrorReporter.js",
   "/GAME/js/data/minigameAssets.js",
@@ -20,6 +21,7 @@ const urlsToCache = [
   "/GAME/js/core/AudioManager.js",
   "/GAME/js/core/GameMusic.js",
   "/GAME/js/core/AudioSettings.js",
+  "/GAME/js/core/GameSettings.js",
   "/GAME/js/core/SceneManager.js",
   "/GAME/js/core/Typewriter.js",
   "/GAME/js/core/DialogueSystem.js",

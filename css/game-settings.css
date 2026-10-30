@@ -1,0 +1,42 @@
+/* 固定設計尺寸，由舞台實際邊界等比例縮放，原生 dialog 仍保留模態與鍵盤行為。 */
+#audio-settings, #skip-unlock, #skip-confirm {
+    position: fixed;
+    box-sizing: border-box;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    transform: translate(-50%, -50%) scale(var(--settings-scale, 1));
+    transform-origin: center;
+}
+#audio-settings { width: 660px; height: 340px; padding: 16px 22px 20px; }
+#skip-unlock { width: 460px; height: 380px; padding: 22px; }
+#skip-unlock h2 { margin: 0 0 8px; font-size: 24px; line-height: 28px; }
+#skip-unlock p { margin: 6px 0; line-height: 24px; }
+#skip-unlock label { margin: 6px 0; line-height: 24px; }
+#skip-unlock .skip-dialog-actions { margin-top: 12px; }
+#skip-confirm { width: 460px; height: 200px; padding: 22px; display: none; }
+#skip-confirm[open] { display: flex; flex-direction: column; justify-content: center; }
+#audio-settings h2 { margin: 0 44px 8px; font-size: 24px; line-height: 40px; }
+#audio-settings .settings-tabs { display: flex; gap: 10px; margin-bottom: 12px; }
+#audio-settings .settings-tabs button { flex: 1; border-radius: 12px; min-height: 40px; background: #455e70; font-size: 18px; }
+#audio-settings .settings-tabs button[aria-selected="true"] { background: #e67e22; }
+#audio-settings [role="tabpanel"][hidden] { display: none; }
+#audio-settings .audio-setting-row { grid-template-columns: 128px 1fr 48px 44px; gap: 10px; margin: 8px 0; font-size: 18px; }
+#audio-settings .audio-setting-row label { grid-column: 1; grid-row: 1; }
+#audio-settings .audio-setting-row output { grid-column: 3; grid-row: 1; }
+#audio-settings .audio-setting-row input { grid-column: 2; grid-row: 1; }
+#audio-settings .audio-mute-toggle { grid-column: 4; grid-row: 1; }
+#audio-settings .play-setting-row, #audio-settings .skip-setting-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 8px 0; margin: 0; font-size: 20px; }
+#audio-settings .skip-setting-row { border-top: 1px solid #ffffff40; margin-top: 8px; }
+#audio-settings small { display: block; font-size: 14px; line-height: 1.5; color: #e6d5bd; }
+#audio-settings #skip-setting-toggle { min-width: 90px; padding: 6px 14px; border-radius: 24px; font-size: 18px; flex: none; }
+.chapter-order-choice { display: flex; flex: none; gap: 4px; padding: 4px; border: 1px solid #e6b77b; border-radius: 28px; background: #203140; }
+.chapter-order-choice label { position: relative; cursor: pointer; }
+.chapter-order-choice input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.chapter-order-choice span { display: grid; place-items: center; width: 60px; height: 44px; border-radius: 24px; color: #e6d5bd; font-size: 18px; }
+.chapter-order-choice input:checked + span { background: #e67e22; color: white; font-weight: bold; box-shadow: 0 2px 5px #0003; }
+.chapter-order-choice input:focus-visible + span { outline: 3px solid #ffd700; outline-offset: 2px; }
+.chapter-order-choice label:hover span { color: white; }
+.chapter-order-controls { display: flex; align-items: center; gap: 8px; flex: none; }
+#audio-settings #chapter-order-lock { min-width: 104px; padding: 6px 10px; border-radius: 24px; font-size: 16px; }
+.chapter-order-choice input:disabled + span { opacity: .55; cursor: not-allowed; }

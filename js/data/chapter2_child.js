@@ -58,8 +58,8 @@ const chapter2ChildData = {
                 thumb: "assets/images/memory/碗粿.png",
                 fullImage: "assets/images/memory/碗粿.png",
                 title: "碗粿",
-                summary: "傳統的碗粿小吃。",
-                story: "用米漿做成的碗粿，口感軟軟的，配上醬油和配料，是很傳統的台灣小吃。"
+                summary: "把米漿裝進碗裡蒸熟的傳統點心。",
+                story: "碗粿是用米漿做的。把米漿裝進碗裡，搭配香菇、豬肉等配料，再放進鍋裡蒸熟，就成了一碗米食點心。每家的配料可能不一樣，看看你認得哪些食材！"
             }
         ],
     

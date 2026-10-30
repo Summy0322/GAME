@@ -89,6 +89,7 @@ window.DialogueSkip = {
                 ? '要跳過剩餘對話，完成本章嗎？' : '要跳過對話，直接進行小遊戲嗎？');
             document.getElementById('skip-confirm-play').textContent = this.context.ending ? '完成本章' : '直接遊玩';
             dialog.showModal();
+            window.GameSettings?.fit(dialog);
             document.getElementById('skip-confirm-later').focus();
         });
         // 原生 dialog 阻擋背景點擊；內部事件也不傳遞至劇情。
@@ -107,7 +108,7 @@ window.DialogueSkip = {
             if (this.unlocked) { this.enabled = !this.enabled; this.render(); return; }
             input.value = '';
             document.getElementById('skip-password-error').textContent = '';
-            unlock.showModal(); input.focus();
+            unlock.showModal(); window.GameSettings?.fit(unlock); input.focus();
         });
         document.getElementById('skip-unlock-cancel').addEventListener('click', () => unlock.close());
         document.getElementById('skip-unlock-form').addEventListener('submit', event => {

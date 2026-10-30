@@ -447,9 +447,22 @@ function setupBackButton() {
 // 關卡狀態：'open' = 開放, 'locked' = 鎖定, 'completed' = 已完成
 const chapterStatus = {
     chapter1: 'open',
-    chapter2: 'open',
-    chapter3: 'open'
+    chapter2: 'locked',
+    chapter3: 'locked'
 };
+
+// 完成紀錄與遊玩順序分開：切換設定不會清除已完成的章節。
+function applyChapterOrder() {
+    let previousCompleted = true;
+    for (const chapter of ['chapter1','chapter2','chapter3']) {
+        const completed = chapterStatus[chapter] === 'completed';
+        if (!completed) chapterStatus[chapter] = window.GameSettings?.sequential === false || previousCompleted ? 'open' : 'locked';
+        previousCompleted = previousCompleted && completed;
+    }
+    saveChapterStatus();
+    updateChapterButtons();
+}
+window.applyChapterOrder = applyChapterOrder;
 
 // 儲存到 localStorage
 function saveChapterStatus() {
@@ -478,7 +491,7 @@ function loadChapterStatus() {
     } catch (error) {
         if (window.Logger) window.Logger.warn('無法讀取關卡進度，使用預設狀態', error);
     }
-    updateChapterButtons();
+    applyChapterOrder();
 }
 
 // 更新按鈕外觀
@@ -513,8 +526,7 @@ function updateChapterButtons() {
 function setChapterStatus(chapterId, status) {
     if (Object.prototype.hasOwnProperty.call(chapterStatus, chapterId) && ['open', 'locked', 'completed'].includes(status)) {
         chapterStatus[chapterId] = status;
-        saveChapterStatus();
-        updateChapterButtons();
+        applyChapterOrder();
         if (window.Logger) window.Logger.info(`🔧 設定 ${chapterId} 狀態為: ${status}`);
     }
 }
@@ -565,7 +577,6 @@ function resetAllChapters() {
     chapterStatus.chapter1 = 'open';
     chapterStatus.chapter2 = 'open';
     chapterStatus.chapter3 = 'open';
-    saveChapterStatus();
-    updateChapterButtons();
+    applyChapterOrder();
     if (window.Logger) window.Logger.info('🔄 所有關卡已重設');
 }

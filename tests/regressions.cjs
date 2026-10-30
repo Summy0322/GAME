@@ -14,7 +14,7 @@ function main(storage = {}) {
     return context;
 }
 
-test('completed chapters survive a new session and reset reopens all chapters', () => {
+test('completed chapters survive a new session and reset restores ordered chapter access', () => {
     const data = new Map();
     const storage = { getItem: k => data.get(k), setItem: (k, v) => data.set(k, v) };
     const first = main(storage);
@@ -24,7 +24,7 @@ test('completed chapters survive a new session and reset reopens all chapters', 
     assert.equal(vm.runInContext('chapterStatus.chapter1', second), 'completed');
     vm.runInContext('resetAllChapters()', second);
     assert.deepEqual(JSON.parse(data.get('chapterStatus')), {
-        chapter1: 'open', chapter2: 'open', chapter3: 'open'
+        chapter1: 'open', chapter2: 'locked', chapter3: 'locked'
     });
 });
 
@@ -71,7 +71,7 @@ test('only known chapters and valid status values are restored', () => {
     const context = main({ getItem: () => '{"chapter1":"completed","chapter2":"bad","extra":"open"}' });
     vm.runInContext("loadChapterStatus(); setChapterStatus('chapter3', 'bad')", context);
     assert.equal(vm.runInContext('JSON.stringify(chapterStatus)', context),
-        '{"chapter1":"completed","chapter2":"open","chapter3":"open"}');
+        '{"chapter1":"completed","chapter2":"open","chapter3":"locked"}');
 });
 
 test('preload list includes scene and option backgrounds and removes duplicates', () => {
