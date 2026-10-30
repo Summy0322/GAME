@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="css/viewport.css">
     <link rel="stylesheet" href="css/dialogue-layout.css">
     <link rel="stylesheet" href="css/audio-settings.css">
+    <link rel="stylesheet" href="css/dialogue-skip.css">
 
     <!-- Swiper.js CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -125,6 +126,22 @@
             <div id="audio-master-row" class="audio-setting-row"><label for="audio-master">整體音量</label><output id="audio-master-value" for="audio-master">100%</output><input id="audio-master" type="range" min="0" max="100" value="100"><button id="audio-master-mute" class="audio-mute-toggle" type="button" aria-label="開啟整體音量靜音" aria-pressed="false">🔊</button></div>
             <div id="audio-sfx-row" class="audio-setting-row"><label for="audio-sfx">音效與對話音</label><output id="audio-sfx-value" for="audio-sfx">100%</output><input id="audio-sfx" type="range" min="0" max="100" value="100"><button id="audio-sfx-mute" class="audio-mute-toggle" type="button" aria-label="開啟音效與對話音靜音" aria-pressed="false">🔊</button></div>
             <div id="audio-music-row" class="audio-setting-row"><label for="audio-music">背景音樂</label><output id="audio-music-value" for="audio-music">100%</output><input id="audio-music" type="range" min="0" max="100" value="100"><button id="audio-music-mute" class="audio-mute-toggle" type="button" aria-label="開啟背景音樂靜音" aria-pressed="false">🔊</button></div>
+            <div class="skip-setting-row"><span>跳過對話 <small>本次遊玩有效</small></span><button id="skip-setting-toggle" type="button" aria-pressed="false">密碼解鎖</button></div>
+        </dialog>
+        <button id="dialogue-skip" type="button" aria-label="跳過對話" title="跳過對話" hidden>&gt;&gt;</button>
+        <dialog id="skip-unlock" class="skip-dialog" aria-labelledby="skip-unlock-title">
+            <form id="skip-unlock-form">
+                <h2 id="skip-unlock-title">解鎖跳過對話</h2>
+                <p>開啟後可略過劇情，直接進行小遊戲。</p>
+                <label for="skip-password">請輸入密碼</label>
+                <input id="skip-password" type="password" autocomplete="off" maxlength="64" required>
+                <p id="skip-password-error" role="alert"></p>
+                <div class="skip-dialog-actions"><button id="skip-unlock-cancel" type="button" class="skip-later">稍後</button><button type="submit">解鎖並開啟</button></div>
+            </form>
+        </dialog>
+        <dialog id="skip-confirm" class="skip-dialog" aria-labelledby="skip-confirm-text">
+            <p id="skip-confirm-text">要跳過對話，直接進行小遊戲嗎？</p>
+            <div class="skip-dialog-actions"><button id="skip-confirm-later" type="button" class="skip-later">稍後</button><button id="skip-confirm-play" type="button">直接遊玩</button></div>
         </dialog>
 
         <!-- 音效控制（隱藏） -->
@@ -164,6 +181,7 @@
     
     <!-- 3. DialogueSystem 依賴 Typewriter -->
     <script src="js/core/DialogueSystem.js"></script>
+    <script src="js/core/DialogueSkip.js"></script>
     
     <!-- 4. 對話資料 -->
     <script src="js/data/intro.js"></script>

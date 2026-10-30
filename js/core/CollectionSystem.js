@@ -20,6 +20,74 @@ const CollectionSystem = {
     completeBtn: null,
     backgroundDiv: null,
     dialogueOverlay: null,
+    dialogueRun: 0,
+    cancelDialogueWait: null,
+    collectionRun: 0,
+    shopRequest: 0,
+    hotspots: [],
+    getChapterData: function() {
+        return window.gameMode === 'child' ? window.Chapter3_Child : window.Chapter3_Teen;
+    },
+    nextSkippedShop: function() {
+        const chapter = this.getChapterData();
+        for (const shopId of ['herbal', 'knife', 'grocery']) {
+            const index = this.hotspots.findIndex(shop => shop.shopId === shopId);
+            if (index >= 0 && !this.collectedItems[index] && !chapter?.shopStatus?.[shopId]) return index;
+        }
+        return -1;
+    },
+    startNextSkippedShop: function() {
+        if (!this.isActive || this.isGameStarting) return;
+        this.shopRequest++;
+        const index = this.nextSkippedShop();
+        if (index < 0) { this.finishSkippedCollection(); return; }
+        this.clearDialogueSkip();
+        window.Typewriter?.clear();
+        this.isAnimating = false;
+        this.isProcessingShop = true;
+        this.currentCollectingIndex = index;
+        this.hideShopLoading();
+        this.enableClicksAfterLoading();
+        const hotspot = this.hotspots[index];
+        if (hotspot.dialogue?.background && window.DialogueSystem?.gameBackground)
+            window.DialogueSystem.gameBackground.style.backgroundImage = `url('${hotspot.dialogue.background}')`;
+        this.startGameThenCollect(index, hotspot);
+    },
+    skipCollectedItem: function(itemIndex) {
+        if (!this.isActive) return;
+        // 成功回呼已完成扣款；此處只完成物品紀錄與畫面，不再扣款。
+        this.clearDialogueSkip();
+        window.Typewriter?.clear();
+        this.collectedItems[itemIndex] = true;
+        const shadow = document.getElementById(`item-shadow-${itemIndex}`);
+        const color = document.getElementById(`item-color-${itemIndex}`);
+        if (shadow) shadow.style.display = 'none';
+        if (color) color.style.display = 'block';
+        this.isProcessingShop = false;
+        this.startNextSkippedShop();
+    },
+    finishSkippedCollection: function() {
+        const chapter = this.getChapterData();
+        if (!this.isActive || !chapter?.isAllComplete() || !this.collectedItems.every(Boolean)) return;
+        const callback = this.onCompleteCallback;
+        this.onCompleteCallback = null;
+        this.close();
+        callback?.();
+        // 接回原有結尾後略過文字，仍由原有章節完成方法記錄。
+        window.DialogueSystem?.endDialogue(false);
+    },
+    bindMapSkip: function() {
+        const index = this.nextSkippedShop();
+        window.DialogueSkip?.bind(() => this.startNextSkippedShop(), index < 0,
+            index < 0 ? '要略過完成蒐集動畫與剩餘對話，完成本章嗎？'
+                : `要略過地圖選店，直接挑戰${this.hotspots[index].shopName}嗎？`);
+    },
+    clearDialogueSkip: function() {
+        this.dialogueRun++;
+        this.cancelDialogueWait?.();
+        this.cancelDialogueWait = null;
+        window.DialogueSkip?.clear();
+    },
     
     // 物品資料
     items: [],
@@ -407,6 +475,7 @@ const CollectionSystem = {
     
     // 開啟蒐集模式
     open: function(config, onComplete) {
+        const collectionRun = ++this.collectionRun;
         console.log('🗺️ 開啟蒐集模式:', config);
         
         // 確保 DOM 已建立
@@ -421,8 +490,9 @@ const CollectionSystem = {
         }
         
         this.items = config.items;
+        this.hotspots = config.hotspots;
         this.totalItems = this.items.length;
-        this.collectedItems = new Array(this.totalItems).fill(false);
+        this.collectedItems = config.hotspots.map(shop => !!this.getChapterData()?.shopStatus?.[shop.shopId]);
         this.onCompleteCallback = onComplete;
         this.isActive = true;
 
@@ -455,8 +525,10 @@ const CollectionSystem = {
             
             // 使用 LoadingManager 預載入所有圖片
             LoadingManager.showAndLoad(imagesToPreload, () => {
+                if (collectionRun !== this.collectionRun || !this.isActive) return;
                 console.log('✅ 所有圖片預載完成');
                 this.hideSimpleLoading();
+                if (config.skipToFirstShop) { this.startNextSkippedShop(); return; }
                 this.showMapMode();
                 if (config.introDialogue) {
                     this.showIntroDialogue(config.introDialogue);
@@ -464,6 +536,10 @@ const CollectionSystem = {
             });
         } else {
             // 沒有需要預載的圖片，直接顯示
+            if (config.skipToFirstShop) {
+                this.startNextSkippedShop();
+                return;
+            }
             this.showMapMode();
             if (config.introDialogue) {
                 this.showIntroDialogue(config.introDialogue);
@@ -479,6 +555,8 @@ const CollectionSystem = {
     
     // 顯示地圖模式
     showMapMode: function() {
+        this.clearDialogueSkip();
+        if (this.isActive && this.hotspots.length) this.bindMapSkip();
         if (this.mapContainer) {
             this.mapContainer.style.display = 'block';
         }
@@ -514,6 +592,7 @@ const CollectionSystem = {
     
     // 小遊戲模式
     showGameMode: function() {
+        this.clearDialogueSkip();
         if (this.mapContainer) {
             this.mapContainer.style.display = 'none';
         }
@@ -571,6 +650,10 @@ const CollectionSystem = {
                 left: 0;
             `;
             colorImg.id = `item-color-${index}`;
+            if (this.collectedItems[index]) {
+                shadowImg.style.display = 'none';
+                colorImg.style.display = 'block';
+            }
             
             itemDiv.appendChild(shadowImg);
             itemDiv.appendChild(colorImg);
@@ -677,6 +760,9 @@ const CollectionSystem = {
         }
         
         console.log(`📍 點擊定位點 ${itemIndex + 1}`);
+        this.clearDialogueSkip();
+        const request = ++this.shopRequest;
+        const collectionRun = this.collectionRun;
         this.currentCollectingIndex = itemIndex;
         
         // ✅ 標記開始處理
@@ -687,6 +773,7 @@ const CollectionSystem = {
         
         // ✅ 等待至少 1 秒，確保 loading 有足夠時間顯示
         await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!this.isActive || request !== this.shopRequest || collectionRun !== this.collectionRun) return;
         
         // 檢查對話是否有選項
         if (hotspot.dialogue && hotspot.dialogue.options && hotspot.dialogue.options.length > 0) {
@@ -708,7 +795,16 @@ const CollectionSystem = {
 
     // 顯示有選項的對話（防止重複觸發）
     showDialogueWithOptions: async function(dialogue, onStartGame) {
+        this.clearDialogueSkip();
+        const run = this.dialogueRun;
         let gameStarted = false;
+        const start = () => {
+            if (gameStarted || run !== this.dialogueRun || !this.isActive) return;
+            gameStarted = true;
+            this.clearDialogueSkip();
+            window.Typewriter?.clear();
+            if (onStartGame) onStartGame();
+        };
         
         if (typeof Typewriter !== 'undefined') {
             // ✅ 需要載入的圖片清單
@@ -737,6 +833,7 @@ const CollectionSystem = {
             }
             
             // ✅ 圖片載入完成後，切換到對話模式
+            if (run !== this.dialogueRun || !this.isActive) return;
             this.showDialogueMode();
             this.hideShopLoading();
             
@@ -748,6 +845,7 @@ const CollectionSystem = {
             }
             
             // ✅ 等待對話顯示完成（打字完成 + 玩家點擊）
+            window.DialogueSkip?.bind(start);
             await Typewriter.showDialogue(
                 dialogue.name || '老闆',
                 dialogue.text,
@@ -758,6 +856,7 @@ const CollectionSystem = {
             );
             
             // ✅ 對話完成後，才顯示選項按鈕
+            if (run !== this.dialogueRun || !this.isActive) return;
             if (dialogue.options && dialogue.options.length > 0) {
                 const optionsContainer = document.getElementById('options-container');
                 if (optionsContainer) {
@@ -784,12 +883,7 @@ const CollectionSystem = {
                             const indicator = document.getElementById('typing-complete-indicator');
                             if (indicator) indicator.remove();
                             
-                            if (!gameStarted) {
-                                gameStarted = true;
-                                console.log('玩家選擇:', opt.text);
-                                console.log('進入遊戲');
-                                if (onStartGame) onStartGame();
-                            }
+                            start();
                         };
                         
                         optionsContainer.appendChild(btn);
@@ -804,6 +898,7 @@ const CollectionSystem = {
 
     // 啟動遊戲，完成後蒐集物品
     startGameThenCollect: function(itemIndex, hotspot) {
+        const collectionRun = this.collectionRun;
         console.log(`🎮 啟動遊戲: ${hotspot.shopName}`);
         
         const gameConfig = hotspot.gameConfig;
@@ -822,7 +917,9 @@ const CollectionSystem = {
             
             GameEngine.startMinigame('interact', {
                 ...gameConfigCopy,
+                requiredBackground: hotspot.dialogue?.background,
                 onComplete: (success) => {
+                    if (!this.isActive || collectionRun !== this.collectionRun) return;
                     console.log(`🎮 遊戲結果回调: ${success ? '成功' : '失敗'}`);
                     this.isGameStarting = false;
                     
@@ -835,7 +932,9 @@ const CollectionSystem = {
                         }
                         
                         let canComplete = false;
-                        if (chapterData && chapterData.markShopComplete) {
+                        if (chapterData?.shopStatus?.[hotspot.shopId]) {
+                            canComplete = true;
+                        } else if (chapterData && chapterData.markShopComplete) {
                             canComplete = chapterData.markShopComplete(hotspot.shopId);
                             console.log(`💰 扣款結果: ${canComplete ? '成功' : '失敗'}`);
                         }
@@ -861,14 +960,14 @@ const CollectionSystem = {
                                 console.log('📖 所有成功對話完成，開始蒐集物品');
                                 this.collectItemWithKeepDialogue(itemIndex);
                                 this.isProcessingShop = false;
-                            });
+                            }, () => this.skipCollectedItem(itemIndex));
                         } else {
                             this.collectItemWithKeepDialogue(itemIndex);
                             this.isProcessingShop = false;
                         }
                     } else {
                         // ✅ 失敗時也要釋放標記和清理
-                        this.showMessage('再試一次吧！', '#ff6666');
+                        this.showMessage('已返回地圖，可以選擇店家繼續遊玩。', '#ffd700');
                         this.showMapMode();
                         this.hideShopLoading();  // 確保 loading 被隱藏
                         this.isProcessingShop = false;  // ✅ 釋放標記
@@ -892,7 +991,24 @@ const CollectionSystem = {
     },
 
     // 依序顯示對話（每句都會等玩家點擊）- 使用 DialogueSystem
-    showDialogueSequence: async function(dialogues, onComplete) {
+    showDialogueSequence: async function(dialogues, onComplete, onSkip = null) {
+        this.clearDialogueSkip();
+        const run = this.dialogueRun;
+        const finish = () => {
+            if (run !== this.dialogueRun || !this.isActive) return;
+            this.clearDialogueSkip();
+            window.Typewriter?.clear();
+            if (onComplete) onComplete();
+        };
+        const nextIndex = this.nextSkippedShop();
+        window.DialogueSkip?.bind(onSkip ? () => {
+            if (run !== this.dialogueRun || !this.isActive) return;
+            this.clearDialogueSkip();
+            onSkip();
+        } : finish, !!onSkip && nextIndex < 0, onSkip
+            ? nextIndex < 0 ? '要略過蒐集動畫與剩餘對話，完成本章嗎？'
+                : `要略過對話與蒐集動畫，直接挑戰${this.hotspots[nextIndex].shopName}嗎？`
+            : null);
         for (let i = 0; i < dialogues.length; i++) {
             const dialogue = dialogues[i];
             
@@ -923,15 +1039,19 @@ const CollectionSystem = {
             );
             
             // 等待玩家點擊
+            if (run !== this.dialogueRun || !this.isActive) return;
             await new Promise((resolve) => {
                 const onClick = () => {
                     document.removeEventListener('click', onClick);
+                    this.cancelDialogueWait = null;
                     resolve();
                 };
+                this.cancelDialogueWait = () => document.removeEventListener('click', onClick);
                 document.addEventListener('click', onClick);
             });
+            if (run !== this.dialogueRun || !this.isActive) return;
         }
-        if (onComplete) onComplete();
+        finish();
     },
     
     // 播放蒐集動畫
@@ -1082,6 +1202,8 @@ const CollectionSystem = {
     
     // 顯示前言劇情（使用 DialogueSystem 的對話機制）
     showIntroDialogue: function(dialogue) {
+        this.clearDialogueSkip();
+        const run = this.dialogueRun;
         if (this.hotspotsContainer) {
             this.hotspotsContainer.style.pointerEvents = 'none';
         }
@@ -1089,6 +1211,9 @@ const CollectionSystem = {
         this.showDialogueMode();
         
         const onComplete = () => {
+            if (run !== this.dialogueRun || !this.isActive) return;
+            this.clearDialogueSkip();
+            window.Typewriter?.clear();
             this.showMapMode();
             if (this.hotspotsContainer) {
                 this.hotspotsContainer.style.pointerEvents = 'auto';
@@ -1096,6 +1221,7 @@ const CollectionSystem = {
         };
         
         if (window.DialogueSystem && window.DialogueSystem.typewriter) {
+            window.DialogueSkip?.bind(onComplete);
             window.DialogueSystem.typewriter.showDialogue(
                 dialogue.name || '阿斗仔',
                 dialogue.text,
@@ -1104,6 +1230,7 @@ const CollectionSystem = {
                 'left',
                 ''
             ).then(() => {
+                if (run !== this.dialogueRun || !this.isActive) return;
                 // 等待點擊
                 const gameContainer = document.getElementById('game-container');
                 if (gameContainer) {
@@ -1112,10 +1239,11 @@ const CollectionSystem = {
                         onComplete();
                     };
                     gameContainer.addEventListener('click', onClick);
-                    setTimeout(() => {
+                    const timer = setTimeout(() => {
                         gameContainer.removeEventListener('click', onClick);
                         onComplete();
                     }, 10000);
+                    this.cancelDialogueWait = () => { clearTimeout(timer); gameContainer.removeEventListener('click', onClick); };
                 } else {
                     onComplete();
                 }
@@ -1249,6 +1377,9 @@ const CollectionSystem = {
     
     // 關閉蒐集系統
     close: function() {
+        this.collectionRun++;
+        this.shopRequest++;
+        this.clearDialogueSkip();
         console.log('🗺️ 關閉蒐集模式');
         
         this.isActive = false;

@@ -40,6 +40,32 @@ test('invalid saves and unavailable storage do not stop initialization', () => {
     assert.doesNotThrow(() => vm.runInContext("loadChapterStatus(); completeChapter('chapter1')", context));
     assert.equal(vm.runInContext('chapterStatus.chapter1', context), 'completed');
 });
+test('reset clears both modes shop progress, wallet and earlier chapter rewards before replay',()=>{
+    const context=main({getItem(){return null;},setItem(){}});
+    context.CustomEvent=class{};context.window.dispatchEvent=()=>{};
+    for(const mode of ['child','teen'])for(const number of [1,2,3])
+        vm.runInContext(fs.readFileSync(path.join(root,`js/data/chapter${number}_${mode}.js`),'utf8'),context);
+    for(const suffix of ['Child','Teen']){
+        const c=context.window[`Chapter3_${suffix}`];
+        for(const shop of ['herbal','knife','grocery'])c.markShopComplete(shop);
+        c.playerName='舊名字';context.window[`Chapter2_${suffix}`].quizScore=2;
+        context.window[`Chapter1_${suffix}`].setLevelCompleted(1);
+    }
+    let closed=0,canceled=0;
+    context.window.CollectionSystem={close(){closed++;},collectedItems:[true,true,true],onCompleteCallback:()=>{},pendingCallback:()=>{}};
+    context.window.LoadingManager={cancel(){canceled++;}};
+    vm.runInContext('resetAllChapters()',context);
+    assert.equal(closed,1);assert.equal(canceled,1);
+    for(const suffix of ['Child','Teen']){
+        const c=context.window[`Chapter3_${suffix}`];
+        assert.equal(c.money,20);assert.equal(c.isAllComplete(),false);assert.equal(c.playerName,'小旅人');
+        assert.ok(Object.values(c.shopStatus).every(value=>value===false));
+        assert.equal(context.window[`Chapter2_${suffix}`].quizScore,0);
+        assert.equal(context.window[`Chapter1_${suffix}`].gameProgress.level1Completed,false);
+    }
+    assert.equal(context.window.CollectionSystem.collectedItems.length,0);
+    assert.equal(context.window.CollectionSystem.onCompleteCallback,null);
+});
 
 test('only known chapters and valid status values are restored', () => {
     const context = main({ getItem: () => '{"chapter1":"completed","chapter2":"bad","extra":"open"}' });
@@ -100,6 +126,21 @@ test('timeouts unblock loading and late events do not complete twice', () => {
     late();
     assert.equal(completed, 1);
     assert.equal(manager.loadingScreen.style.display, 'none');
+});
+test('required game images wait for every success; failure or timeout needs retry and reset invalidates late work',()=>{
+    const {manager,timers}=loader();let completed=0,retry,cancel;
+    const callbacks={};manager.loadImage=(src,done)=>{callbacks[src]=done;};
+    manager.showRetry=(again,back)=>{retry=again;cancel=back;};
+    let back=0;
+    manager.showAndLoad(['a.png','b.png'],()=>completed++,{required:true,onCancel:()=>back++});
+    callbacks['a.png']();assert.equal(completed,0);
+    callbacks['b.png'](true);assert.equal(completed,0);assert.equal(typeof retry,'function');
+    retry();callbacks['a.png']();callbacks['b.png']();assert.equal(completed,1);
+    manager.showAndLoad(['slow.png'],()=>completed++,{required:true,onCancel:()=>back++});
+    for(const timer of [...timers.values()])timer();assert.equal(completed,1);
+    cancel();assert.equal(back,1);
+    manager.showAndLoad(['late.png'],()=>completed++,{required:true});const late=callbacks['late.png'];
+    manager.cancel();late();assert.equal(completed,1);assert.equal(manager.loadingScreen.style.display,'none');
 });
 
 test('superseded loading cannot navigate back to a stale scene', () => {

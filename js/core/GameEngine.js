@@ -32,7 +32,7 @@ const GameEngine = {
         
         // ✅ 為 interact 遊戲收集所有圖片資源
         if (minigameName === 'interact' && options && options.items) {
-            const imageUrls = [];
+            const imageUrls = [options.background, options.requiredBackground].filter(Boolean);
             
             // 收集遊戲物件的圖片
             options.items.forEach(item => {
@@ -69,7 +69,11 @@ const GameEngine = {
                 if (requestId === this.loadRequestId) {
                     this._startMinigameImmediately(minigameName, options);
                 }
-            });
+            }, {required: minigameName === 'interact', onCancel: () => {
+                if (requestId !== this.loadRequestId) return;
+                this.loadRequestId++;
+                options.onComplete?.(false);
+            }});
         } else {
             this._startMinigameImmediately(minigameName, options);
         }
@@ -177,3 +181,4 @@ const GameEngine = {
 };
 
 window.GameEngine = GameEngine;
+

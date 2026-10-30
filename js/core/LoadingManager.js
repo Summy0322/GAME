@@ -63,13 +63,22 @@ const LoadingManager = {
     loadId: 0,
     assetTimeoutMs: 15000,
 
-    showAndLoad: function(assets, onComplete) {
+    cancel: function() {
+        this.loadId++;
+        this.retryPanel?.remove();
+        this.retryPanel = null;
+        if (this.loadingScreen) this.loadingScreen.style.display = 'none';
+    },
+    showAndLoad: function(assets, onComplete, options = {}) {
+        this.retryPanel?.remove();
+        this.retryPanel = null;
         const loadId = ++this.loadId;
         if (!this.loadingScreen) this.init();
         if (this.loadingScreen) this.loadingScreen.style.display = 'flex';
         this.updateProgress(0);
         const urls = [...new Set(assets.filter(src => typeof src === 'string' && src))];
         let loadedCount = 0;
+        const failed = [];
         if (urls.length === 0) {
             this.updateProgress(100);
             this.finish(onComplete);
@@ -77,18 +86,23 @@ const LoadingManager = {
         }
         urls.forEach(src => {
             let settled = false;
-            const done = () => {
+            const done = (error = false) => {
                 if (settled) return;
                 settled = true;
                 clearTimeout(timeout);
                 if (loadId !== this.loadId) return;
+                if (error === true) failed.push(src);
                 loadedCount++;
                 this.updateProgress(Math.floor(loadedCount / urls.length * 100));
-                if (loadedCount === urls.length) this.finish(onComplete);
+                if (loadedCount === urls.length) {
+                    if (options.required && failed.length) {
+                        this.showRetry(() => this.showAndLoad(assets, onComplete, options), options.onCancel, loadId);
+                    } else this.finish(onComplete);
+                }
             };
             const timeout = setTimeout(() => {
                 if (window.Logger) window.Logger.warn('資源載入逾時，繼續遊戲:', src);
-                done();
+                done(true);
             }, this.assetTimeoutMs);
             const path = src.split(/[?#]/)[0];
             try {
@@ -98,17 +112,32 @@ const LoadingManager = {
                 else done();
             } catch (error) {
                 if (window.Logger) window.Logger.warn('資源載入失敗，繼續遊戲:', src, error);
-                done();
+                done(true);
             }
         });
+    },
+    showRetry: function(retry, onCancel, loadId) {
+        const panel = document.createElement('div');
+        panel.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#2c3e50;color:white;padding:20px;text-align:center;';
+        const message = document.createElement('p');
+        message.textContent = '部分遊戲圖片尚未載入，請確認網路後重新載入。';
+        panel.appendChild(message);
+        for (const [label, action] of [['重新載入', retry], ['返回地圖', () => { this.cancel(); onCancel?.(); }]]) {
+            const button = document.createElement('button');
+            button.textContent = label;
+            button.onclick = () => { if (loadId === this.loadId) { panel.remove(); action(); } };
+            panel.appendChild(button);
+        }
+        this.retryPanel = panel;
+        this.loadingScreen?.appendChild(panel);
     },
     
     loadImage: function(src, callback) {
         const img = new Image();
-        img.onload = callback;
+        img.onload = () => callback();
         img.onerror = () => {
             if (window.Logger) window.Logger.warn('⚠️ 圖片載入失敗:', src);
-            callback(); // 即使失敗也繼續
+            callback(true); // 必要圖片交由上層顯示重試；一般素材仍可繼續。
         };
         img.src = src;
     },
