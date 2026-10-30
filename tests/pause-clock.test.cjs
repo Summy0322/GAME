@@ -52,12 +52,12 @@ test('real memory memorization and game timer preserve their remaining duration 
     game.session.clock.resume();f.tick(599);assert.equal(game.timeLeft,60);f.tick(1);assert.equal(game.timeLeft,59);
     game.session.dispose();
 });
-test('pause blocks input and freezes CSS, sound and time; resume waits three seconds while cards stay covered',()=>{
+test('defense pause blocks input and freezes CSS, sound and time until its three-second countdown ends',()=>{
     const f=fixture(),clock=f.clock(),root=f.element();let pausedAnimations=0,playedAnimations=0,audioPauses=0,audioPlays=0,work=0;
     root.animations=[{playState:'running',pause(){pausedAnimations++;},play(){playedAnimations++;}}];
     f.window.GameMusic={player:{pause(){audioPauses++;}},play(){audioPlays++;}};
     const game={container:root,session:{clock}};clock.setTimeout(()=>work++,1000);
-    const pause=f.window.GamePause;pause.attach(game,'memory');f.tick(400);pause.pause();
+    const pause=f.window.GamePause;pause.attach(game,'defense');f.tick(400);pause.pause();
     assert.equal(root.inert,true);assert.equal(pausedAnimations,1);assert.equal(audioPauses,1);assert.equal(f.nodes.get('game-pause-overlay').hidden,false);
     let blocked=0;f.emit('pointerup',{target:root,preventDefault(){blocked++;},stopImmediatePropagation(){blocked++;}});assert.equal(blocked,2);
     pause.continueGame();f.tick(2999);assert.equal(work,0);assert.equal(pause.paused,true);f.tick(1);
@@ -83,9 +83,15 @@ test('quiz and third chapter never enable manual or automatic pause',()=>{
 });
 test('exit or ending invalidates countdown and a stale game cannot dismiss the next pause session',()=>{
     const f=fixture(),pause=f.window.GamePause,first={session:{clock:f.clock()}},second={session:{clock:f.clock()}};
-    pause.attach(first,'memory');pause.pause();pause.continueGame();const stale=[...f.timers.values()][0].fn;
-    pause.end();pause.attach(second,'memory');pause.pause();stale();f.tick(5000);assert.equal(pause.paused,true);assert.equal(pause.owner,second);
+    pause.attach(first,'defense');pause.pause();pause.continueGame();const stale=[...f.timers.values()][0].fn;
+    pause.end();pause.attach(second,'defense');pause.pause();stale();f.tick(5000);assert.equal(pause.paused,true);assert.equal(pause.owner,second);
     pause.end(first);assert.equal(pause.owner,second);pause.end(second);assert.equal(f.nodes.get('game-pause-overlay').hidden,true);
+});
+test('memory resumes immediately, preserving the remaining timer fraction without a countdown',()=>{
+    const f=fixture(),pause=f.window.GamePause,clock=f.clock();let work=0;
+    clock.setTimeout(()=>work++,1000);pause.attach({session:{clock}},'memory');f.tick(400);pause.pause();f.tick(20000);
+    assert.equal(work,0);pause.continueGame();assert.equal(pause.paused,false);assert.equal(pause.countdownTimer,null);
+    assert.equal(f.nodes.get('game-pause-overlay').hidden,true);f.tick(599);assert.equal(work,0);f.tick(1);assert.equal(work,1);
 });
 test('defense gameplay uses the virtual clock for all timers, animation frames and timestamp checks',()=>{
     for(const file of ['js/minigames/DefenseGameV2.js','js/minigames/defense/DefenseAttackRunner.js','js/minigames/defense/DefenseTrailRender.js']){
