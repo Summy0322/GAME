@@ -90,10 +90,13 @@ test('exit or ending invalidates countdown and a stale game cannot dismiss the n
     pause.end();pause.attach(second,'defense');pause.pause();stale();f.tick(5000);assert.equal(pause.paused,true);assert.equal(pause.owner,second);
     pause.end(first);assert.equal(pause.owner,second);pause.end(second);assert.equal(f.nodes.get('game-pause-overlay').hidden,true);
 });
-test('memory resumes immediately, preserving the remaining timer fraction without a countdown',()=>{
+test('memory resumes after three seconds, preserving the remaining timer fraction throughout the countdown',()=>{
     const f=fixture(),pause=f.window.GamePause,clock=f.clock();let work=0;
     clock.setTimeout(()=>work++,1000);pause.attach({session:{clock}},'memory');f.tick(400);pause.pause();f.tick(20000);
-    assert.equal(work,0);pause.continueGame();assert.equal(pause.paused,false);assert.equal(pause.countdownTimer,null);
+    assert.equal(work,0);pause.continueGame();assert.equal(pause.paused,true);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,'true');
+    f.tick(2999);assert.equal(pause.paused,true);assert.equal(work,0);
+    f.tick(1);assert.equal(pause.paused,false);assert.equal(pause.countdownTimer,null);
     assert.equal(f.nodes.get('game-pause-overlay').hidden,true);f.tick(599);assert.equal(work,0);f.tick(1);assert.equal(work,1);
 });
 test('defense gameplay uses the virtual clock for all timers, animation frames and timestamp checks',()=>{

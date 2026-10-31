@@ -57,7 +57,6 @@ window.GamePause = {
             document.getElementById('game-pause-status').textContent = '請將畫面橫放後再繼續';
             return;
         }
-        if (this.kind === 'memory') { this.resume(); return; }
         const generation = this.generation;
         document.getElementById('game-pause-overlay').dataset.countdown = 'true';
         let remaining = 3;
