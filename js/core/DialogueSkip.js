@@ -66,6 +66,7 @@ window.DialogueSkip = {
         if (!intro && !/^chapter[123]_(child|teen)$/.test(system.currentChapter?.id || '')) { this.clear(); return; }
         const target = this.plan(system);
         if (!target) { this.clear(); return; }
+        const enteringQuiz = target.option?.action === 'quiz';
         const run = system.dialogueRun;
         this.bind(() => {
             if (run !== system.dialogueRun) return;
@@ -83,7 +84,7 @@ window.DialogueSkip = {
                 system.gameBackground.style.backgroundImage = `url('${target.background}')`;
             system.handleOption(target.option.action === 'collection'
                 ? {...target.option, skipToFirstShop: true} : target.option);
-        }, target.ending, intro ? '要跳過介紹，直接前往章節選擇嗎？' : null, intro ? '前往選章' : null);
+        }, target.ending, intro ? '要跳過介紹，直接前往章節選擇嗎？' : enteringQuiz ? '要跳過對話，直接進入問答嗎？' : null, intro ? '前往選章' : enteringQuiz ? '進入問答' : null);
     },
     bindQuiz(system) {
         const index = system.currentDialogue.findIndex(line => line.id === 'quiz_result_menu');
