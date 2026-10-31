@@ -27,6 +27,24 @@ test('back menu cancellation preserves the game and confirmation cancels loading
     handler({stopPropagation(){}});confirmExit(true);assert.deepEqual(calls,['loading','map','dialogue','scene']);
 });
 
+test('exit confirmation blocks background and backdrop input, and stops button events before document dialogue handlers',()=>{
+    const context=main(),listeners={},nodes=new Map();
+    const element=()=>({style:{},handlers:{},contains(target){return target===this;},focus(){},cloneNode(){return element();},replaceWith(next){for(const [id,node] of nodes)if(node===this)nodes.set(id,next);},addEventListener(type,fn){this.handlers[type]=fn;}});
+    for(const id of ['exit-confirm-dialog','exit-confirm-yes','exit-confirm-no','game-container'])nodes.set(id,element());
+    const dialog=nodes.get('exit-confirm-dialog');dialog.querySelectorAll=()=>[{},{}];
+    context.document.getElementById=id=>nodes.get(id);
+    context.document.addEventListener=(type,fn)=>{listeners[type]=fn;};
+    let result;context.exitResult=value=>{result=value;};vm.runInContext('showExitConfirm(exitResult)',context);
+    for(const type of ['click','touchend','keydown'])for(const target of [nodes.get('game-container'),dialog]){
+        let prevented=0,stopped=0;listeners[type]({target,preventDefault(){prevented++;},stopImmediatePropagation(){stopped++;}});
+        assert.equal(prevented,1);assert.equal(stopped,1);
+    }
+    const button=nodes.get('exit-confirm-no');listeners.click({target:button,preventDefault(){assert.fail();},stopImmediatePropagation(){assert.fail();}});
+    button.onclick();assert.equal(result,false);
+    let bubbled=false;dialog.handlers.click({stopPropagation(){bubbled=true;}});assert.equal(bubbled,true);
+    listeners.click({target:dialog,preventDefault(){assert.fail('closed dialog cannot block');},stopImmediatePropagation(){assert.fail();}});
+});
+
 test('completed chapters survive a new session and reset restores ordered chapter access', () => {
     const data = new Map();
     const storage = { getItem: k => data.get(k), setItem: (k, v) => data.set(k, v) };

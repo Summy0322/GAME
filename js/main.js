@@ -379,6 +379,20 @@ function showExitConfirm(callback, options = {}) {
         if (callback) callback(confirm(options.message || '確定要離開嗎？'));
         return;
     }
+    if (!dialog.inputGuardInstalled) {
+        dialog.inputGuardInstalled = true;
+        for (const type of ['click', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'keydown', 'keyup']) {
+            document.addEventListener(type, event => {
+                if (dialog.style.display !== 'flex') return;
+                const buttons = ['exit-confirm-yes', 'exit-confirm-no'].map(id => document.getElementById(id));
+                if (buttons.some(button => button?.contains(event.target))) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }, {capture:true, passive:false});
+            // 按鈕關閉視窗的同一次事件，也不能傳到文件上的對話監聽器。
+            dialog.addEventListener(type, event => event.stopPropagation());
+        }
+    }
     
     const paragraphs = dialog.querySelectorAll('p');
     paragraphs[0].textContent = options.message || '你確定要退出嗎？';
@@ -392,6 +406,7 @@ function showExitConfirm(callback, options = {}) {
     
     const newYesBtn = document.getElementById('exit-confirm-yes');
     const newNoBtn = document.getElementById('exit-confirm-no');
+    newNoBtn.focus();
     
     newYesBtn.onclick = () => {
         if (typeof AudioManager !== 'undefined') {
