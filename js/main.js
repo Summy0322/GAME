@@ -370,16 +370,34 @@ function collectChapterAssets(chapterData) {
 }
 
 // 顯示退出確認彈窗
-function showExitConfirm(callback) {
+function showExitConfirm(callback, options = {}) {
     const dialog = document.getElementById('exit-confirm-dialog');
     const yesBtn = document.getElementById('exit-confirm-yes');
     const noBtn = document.getElementById('exit-confirm-no');
     
     if (!dialog || !yesBtn || !noBtn) {
-        if (callback) callback(confirm('確定要離開嗎？'));
+        if (callback) callback(confirm(options.message || '確定要離開嗎？'));
         return;
     }
+    if (!dialog.inputGuardInstalled) {
+        dialog.inputGuardInstalled = true;
+        for (const type of ['click', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'keydown', 'keyup']) {
+            document.addEventListener(type, event => {
+                if (dialog.style.display !== 'flex') return;
+                const buttons = ['exit-confirm-yes', 'exit-confirm-no'].map(id => document.getElementById(id));
+                if (buttons.some(button => button?.contains(event.target))) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }, {capture:true, passive:false});
+            // 按鈕關閉視窗的同一次事件，也不能傳到文件上的對話監聽器。
+            dialog.addEventListener(type, event => event.stopPropagation());
+        }
+    }
     
+    const paragraphs = dialog.querySelectorAll('p');
+    paragraphs[0].textContent = options.message || '你確定要退出嗎？';
+    paragraphs[1].textContent = options.warning || '任何未儲存的進度都會遺失';
+    yesBtn.textContent = options.confirmLabel || '確認退出';
     dialog.style.display = 'flex';
     document.getElementById('game-container').style.pointerEvents = 'none';
     
@@ -388,6 +406,7 @@ function showExitConfirm(callback) {
     
     const newYesBtn = document.getElementById('exit-confirm-yes');
     const newNoBtn = document.getElementById('exit-confirm-no');
+    newNoBtn.focus();
     
     newYesBtn.onclick = () => {
         if (typeof AudioManager !== 'undefined') {
@@ -416,6 +435,10 @@ function setupBackButton() {
         
         backBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (window.CollectionSystem?.isActive && window.CollectionSystem.viewMode === 'dialogue') {
+                window.CollectionSystem.requestReturnMap();
+                return;
+            }
             
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');
@@ -424,6 +447,8 @@ function setupBackButton() {
             showExitConfirm((confirmed) => {
                 if (confirmed) {
                     console.log('確認退出，返回關卡選擇');
+                    window.LoadingManager?.cancel();
+                    window.CollectionSystem?.close();
                     
                     if (typeof AudioManager !== 'undefined') {
                         AudioManager.stopBGM();

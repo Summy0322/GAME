@@ -11,6 +11,11 @@ const CollectionSystem = {
     totalItems: 0,
     onCompleteCallback: null,
     currentCollectingIndex: null,
+    collectionVisuals: [],
+    clearCollectionVisuals: function() {
+        this.collectionVisuals.forEach(node => node.remove());
+        this.collectionVisuals = [];
+    },
     
     // DOM 元素
     overlay: null,
@@ -554,7 +559,43 @@ const CollectionSystem = {
     },
     
     // 顯示地圖模式
+    setNavigation: function(mode) {
+        this.viewMode = mode;
+        const button = document.querySelector?.('#game-container .back-btn');
+        if (button) {
+            button.textContent = mode === 'dialogue' ? '返回地圖' : '返回選單';
+            button.style.display = ['game', 'collecting'].includes(mode) ? 'none' : 'block';
+        }
+    },
+    requestReturnMap: function() {
+        if (!this.isActive || this.viewMode === 'collecting') return;
+        const run = this.collectionRun;
+        showExitConfirm(confirmed => {
+            if (!confirmed || !this.isActive || this.viewMode === 'collecting' || run !== this.collectionRun) return;
+            this.collectionRun++;
+            this.clearCollectionVisuals();
+            this.shopRequest++;
+            this.clearDialogueSkip();
+            window.LoadingManager?.cancel();
+            window.GameEngine?.stopMinigame();
+            window.Typewriter?.clear();
+            if (window.DialogueSystem?.gameContainer) window.DialogueSystem.gameContainer.onclick = null;
+            // 已通關的店家保留物品，未完成的遊戲不扣款、不算通關。
+            const chapter = this.getChapterData();
+            this.hotspots.forEach((shop,index) => {
+                if (chapter?.shopStatus?.[shop.shopId]) this.collectedItems[index] = true;
+            });
+            this.isGameStarting = this.isProcessingShop = this.isAnimating = false;
+            this.hideShopLoading();
+            this.hideSimpleLoading();
+            this.enableClicksAfterLoading();
+            this.buildItemsDisplay();
+            this.showMapMode();
+            if (this.completeBtn) this.completeBtn.style.display = this.collectedItems.every(Boolean) ? 'block' : 'none';
+        }, {message:'要返回地圖嗎？', warning:'尚未完成的小遊戲進度不會保留。', confirmLabel:'返回地圖'});
+    },
     showMapMode: function() {
+        this.setNavigation('map');
         this.clearDialogueSkip();
         if (this.isActive && this.hotspots.length) this.bindMapSkip();
         if (this.mapContainer) {
@@ -576,6 +617,7 @@ const CollectionSystem = {
     
     // 顯示對話模式
     showDialogueMode: function() {
+        this.setNavigation('dialogue');
         if (this.mapContainer) {
             this.mapContainer.style.display = 'none';
         }
@@ -592,6 +634,7 @@ const CollectionSystem = {
     
     // 小遊戲模式
     showGameMode: function() {
+        this.setNavigation('game');
         this.clearDialogueSkip();
         if (this.mapContainer) {
             this.mapContainer.style.display = 'none';
@@ -845,7 +888,6 @@ const CollectionSystem = {
             }
             
             // ✅ 等待對話顯示完成（打字完成 + 玩家點擊）
-            window.DialogueSkip?.bind(start);
             await Typewriter.showDialogue(
                 dialogue.name || '老闆',
                 dialogue.text,
@@ -1056,6 +1098,12 @@ const CollectionSystem = {
     
     // 播放蒐集動畫
     playCollectionAnimationKeepDialogue: function(itemIndex) {
+        this.setNavigation('collecting');
+        // 收集開始後關閉可能尚未決定的返回確認，避免兩層彈窗重疊。
+        const exitDialog = document.getElementById('exit-confirm-dialog');
+        if (exitDialog) exitDialog.style.display = 'none';
+        if (window.DialogueSystem?.gameContainer) window.DialogueSystem.gameContainer.style.pointerEvents = 'auto';
+        const run = this.collectionRun;
         this.isAnimating = true;
         const item = this.items[itemIndex];
         
@@ -1083,8 +1131,10 @@ const CollectionSystem = {
             <div style="color: #ffd700; margin-top: 8px; font-size: 14px;">獲得 ${item.name}</div>
         `;
         document.body.appendChild(popup);
+        this.collectionVisuals.push(popup);
         
         const onPopupClick = () => {
+            if (run !== this.collectionRun || !this.isActive) return;
             const targetSlot = this.itemsDisplayContainer.querySelector(`.item-${itemIndex}`);
             if (!targetSlot) {
                 popup.remove();
@@ -1109,9 +1159,11 @@ const CollectionSystem = {
                 object-fit: contain;
             `;
             document.body.appendChild(flyingImg);
+            this.collectionVisuals.push(flyingImg);
             popup.remove();
             
             requestAnimationFrame(() => {
+                if (run !== this.collectionRun || !this.isActive) return;
                 flyingImg.style.top = `${targetRect.top}px`;
                 flyingImg.style.left = `${targetRect.left}px`;
                 flyingImg.style.width = '50px';
@@ -1120,6 +1172,7 @@ const CollectionSystem = {
             
             setTimeout(() => {
                 flyingImg.remove();
+                if (run !== this.collectionRun || !this.isActive) return;
                 
                 const shadowImg = document.getElementById(`item-shadow-${itemIndex}`);
                 const colorImg = document.getElementById(`item-color-${itemIndex}`);
@@ -1143,6 +1196,7 @@ const CollectionSystem = {
 
     // 蒐集完成後的處理
     afterCollectionComplete: function(itemIndex) {
+        const run = this.collectionRun;
         console.log(`✅ 蒐集完成，物品 ${itemIndex + 1}，準備繼續對話`);
         
         const allItemsCollected = this.collectedItems.every(collected => collected === true);
@@ -1152,6 +1206,7 @@ const CollectionSystem = {
         
         // 延遲 1 秒後才顯示地圖
         setTimeout(() => {
+            if (run !== this.collectionRun || !this.isActive) return;
             this.hideShopLoading();
             this.showMapMode();
             
@@ -1377,6 +1432,8 @@ const CollectionSystem = {
     
     // 關閉蒐集系統
     close: function() {
+        this.clearCollectionVisuals();
+        this.setNavigation('map');
         this.collectionRun++;
         this.shopRequest++;
         this.clearDialogueSkip();

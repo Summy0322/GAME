@@ -77,6 +77,13 @@ const chapter3ChildData = {
     },
     
     dialogue: [
+        {
+            id: 'chapter_intro',
+            type: 'narration',
+            text: '老街上有好多不同的店。今天，跟著媽媽的購物清單，一起去逛逛，找找店裡的東西吧！',
+            speed: 60,
+            next: 'start'
+        },
         // ========== 命名畫面 ==========
         {
             id: 'start',

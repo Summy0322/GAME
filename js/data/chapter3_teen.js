@@ -77,6 +77,13 @@ const chapter3TeenData = {
     },
     
     dialogue: [
+        {
+            id: 'chapter_intro',
+            type: 'narration',
+            text: '走過市場的熱鬧，老街的日常仍在一間間店舖裡延續。一張媽媽交付的購物清單，將帶你走進熟悉又陌生的街巷，從店裡的物件，發現藏在生活中的老街記憶。',
+            speed: 50,
+            next: 'start'
+        },
         // ========== 命名畫面 ==========
         {
             id: 'start',

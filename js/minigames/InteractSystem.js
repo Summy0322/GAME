@@ -218,8 +218,12 @@ const InteractSystem = {
         
         const closeBtn = document.createElement('button');
         closeBtn.className = 'interact-close-btn';
-        closeBtn.textContent = '✕ 關閉遊戲';
+        closeBtn.textContent = '返回地圖';
         closeBtn.onclick = () => {
+            if (window.CollectionSystem?.isActive) {
+                window.CollectionSystem.requestReturnMap();
+                return;
+            }
             if (confirm('確定要離開嗎？進度不會儲存。')) {
                 const callback = this.onComplete;
                 this.close();

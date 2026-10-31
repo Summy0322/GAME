@@ -447,7 +447,7 @@ html {
     left: 20px;
     padding: 8px 16px;
     font-size: clamp(14px, 2vw, 18px);
-    z-index: 100;
+    z-index: 4000;
 }
 
 /* ========== 按鈕與文字調整 ========== */
