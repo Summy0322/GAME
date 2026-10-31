@@ -370,16 +370,20 @@ function collectChapterAssets(chapterData) {
 }
 
 // 顯示退出確認彈窗
-function showExitConfirm(callback) {
+function showExitConfirm(callback, options = {}) {
     const dialog = document.getElementById('exit-confirm-dialog');
     const yesBtn = document.getElementById('exit-confirm-yes');
     const noBtn = document.getElementById('exit-confirm-no');
     
     if (!dialog || !yesBtn || !noBtn) {
-        if (callback) callback(confirm('確定要離開嗎？'));
+        if (callback) callback(confirm(options.message || '確定要離開嗎？'));
         return;
     }
     
+    const paragraphs = dialog.querySelectorAll('p');
+    paragraphs[0].textContent = options.message || '你確定要退出嗎？';
+    paragraphs[1].textContent = options.warning || '任何未儲存的進度都會遺失';
+    yesBtn.textContent = options.confirmLabel || '確認退出';
     dialog.style.display = 'flex';
     document.getElementById('game-container').style.pointerEvents = 'none';
     
@@ -416,6 +420,10 @@ function setupBackButton() {
         
         backBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (window.CollectionSystem?.isActive && window.CollectionSystem.viewMode === 'dialogue') {
+                window.CollectionSystem.requestReturnMap();
+                return;
+            }
             
             if (typeof AudioManager !== 'undefined') {
                 AudioManager.playSFX('assets/sounds/click.mp3');

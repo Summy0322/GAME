@@ -179,14 +179,34 @@ test('pending old dialogue completion cannot add story choices after a skip star
     const pending=f.system.showDialogue();skipNow(f);resolve();await pending;
     assert.equal(f.games.length,1);assert.equal(choices,0);
 });
-test('third chapter shop dialogue skip starts the real drag game once and late text cannot reopen choices',async()=>{
+test('third chapter shop entry has no skip and returning to map invalidates late dialogue choices',async()=>{
     const f=fixture();chapter(f,3,'teen');f.skip.enabled=true;
     vm.runInContext(fs.readFileSync('js/core/CollectionSystem.js','utf8'),f.context);
     const collection=f.window.CollectionSystem;collection.isActive=true;collection.showDialogueMode=()=>{};collection.hideShopLoading=()=>{};
     let resolve,started=0;f.writer.showDialogue=()=>new Promise(r=>resolve=r);
     const pending=collection.showDialogueWithOptions({name:'店家',text:'介紹',options:[{text:'開始'}]},()=>started++);
-    click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');resolve();await pending;
-    assert.equal(started,1);assert.equal(f.skip.context,null);assert.notEqual(f.nodes.get('options-container').style.display,'flex');
+    assert.equal(f.nodes.get('dialogue-skip').hidden,true);
+    collection.showMapMode();resolve();await pending;
+    assert.equal(started,0);assert.notEqual(f.nodes.get('options-container').style.display,'flex');
+});
+test('shop and game returns share confirmation, cancel preserves play, and returning preserves only completed shops',()=>{
+    for(const mode of ['child','teen']) {
+        const f=fixture(),chapterData=chapter(f,3,mode);
+        vm.runInContext(fs.readFileSync('js/core/CollectionSystem.js','utf8'),f.context);
+        const c=f.window.CollectionSystem,back={style:{}};f.document.querySelector=()=>back;
+        c.isActive=true;c.hotspots=[{shopId:'herbal'},{shopId:'knife'}];c.collectedItems=[false,false];
+        c.hideShopLoading=c.hideSimpleLoading=c.enableClicksAfterLoading=c.buildItemsDisplay=()=>{};
+        let confirmation,config,stopped=0;
+        f.context.showExitConfirm=(callback,options)=>{confirmation=callback;config=options;};
+        f.window.GameEngine={stopMinigame(){stopped++;}};
+        c.showDialogueMode();assert.equal(back.textContent,'返回地圖');assert.equal(back.style.display,'block');
+        c.showGameMode();assert.equal(back.style.display,'none');
+        c.requestReturnMap();assert.equal(config.confirmLabel,'返回地圖');confirmation(false);assert.equal(stopped,0);assert.equal(c.viewMode,'game');
+        chapterData.shopStatus.herbal=true;
+        c.requestReturnMap();confirmation(true);
+        assert.equal(stopped,1);assert.equal(c.viewMode,'map');assert.equal(back.textContent,'返回選單');
+        assert.equal(c.collectedItems[0],true);assert.equal(c.collectedItems[1],false);assert.equal(chapterData.money,20);
+    }
 });
 test('third chapter result-dialogue skip continues item collection, while map/game/close remove the skip control',async()=>{
     const f=fixture();chapter(f,3,'child');f.skip.enabled=true;
