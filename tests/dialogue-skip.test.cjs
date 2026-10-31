@@ -208,6 +208,25 @@ test('shop and game returns share confirmation, cancel preserves play, and retur
         assert.equal(c.collectedItems[0],true);assert.equal(c.collectedItems[1],false);assert.equal(chapterData.money,20);
     }
 });
+test('collection popup hides map return until the map is restored and rejects pending return confirmations',()=>{
+    const f=fixture();chapter(f,3,'child');
+    vm.runInContext(fs.readFileSync('js/core/CollectionSystem.js','utf8'),f.context);
+    const c=f.window.CollectionSystem,back={style:{}};f.document.querySelector=()=>back;
+    c.isActive=true;c.items=[{colorImage:'item.png',name:'物品'}];c.collectedItems=[true];
+    let confirmReturn,stopped=0;f.context.showExitConfirm=callback=>{confirmReturn=callback;};
+    f.window.GameEngine={stopMinigame(){stopped++;}};
+    c.showDialogueMode();c.requestReturnMap();
+    f.nodes.get('exit-confirm-dialog').style.display='flex';
+    c.playCollectionAnimationKeepDialogue(0);
+    assert.equal(back.style.display,'none');assert.equal(c.viewMode,'collecting');
+    assert.equal(f.nodes.get('exit-confirm-dialog').style.display,'none');
+    confirmReturn(true);assert.equal(stopped,0);
+    f.context.showExitConfirm=()=>assert.fail('return must remain unavailable during collection');c.requestReturnMap();
+    c.showShopLoading=c.hideShopLoading=()=>{};c.afterCollectionComplete(0);
+    assert.equal(back.style.display,'none');[...f.timers.values()].forEach(fn=>fn());
+    assert.equal(c.viewMode,'map');assert.equal(back.style.display,'block');
+});
+
 test('third chapter result-dialogue skip continues item collection, while map/game/close remove the skip control',async()=>{
     const f=fixture();chapter(f,3,'child');f.skip.enabled=true;
     vm.runInContext(fs.readFileSync('js/core/CollectionSystem.js','utf8'),f.context);

@@ -564,14 +564,14 @@ const CollectionSystem = {
         const button = document.querySelector?.('#game-container .back-btn');
         if (button) {
             button.textContent = mode === 'dialogue' ? '返回地圖' : '返回選單';
-            button.style.display = mode === 'game' ? 'none' : 'block';
+            button.style.display = ['game', 'collecting'].includes(mode) ? 'none' : 'block';
         }
     },
     requestReturnMap: function() {
-        if (!this.isActive) return;
+        if (!this.isActive || this.viewMode === 'collecting') return;
         const run = this.collectionRun;
         showExitConfirm(confirmed => {
-            if (!confirmed || !this.isActive || run !== this.collectionRun) return;
+            if (!confirmed || !this.isActive || this.viewMode === 'collecting' || run !== this.collectionRun) return;
             this.collectionRun++;
             this.clearCollectionVisuals();
             this.shopRequest++;
@@ -1098,6 +1098,11 @@ const CollectionSystem = {
     
     // 播放蒐集動畫
     playCollectionAnimationKeepDialogue: function(itemIndex) {
+        this.setNavigation('collecting');
+        // 收集開始後關閉可能尚未決定的返回確認，避免兩層彈窗重疊。
+        const exitDialog = document.getElementById('exit-confirm-dialog');
+        if (exitDialog) exitDialog.style.display = 'none';
+        if (window.DialogueSystem?.gameContainer) window.DialogueSystem.gameContainer.style.pointerEvents = 'auto';
         const run = this.collectionRun;
         this.isAnimating = true;
         const item = this.items[itemIndex];
