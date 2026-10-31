@@ -60,7 +60,9 @@ test('defense pause blocks input and freezes CSS, sound and time until its three
     const pause=f.window.GamePause;pause.attach(game,'defense');f.tick(400);pause.pause();
     assert.equal(root.inert,true);assert.equal(pausedAnimations,1);assert.equal(audioPauses,1);assert.equal(f.nodes.get('game-pause-overlay').hidden,false);
     let blocked=0;f.emit('pointerup',{target:root,preventDefault(){blocked++;},stopImmediatePropagation(){blocked++;}});assert.equal(blocked,2);
-    pause.continueGame();f.tick(2999);assert.equal(work,0);assert.equal(pause.paused,true);f.tick(1);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,undefined);
+    pause.continueGame();assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,'true');f.tick(2999);assert.equal(work,0);assert.equal(pause.paused,true);f.tick(1);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,undefined);
     assert.equal(pause.paused,false);assert.equal(root.inert,false);assert.equal(playedAnimations,1);assert.equal(audioPlays,1);
     f.tick(599);assert.equal(work,0);f.tick(1);assert.equal(work,1);
 });
@@ -69,6 +71,7 @@ test('hidden tab and portrait auto-pause, visible return stays paused and interr
     f.document.hidden=true;f.emit('visibilitychange');assert.equal(pause.paused,true);
     f.document.hidden=false;f.emit('visibilitychange');assert.equal(pause.paused,true);
     pause.continueGame();f.tick(1000);f.document.hidden=true;f.emit('visibilitychange');f.tick(9000);assert.equal(pause.paused,true);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,undefined);
     f.document.hidden=false;f.portrait(true);pause.continueGame();f.tick(5000);assert.equal(pause.paused,true);
     f.portrait(false);pause.continueGame();f.tick(3000);assert.equal(pause.paused,false);
 });

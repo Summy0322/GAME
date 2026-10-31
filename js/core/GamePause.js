@@ -48,6 +48,8 @@ window.GamePause = {
     cancelCountdown() {
         if (this.countdownTimer != null) clearTimeout(this.countdownTimer);
         this.countdownTimer = null;
+        const overlay = document.getElementById('game-pause-overlay');
+        if (overlay) delete overlay.dataset.countdown;
     },
     continueGame() {
         if (!this.owner || !this.paused || this.countdownTimer != null) return;
@@ -57,6 +59,7 @@ window.GamePause = {
         }
         if (this.kind === 'memory') { this.resume(); return; }
         const generation = this.generation;
+        document.getElementById('game-pause-overlay').dataset.countdown = 'true';
         let remaining = 3;
         const status = document.getElementById('game-pause-status');
         document.getElementById('game-pause-resume').disabled = true;
