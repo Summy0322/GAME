@@ -18,6 +18,24 @@ function fixture(storage = new Map(), blocked = false) {
     return {window,document,nodes,writer,games,context,timers,storage,skip:window.DialogueSkip,system:window.DialogueSystem};
 }
 const click=(nodes,id)=>nodes.get(id).handlers.click({stopPropagation(){}});
+test('quiz skip starts memory once with only earned rewards and discards stale question rendering',async()=>{
+    for(const mode of ['child','teen']) for(const earned of [0,1]) {
+        const f=fixture(),c=chapter(f,2,mode);f.skip.enabled=true;
+        let resolveText,optionsShown=0;
+        f.writer.showDialogue=()=>new Promise(resolve=>{resolveText=resolve;});
+        f.writer.showOptions=()=>{optionsShown++;return new Promise(()=>{});};
+        f.context.QuizQuestions={getRandomQuestions:()=>[{text:'題目',options:[]}]};
+        f.system.startQuiz({start:1,end:8},2,()=>assert.fail('skip must bypass quiz result callback'));
+        f.system.quizScore=earned;
+        assert.equal(f.nodes.get('dialogue-skip').hidden,false);
+        click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-later');assert.equal(f.games.length,0);
+        click(f.nodes,'dialogue-skip');click(f.nodes,'skip-confirm-play');click(f.nodes,'skip-confirm-play');
+        resolveText();await Promise.resolve();await Promise.resolve();
+        assert.equal(optionsShown,0);assert.equal(f.games.length,1);assert.equal(f.games[0].name,'memory');
+        assert.equal(c.quizScore,earned);assert.equal(f.games[0].options.penaltyRedemption,earned);
+        assert.equal(f.nodes.get('dialogue-skip').hidden,true);assert.equal(f.system.quizCallback,null);
+    }
+});
 function chapter(f,number,mode) {
     f.window.gameMode=mode==='child'?'child':'adult';
     vm.runInContext(fs.readFileSync(`js/data/chapter${number}_${mode}.js`,'utf8'),f.context);
@@ -148,7 +166,8 @@ test('chapter 2 preserves quiz and earned rewards, then enters memory without lo
         const f=fixture(),c=chapter(f,2,mode);f.skip.enabled=true;let quiz=0,completedQuiz;
         f.system.startQuiz=(_range,_count,done)=>{quiz++;completedQuiz=done;};
         skipNow(f);assert.equal(quiz,1);assert.equal(f.games.length,0);assert.equal(f.skip.context,null);
-        completedQuiz(2);assert.equal(c.quizScore,2);skipNow(f);
+        completedQuiz(2);assert.equal(c.quizScore,2);f.skip.bindStory(f.system);assert.equal(f.skip.context,null);
+        f.system.handleOption(c.dialogue.find(line=>line.id==='quiz_result_menu').options.find(option=>option.action==='minigame'));
         assert.equal(quiz,1);assert.equal(f.games[0].name,'memory');assert.equal(f.games[0].options.penaltyRedemption,2);
         f.games[0].options.onComplete(true);assert.equal(f.skip.plan(f.system).ending,true);
     }

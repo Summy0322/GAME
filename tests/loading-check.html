@@ -6,7 +6,7 @@
 try {
  await navigator.serviceWorker.register('/GAME/sw.js');
  await navigator.serviceWorker.ready;
- const cache=await caches.open('game-v47'),keys=await cache.keys();
+ const cache=await caches.open('game-v51'),keys=await cache.keys();
  const assets=keys.filter(r=>new URL(r.url).pathname.includes('/assets/'));
  const backgrounds=[];
  for(const src of ['../assets/images/title/background.webp','../assets/images/shared/market-background.webp']) {

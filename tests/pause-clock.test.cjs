@@ -60,7 +60,9 @@ test('defense pause blocks input and freezes CSS, sound and time until its three
     const pause=f.window.GamePause;pause.attach(game,'defense');f.tick(400);pause.pause();
     assert.equal(root.inert,true);assert.equal(pausedAnimations,1);assert.equal(audioPauses,1);assert.equal(f.nodes.get('game-pause-overlay').hidden,false);
     let blocked=0;f.emit('pointerup',{target:root,preventDefault(){blocked++;},stopImmediatePropagation(){blocked++;}});assert.equal(blocked,2);
-    pause.continueGame();f.tick(2999);assert.equal(work,0);assert.equal(pause.paused,true);f.tick(1);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,undefined);
+    pause.continueGame();assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,'true');f.tick(2999);assert.equal(work,0);assert.equal(pause.paused,true);f.tick(1);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,undefined);
     assert.equal(pause.paused,false);assert.equal(root.inert,false);assert.equal(playedAnimations,1);assert.equal(audioPlays,1);
     f.tick(599);assert.equal(work,0);f.tick(1);assert.equal(work,1);
 });
@@ -69,6 +71,7 @@ test('hidden tab and portrait auto-pause, visible return stays paused and interr
     f.document.hidden=true;f.emit('visibilitychange');assert.equal(pause.paused,true);
     f.document.hidden=false;f.emit('visibilitychange');assert.equal(pause.paused,true);
     pause.continueGame();f.tick(1000);f.document.hidden=true;f.emit('visibilitychange');f.tick(9000);assert.equal(pause.paused,true);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,undefined);
     f.document.hidden=false;f.portrait(true);pause.continueGame();f.tick(5000);assert.equal(pause.paused,true);
     f.portrait(false);pause.continueGame();f.tick(3000);assert.equal(pause.paused,false);
 });
@@ -87,10 +90,13 @@ test('exit or ending invalidates countdown and a stale game cannot dismiss the n
     pause.end();pause.attach(second,'defense');pause.pause();stale();f.tick(5000);assert.equal(pause.paused,true);assert.equal(pause.owner,second);
     pause.end(first);assert.equal(pause.owner,second);pause.end(second);assert.equal(f.nodes.get('game-pause-overlay').hidden,true);
 });
-test('memory resumes immediately, preserving the remaining timer fraction without a countdown',()=>{
+test('memory resumes after three seconds, preserving the remaining timer fraction throughout the countdown',()=>{
     const f=fixture(),pause=f.window.GamePause,clock=f.clock();let work=0;
     clock.setTimeout(()=>work++,1000);pause.attach({session:{clock}},'memory');f.tick(400);pause.pause();f.tick(20000);
-    assert.equal(work,0);pause.continueGame();assert.equal(pause.paused,false);assert.equal(pause.countdownTimer,null);
+    assert.equal(work,0);pause.continueGame();assert.equal(pause.paused,true);
+    assert.equal(f.nodes.get('game-pause-overlay').dataset.countdown,'true');
+    f.tick(2999);assert.equal(pause.paused,true);assert.equal(work,0);
+    f.tick(1);assert.equal(pause.paused,false);assert.equal(pause.countdownTimer,null);
     assert.equal(f.nodes.get('game-pause-overlay').hidden,true);f.tick(599);assert.equal(work,0);f.tick(1);assert.equal(work,1);
 });
 test('defense gameplay uses the virtual clock for all timers, animation frames and timestamp checks',()=>{

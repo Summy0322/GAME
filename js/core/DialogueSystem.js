@@ -818,12 +818,15 @@ const DialogueSystem = {
         
         // 第一題顯示後才啟動音樂，前導對話不播放。
         this.showQuizQuestion();
+        window.DialogueSkip?.bindQuiz(this);
         window.GameMusic?.start('quiz');
     },
 
     // 顯示一題問答
     showQuizQuestion: function() {
+        const run = this.dialogueRun;
         if (this.currentQuizIndex >= this.currentQuizQuestions.length) {
+            window.DialogueSkip?.clear();
             window.GamePause?.end(this);
             window.GameMusic?.fadeOut('quiz');
             // 所有題目答完
@@ -855,7 +858,9 @@ const DialogueSystem = {
             'left',
             ''
         ).then(() => {
+            if (run !== this.dialogueRun) return;
             this.typewriter.showOptions(options).then(selected => {
+                if (run !== this.dialogueRun) return;
                 this.handleQuizAnswer(selected);
             });
         });
@@ -863,6 +868,7 @@ const DialogueSystem = {
 
     // 處理回答
     handleQuizAnswer: function(selectedOption) {
+        const run = this.dialogueRun;
         const question = this.currentQuizQuestions[this.currentQuizIndex];
         const isCorrect = selectedOption.isCorrect === true;
         
@@ -880,7 +886,7 @@ const DialogueSystem = {
                 ''
             ).then(() => {
                 // ✅ 修改：顯示完成後，需要點擊畫面才繼續下一題
-                this.waitForClickToContinue();
+                if (run === this.dialogueRun) this.waitForClickToContinue();
             });
         } else {
             console.log(`❌ 答錯！正確答案: ${QuizQuestions.getCorrectAnswerText(question)}`);
@@ -895,7 +901,7 @@ const DialogueSystem = {
                 ''
             ).then(() => {
                 // ✅ 修改：顯示完成後，需要點擊畫面才繼續下一題
-                this.waitForClickToContinue();
+                if (run === this.dialogueRun) this.waitForClickToContinue();
             });
         }
     },
