@@ -424,6 +424,8 @@ function setupBackButton() {
             showExitConfirm((confirmed) => {
                 if (confirmed) {
                     console.log('確認退出，返回關卡選擇');
+                    window.LoadingManager?.cancel();
+                    window.CollectionSystem?.close();
                     
                     if (typeof AudioManager !== 'undefined') {
                         AudioManager.stopBGM();

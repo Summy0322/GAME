@@ -14,6 +14,19 @@ function main(storage = {}) {
     return context;
 }
 
+test('back menu cancellation preserves the game and confirmation cancels loading and closes the map before exiting',()=>{
+    const context=main(),calls=[];let handler,confirmExit;
+    context.document.querySelector=()=>({removeAttribute(){},addEventListener(type,fn){handler=fn;}});
+    context.window.LoadingManager={cancel(){calls.push('loading');}};
+    context.window.CollectionSystem={close(){calls.push('map');}};
+    context.DialogueSystem={endDialogue(manual){assert.equal(manual,true);calls.push('dialogue');}};
+    context.showExitConfirm=callback=>{confirmExit=callback;};
+    context.showScene=id=>{assert.equal(id,'level-select');calls.push('scene');};
+    vm.runInContext('setupBackButton()',context);
+    handler({stopPropagation(){}});confirmExit(false);assert.deepEqual(calls,[]);
+    handler({stopPropagation(){}});confirmExit(true);assert.deepEqual(calls,['loading','map','dialogue','scene']);
+});
+
 test('completed chapters survive a new session and reset restores ordered chapter access', () => {
     const data = new Map();
     const storage = { getItem: k => data.get(k), setItem: (k, v) => data.set(k, v) };
