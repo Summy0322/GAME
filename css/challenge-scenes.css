@@ -1,0 +1,25 @@
+#challenge-scene { isolation:isolate;background:#101e35;overflow:hidden;color:#edf5fa; }
+#challenge-night-background { position:absolute;inset:0;z-index:-2;background:center/cover;filter:brightness(.6) saturate(.65); }
+#challenge-scene::before { content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,#123d7870,#122f5860 55%,#081d3d9c);pointer-events:none; }
+.challenge-scene-heading { position:absolute;top:4%;left:16%;right:16%;text-align:center; }
+#challenge-scene-title { max-width:none;width:100%;margin:0;font-size:clamp(19px,4.5cqh,32px);letter-spacing:.08em; }
+#challenge-scene-status { margin:1cqh 0;font-size:clamp(12px,2.6cqh,18px);color:#ffe5a7; }
+#challenge-preview-back { z-index:2;background:#284760;border:1px solid #91bccb77; }
+.challenge-scene-footer { position:absolute;bottom:3%;left:8%;right:8%;text-align:center; }
+#challenge-scene-note { margin:0 0 1cqh;font-size:clamp(11px,2.5cqh,18px);text-shadow:0 2px 4px #000;background:#12253cbb;border-radius:14px;padding:1cqh; }
+#challenge-reroll { margin:0;padding:6px 18px;background:#31576b;border:1px solid #91c8d3;border-radius:22px;font-size:clamp(12px,2.8cqh,19px); }
+#challenge-reroll:disabled { opacity:.5; }
+.challenge-player { position:absolute;height:34%;width:20%;top:31%;left:40%;filter:drop-shadow(0 8px 5px #08132370); }
+.challenge-mixed-objects { position:absolute;inset:18% 12% 25%; }
+.challenge-mixed-objects img { position:absolute;object-fit:contain;width:13%;height:22%;filter:drop-shadow(0 5px 4px #0b142b80); }
+.challenge-mixed-objects img:nth-child(1) { top:0;left:44%; }
+.challenge-mixed-objects img:nth-child(2) { top:38%;left:8%; }
+.challenge-mixed-objects img:nth-child(3) { top:38%;right:8%; }
+.challenge-mixed-objects img:nth-child(4) { bottom:0;left:27%; }
+.challenge-mixed-objects img:nth-child(5) { bottom:0;right:27%; }
+.challenge-card-sample { display:grid;grid-template-columns:repeat(4,1fr);gap:2cqh 1.5cqw;width:48%;height:48%; }
+.challenge-card-sample div { display:flex;align-items:center;justify-content:center;border:2px solid #dcc399;border-radius:10px;background:#fff5e4;box-shadow:0 5px 12px #07152b55;overflow:hidden; }
+.challenge-card-sample img { width:85%;height:85%;object-fit:contain; }
+#challenge-scene[data-kind="memory"] .challenge-player,#challenge-scene[data-kind="memory"] .challenge-mixed-objects,#challenge-scene[data-kind="defense"] .challenge-card-sample { display:none; }
+.challenge-preview button { background:#2a5066;border:1px solid #9cd0dc80;border-radius:20px;padding:5px 13px;margin:1.5cqh 0 0;font-size:clamp(11px,2.2cqh,16px); }
+#challenge-scene button:focus-visible { outline:3px solid #ffe1a0;outline-offset:3px; }
