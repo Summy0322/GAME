@@ -1259,9 +1259,18 @@ const DefenseGameV2 = {
         }
     },
     
+    captureProjectileAssets: function() {
+        const image = this.levelConfig.projectileImage;
+        return Object.freeze({
+            projectileImage: image,
+            projectileHitImage: this.challenge ? image : this.levelConfig.projectileHitImage,
+            attack: this.currentAttack,
+            session: this.sessionId
+        });
+    },
     launchProjectile: function(dir, onComplete) {
         const currentSession = this.sessionId;  // ✅ 加這行
-        const cfg = this.levelConfig;
+        const cfg = this.captureProjectileAssets();
         const target = this.scaledPositions[dir];
         const size = this.scaledSizes.projectile;
 
@@ -1386,7 +1395,7 @@ const DefenseGameV2 = {
 
     // 新增：在玩家位置創建投射物（不發射）
     createProjectileAtPlayer: function(dir) {
-        const cfg = this.levelConfig;
+        const cfg = this.captureProjectileAssets();
         const size = this.scaledSizes.projectile;
         
         // 獲取玩家實際尺寸
@@ -1434,6 +1443,7 @@ const DefenseGameV2 = {
             transition: opacity 0.2s ease;
         `;
         this.stage.appendChild(proj);
+        proj.flightAssets = cfg;
         this.multiProjectiles.push(proj);
         
         return proj;
@@ -1442,7 +1452,11 @@ const DefenseGameV2 = {
     // 新增：從指定位置發射投射物到目標方向
     launchProjectileFromPosition: function(dir, projectile, onComplete) {
         const currentSession = this.sessionId;  // ✅ 加這行
-        const cfg = this.levelConfig;
+        const cfg = projectile.flightAssets || this.captureProjectileAssets();
+        const currentAttackRef = cfg.attack;
+        const currentState = this.state;
+        const expired = () => !this.gameActive || this.sessionId !== cfg.session || this.currentAttack !== currentAttackRef || currentAttackRef?.finished;
+        if (expired()) { projectile.remove(); return; }
         const target = this.scaledPositions[dir];
         
         // 找到對應方向的敵人
@@ -1464,7 +1478,7 @@ const DefenseGameV2 = {
         projectile.style.zIndex = '20';  /* ✅ 統一為 20（原本是 999） */
         
         const animate = (now) => {
-            if (this.sessionId !== currentSession) return;  // ✅ 加這行
+            if (expired()) { projectile.remove(); return; }
             const elapsed = now - startTime;
             const t = Math.min(1, elapsed / duration);
             const easeOut = 1 - Math.pow(1 - t, 2);
@@ -1504,19 +1518,20 @@ const DefenseGameV2 = {
 
                     // 0.2 秒後移除敵人
                     this.clock.setTimeout(() => {
+                        if (expired()) return;
                         if (targetEnemy.element && targetEnemy.element.parentNode) {
                             targetEnemy.element.remove();
                         }
-                        const enemyIdx = this.enemies.findIndex(e => e.dir === dir);
+                        const enemyIdx = this.enemies.indexOf(targetEnemy);
                         if (enemyIdx !== -1) this.enemies.splice(enemyIdx, 1);
 
                         // ✅ 如果是 NORMAL 攻擊且是正確方向，現在才結束攻擊
-                        if (this.state === this.states.NORMAL && 
-                            this.currentAttack && 
-                            this.currentAttack.dir === dir &&
-                            !this.currentAttack.resolved) {
+                        if (currentState === this.states.NORMAL && 
+                            currentAttackRef && 
+                            currentAttackRef.dir === dir &&
+                            !currentAttackRef.resolved) {
                             console.log('🎯 子彈擊中敵人，結束 NORMAL 攻擊');
-                            this.currentAttack.resolved = true;
+                            currentAttackRef.resolved = true;
                             this.finishAttack();
                         }
 
@@ -1706,13 +1721,14 @@ const DefenseGameV2 = {
 
         // ✅ 加入這行！定義 currentSession
         const currentSession = this.sessionId;
+        const currentAttackRef = this.currentAttack;
 
         // ✅ 設定格擋準備狀態
         this.heavyBlockReady = true;
         
         // ✅ 設定超時：如果一段時間沒格擋，自動失敗
         this.heavyBlockTimeout = this.clock.setTimeout(() => {
-            if (this.heavyBlockReady && this.state === this.states.HEAVY_FLYING && !this.currentAttack?.resolved) {
+            if (this.gameActive && this.sessionId === currentSession && this.currentAttack === currentAttackRef && this.heavyBlockReady && this.state === this.states.HEAVY_FLYING && !currentAttackRef?.resolved) {
                 console.log('⏰ 重擊格擋超時！完全沒有格擋');
                 this.heavyBlockFailed('未及時格擋');
                 this.finishAttack();
@@ -1761,7 +1777,7 @@ const DefenseGameV2 = {
             const duration = 400;
             
             const animate = (now) => {
-                if (this.sessionId !== currentSession) return;  // ✅ 加這行
+                if (!this.gameActive || this.sessionId !== currentSession || this.currentAttack !== currentAttackRef || currentAttackRef?.finished) { block.remove(); return; }
                 const elapsed = now - startTime;
                 const t = Math.min(1, elapsed / duration);
                 

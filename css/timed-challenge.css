@@ -14,7 +14,7 @@
 .challenge-play-stage::before { content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,#123d7870,#122f5860 55%,#081d3d9c);pointer-events:none; }
 .challenge-live-hud { position:absolute;top:1%;left:50%;transform:translateX(-50%);z-index:180;white-space:nowrap;color:#e3f3fd;background:#10283de8;padding:1cqh 2cqw;border:1px solid #92c9dd66;border-radius:30px;font-size:clamp(13px,3cqh,23px);pointer-events:none; }
 .challenge-time-warning { color:#ffd09a;border-color:#ffd09a; }
-.night-challenge-game .memory-panel { top:52%;height:90%;max-height:90%;box-sizing:border-box;border-color:#80b7d0;background-image:linear-gradient(145deg,#345d7fe8,#17334de8);color:#e4f1fa;box-shadow:inset 0 1px #b8ddf33b,0 10px 30px #08192b66; }
+.night-challenge-game .memory-panel { top:52%;width:96%;height:90%;max-height:90%;box-sizing:border-box;border-color:#80b7d0;background-image:linear-gradient(145deg,#345d7fe8,#17334de8);color:#e4f1fa;box-shadow:inset 0 1px #b8ddf33b,0 10px 30px #08192b66; }
 .night-challenge-game .memory-grid { max-width:none;max-height:none;flex-shrink:0; }
 .night-challenge-game .memory-hint,.night-challenge-game .defense-controls-hint { display:none; }
 .night-challenge-game .challenge-live-hud { top:2%;left:2%;transform:none; }
