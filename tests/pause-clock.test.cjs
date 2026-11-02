@@ -99,6 +99,18 @@ test('memory resumes after three seconds, preserving the remaining timer fractio
     f.tick(1);assert.equal(pause.paused,false);assert.equal(pause.countdownTimer,null);
     assert.equal(f.nodes.get('game-pause-overlay').hidden,true);f.tick(599);assert.equal(work,0);f.tick(1);assert.equal(work,1);
 });
+test('challenge return confirmation cancels back to pause; countdown blocks all navigation and repeat actions',()=>{
+    const f=fixture();vm.runInContext(fs.readFileSync('js/core/TimedChallenge.js','utf8'),f.context);
+    const challenge=f.window.TimedChallenge;challenge.active=true;let exits=0;challenge.exit=()=>exits++;
+    const pause=f.window.GamePause;pause.attach({session:{clock:f.clock()}},'memory');pause.pause();
+    const resume=f.nodes.get('game-pause-resume'),exit=f.nodes.get('game-pause-exit');
+    pause.exit();assert.equal(pause.phase,'confirm-exit');assert.equal(resume.textContent,'取消');
+    pause.continueGame();assert.equal(pause.phase,'paused');assert.equal(pause.countdownTimer,null);assert.equal(resume.textContent,'繼續遊戲');assert.equal(exits,0);
+    pause.continueGame();assert.equal(pause.phase,'countdown');assert.equal(resume.hidden,true);assert.equal(exit.hidden,true);
+    pause.exit();challenge.confirmExit();pause.continueGame();assert.equal(exits,0);assert.equal(pause.phase,'countdown');
+    f.document.hidden=true;f.emit('visibilitychange');assert.equal(pause.phase,'paused');assert.equal(resume.hidden,false);assert.equal(exit.hidden,false);
+    f.document.hidden=false;pause.exit();pause.exit();assert.equal(exits,1);
+});
 test('defense gameplay uses the virtual clock for all timers, animation frames and timestamp checks',()=>{
     for(const file of ['js/minigames/DefenseGameV2.js','js/minigames/defense/DefenseAttackRunner.js','js/minigames/defense/DefenseTrailRender.js']){
         const source=fs.readFileSync(file,'utf8');const gameplay=source.replace(/get clock\(\) \{[\s\S]*?\n    \},/,'');
