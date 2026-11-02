@@ -513,7 +513,7 @@ const DefenseGameV2 = {
                     </div>
                 </div>
             </div>
-            <div style="position:absolute; bottom:3%; left:0; width:100%; text-align:center; color:#888; font-size:${hintFontSize}px; background:rgba(0,0,0,0.4); padding:5px;">滑動方向發射投射物 · AOE模式需旋轉</div>
+            <div class="defense-controls-hint" style="position:absolute; bottom:3%; left:0; width:100%; text-align:center; color:#888; font-size:${hintFontSize}px; background:rgba(0,0,0,0.4); padding:5px;">滑動方向發射投射物 · AOE模式需旋轉</div>
         `;
         
         // 修正：確保附加到正確的容器

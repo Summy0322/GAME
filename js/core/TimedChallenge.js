@@ -106,6 +106,10 @@ window.TimedChallenge = {
     decorate(game) {
         if (!this.active) return;
         const root = game.container;
+        if (this.kind === 'memory') {
+            const card = game.grid.querySelector('.memory-card');
+            if (card) game.challengeCardBasis = {width:parseFloat(card.style.width),height:parseFloat(card.style.height),stageHeight:document.getElementById('game-wrapper').clientHeight};
+        }
         root.classList.add('night-challenge-game');
         if (this.kind === 'memory') { game.timeLeft=Math.ceil(this.remaining/1000);game.updateStats(); }
         const stage = this.kind === 'defense' ? game.stage : root.querySelector('.memory-stage');

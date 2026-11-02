@@ -14,7 +14,10 @@
 .challenge-play-stage::before { content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,#123d7870,#122f5860 55%,#081d3d9c);pointer-events:none; }
 .challenge-live-hud { position:absolute;top:1%;left:50%;transform:translateX(-50%);z-index:180;white-space:nowrap;color:#e3f3fd;background:#10283de8;padding:1cqh 2cqw;border:1px solid #92c9dd66;border-radius:30px;font-size:clamp(13px,3cqh,23px);pointer-events:none; }
 .challenge-time-warning { color:#ffd09a;border-color:#ffd09a; }
-.night-challenge-game .memory-panel { top:54%;height:80%;max-height:80%;box-sizing:border-box;border-color:#80b7d0;background-image:linear-gradient(145deg,#345d7fe8,#17334de8);color:#e4f1fa;box-shadow:inset 0 1px #b8ddf33b,0 10px 30px #08192b66; }
+.night-challenge-game .memory-panel { top:52%;height:90%;max-height:90%;box-sizing:border-box;border-color:#80b7d0;background-image:linear-gradient(145deg,#345d7fe8,#17334de8);color:#e4f1fa;box-shadow:inset 0 1px #b8ddf33b,0 10px 30px #08192b66; }
+.night-challenge-game .memory-grid { max-height:none;flex-shrink:0; }
+.night-challenge-game .memory-hint,.night-challenge-game .defense-controls-hint { display:none; }
+.timed-challenge .challenge-live-hud { top:2%;left:2%;transform:none; }
 .night-challenge-game .memory-info,.night-challenge-game .memory-info-item,.night-challenge-game .memory-hint,.night-challenge-game .memory-timer-large { color:#e6f4ff; }
 .night-challenge-game .memory-hint { background:#152f49cc;border-color:#7aafc877; }
 .night-challenge-game .memory-card { border-color:#87b8ce; }
@@ -24,7 +27,7 @@
 .night-challenge-game #memory-timer { color:#ccefff;text-shadow:0 0 6px #77bcdd60; }
 .night-challenge-game #defense-combo { display:none!important; }
 .night-challenge-game #defense-player { width:20%!important;height:34%!important; }
-.night-challenge-game #defense-msg { color:#d2ecfa!important;background:#15324bbd!important; }
+.night-challenge-game #defense-msg { display:none!important; }
 .night-challenge-game #defense-wave-progress { color:#d9effa; }
 .timed-challenge > .back-btn { display:none!important; }
 #game-wrapper.challenge-active #game-pause-resume { background:#477e99; }

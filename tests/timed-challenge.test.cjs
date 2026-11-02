@@ -59,3 +59,11 @@ test('memory boards grow only to the mobile-friendly cap and preserve run totals
   }
  }
 });
+test('repositioning the challenge panel preserves card size and resizing scales with the stage',()=>{
+ const f=fixture();vm.runInContext(fs.readFileSync('js/minigames/MemoryGameV2.js','utf8'),f.context);
+ const g=f.window.MemoryGameV2,cards=[{style:{}},{style:{}}];
+ const stage=f.context.document.getElementById('game-wrapper');stage.clientHeight=400;
+ Object.assign(g,{challenge:f.c,challengeCardBasis:{width:100,height:80,stageHeight:400},gridCols:4,gridRows:3,grid:{parentElement:{clientHeight:900,clientWidth:900},querySelectorAll:()=>cards}});
+ g.adjustCardSize();assert.equal(cards[0].style.width,'100px');assert.equal(cards[0].style.height,'80px');
+ stage.clientHeight=200;g.adjustCardSize();assert.equal(cards[0].style.width,'50px');assert.equal(cards[0].style.height,'40px');
+});

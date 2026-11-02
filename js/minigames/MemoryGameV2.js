@@ -123,6 +123,7 @@ const MemoryGameV2 = {
     start: function(options) {
         this.stop();
         this.challenge = options.challenge || null;
+        this.challengeCardBasis = null;
         this.session = new MinigameSession();
         console.log('🎮 記憶遊戲開始', options);
         
@@ -768,6 +769,15 @@ const MemoryGameV2 = {
         const availableWidth = gridArea.clientWidth;
         const rows = this.gridRows;
         const cols = this.gridCols;
+        if (this.challenge && this.challengeCardBasis) {
+            const basis = this.challengeCardBasis;
+            const scale = document.getElementById('game-wrapper').clientHeight / basis.stageHeight;
+            this.grid.querySelectorAll('.memory-card').forEach(card => {
+                card.style.width = `${basis.width * scale}px`;
+                card.style.height = `${basis.height * scale}px`;
+            });
+            return;
+        }
         
         // 獲取 gap 值（從 CSS 讀取，預設 10px）
         const gap = 10;
