@@ -171,8 +171,7 @@ window.TimedChallenge = {
         game.levelConfig={...game.levelConfig,...assets,flow:{...game.levelConfig.flow,targetName:source.flow.targetName}};
         // 顯示中的盾牌與旋轉素材也跟隨本波，背景與角色整場固定。
         for (const dir of ['up','down','left','right']) {
-            const shield=document.getElementById(`shield-${dir}`),aoe=document.getElementById(`aoe-${dir}`);
-            if(shield)shield.style.backgroundImage=`url('${source.shieldImage}')`;
+            const aoe=document.getElementById(`aoe-${dir}`);
             if(aoe)aoe.style.backgroundImage=`url('${source.aoeLineImage}')`;
         }
         return {...attack,resolved:false};

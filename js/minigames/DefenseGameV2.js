@@ -330,6 +330,7 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function (options = {}) {
+        this.hideShields();
         window.GamePause?.end(this);
         this.pauseClock?.dispose();
         if (!options.keepMusic) window.GameMusic?.stop('defense');
@@ -503,7 +504,7 @@ const DefenseGameV2 = {
             <div style="position:absolute; top:2%; left:2%; z-index:110;">
                 <div id="defense-msg" style="font-size:${msgFontSize}px; font-weight:bold; color:#ffd700; background:rgba(0,0,0,0.5); display:inline-block; padding:5px 20px; border-radius:30px;">${cfg.name}</div>
             </div>
-            <div style="position:absolute; top:2%; right:2%; z-index:110;">
+            <div class="defense-status-panel" style="position:absolute; top:2%; right:2%; z-index:110;">
                 <div id="defense-combo" style="font-size:${comboFontSize}px; font-weight:bold; color:#00ffaa; background:rgba(0,0,0,0.5); display:inline-block; padding:5px 15px; border-radius:30px;">分數: 0</div>
                 <div id="defense-wave-progress" aria-live="polite">準備開始</div>
                 <div id="defense-wait-meter" hidden>
@@ -766,6 +767,8 @@ const DefenseGameV2 = {
             }
             
             // 顯示防護罩
+            const shieldAttack = this.currentAttack;
+            const shieldSession = this.sessionId;
             this.showShield(dir);
             
             // ✅ 設定盾牌為啟用狀態
@@ -773,6 +776,7 @@ const DefenseGameV2 = {
             
             // 盾牌持續 0.5 秒後消失
             this.clock.setTimeout(() => {
+                if (this.sessionId !== shieldSession || this.currentAttack !== shieldAttack || shieldAttack.finished) return;
                 this.isShieldActive = false;
                 console.log(`🛡️ 盾牌消失`);
                 
@@ -1549,6 +1553,7 @@ const DefenseGameV2 = {
     
     // ========== 重擊 ==========
     spawnHeavySequence: function(dir) {
+        this.hideShields();
         // ✅ 重置格擋準備狀態
         this.heavyBlockReady = false;
         if (this.heavyBlockTimeout) {
@@ -2091,11 +2096,25 @@ const DefenseGameV2 = {
     },
     
     // ========== 輔助函數 ==========
+    hideShields: function() {
+        this.shieldVisualGeneration = (this.shieldVisualGeneration || 0) + 1;
+        if (this.shieldVisualTimer != null) this.clock.clearTimeout(this.shieldVisualTimer);
+        this.shieldVisualTimer = null;
+        for (const dir of ['up','down','left','right']) {
+            const shield = document.getElementById(`shield-${dir}`);
+            if (shield) shield.style.opacity = '0';
+        }
+    },
     showShield: function(dir) {
+        this.hideShields();
+        const generation = this.shieldVisualGeneration;
         const shield = document.getElementById(`shield-${dir}`);
         if (shield) {
+            if (this.challenge) shield.style.backgroundImage = 'none';
             shield.style.opacity = '0.8';
-            this.clock.setTimeout(() => { shield.style.opacity = '0'; }, 500);
+            this.shieldVisualTimer = this.clock.setTimeout(() => {
+                if (generation === this.shieldVisualGeneration) this.hideShields();
+            }, 500);
         }
     },
     

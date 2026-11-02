@@ -7,7 +7,7 @@ function fixture(challenge=true){
  vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),context);
  const g=window.DefenseGameV2,enemy={dir:'up',element:element()};
  Object.assign(g,{challenge:challenge?{}:null,sessionId:1,gameActive:true,currentAttack:{finished:false},state:g.states.MULTI,levelConfig:{projectileImage:'water.png',projectileHitImage:'steam.png'},player:element(),stage:{getBoundingClientRect:()=>({left:0,top:0,width:100,height:100}),appendChild(e){e.parentNode=this;}},enemies:[enemy],projectiles:[],multiProjectiles:[],scaledSizes:{projectile:10},scaledPositions:{up:{x:0,y:-40}},stopEnemyBounce(){},pauseClock:{now:()=>now,requestAnimationFrame(fn){frames.push(fn);},setTimeout(fn){timers.push(fn);}}});
- return {g,enemy,created,timers,frame(){now=400;frames.splice(0).forEach(fn=>fn(now));}};
+ return {g,context,enemy,created,timers,frame(){now=400;frames.splice(0).forEach(fn=>fn(now));}};
 }
 test('direct challenge shots retain their launch image through impact even when configuration is mutated',()=>{
  for(const image of ['water.png','soy-milk.png']){
@@ -41,4 +41,13 @@ test('heavy flight and its timeout cannot damage or finish a later wave',()=>{
  let failures=0,finished=0;Object.assign(f.g,{heavySequence:[{element:block}],heavyProjectiles:[],stopAllHeavyBlocksBounce(){},heavyBlockFailed(){failures++;},finishAttack(){finished++;}});
  f.g.state=f.g.states.HEAVY_FLYING;f.g.launchHeavyProjectile('up');f.g.currentAttack={finished:false};f.g.levelConfig.projectileImage='block.png';
  f.frame();f.timers.forEach(fn=>fn());assert.equal(block.style.backgroundImage,"url('water.png')");assert.equal(failures,0);assert.equal(finished,0);assert.equal(block.removed,true);
+});
+test('repeated challenge shields never use shield artwork and an old hide callback cannot affect the next block',()=>{
+ const f=fixture(),shields=Object.fromEntries(['up','down','left','right'].map(dir=>[dir,{style:{backgroundImage:"url('shield.png')"}}]));
+ f.context.document.getElementById=id=>shields[id.replace('shield-','')];
+ f.g.showShield('up');const stale=f.timers.at(-1);
+ assert.equal(shields.up.style.backgroundImage,'none');
+ f.g.showShield('down');stale();assert.equal(shields.down.style.opacity,'0.8');assert.equal(shields.up.style.opacity,'0');
+ for(const dir of ['left','up','right']){f.g.showShield(dir);assert.equal(shields[dir].style.backgroundImage,'none');assert.equal(shields[dir].style.opacity,'0.8');}
+ f.g.hideShields();f.timers.forEach(fn=>fn());assert.ok(Object.values(shields).every(s=>s.style.opacity==='0'));
 });

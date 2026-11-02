@@ -35,6 +35,7 @@
 .night-challenge-game #defense-player { width:20%!important;height:34%!important; }
 .night-challenge-game #defense-msg { display:none!important; }
 .night-challenge-game #defense-wave-progress { color:#d9effa; }
+.night-challenge-game [id^="shield-"] { background:none!important;border:2px solid #a5e7ff;border-radius:50%;box-shadow:0 0 12px #78d4f399,inset 0 0 10px #9fe7ff66;box-sizing:border-box;pointer-events:none; }
 .timed-challenge > .back-btn { display:none!important; }
 #game-wrapper.challenge-active #game-pause-resume { background:#477e99; }
 #game-wrapper.challenge-active #game-pause-exit { background:#29475e; }

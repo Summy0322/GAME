@@ -454,6 +454,7 @@ window.DefenseAttackRunnerMixin = {
         }
 
         this.isShieldActive = false;
+        this.hideShields?.();
         this.shieldEndTime = 0;
 
         if (this.currentAttack && this.currentAttack.multiTimeout) {

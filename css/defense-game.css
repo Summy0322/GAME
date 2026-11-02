@@ -17,6 +17,9 @@
 }
 
 #defense-wait-meter {
+    position: absolute;
+    top: 100%;
+    right: 0;
     width: clamp(100px, 23cqw, 190px);
     margin-top: 6px;
     padding: 6px;
@@ -27,6 +30,7 @@
     line-height: 1.5;
     box-sizing: border-box;
 }
+.defense-status-panel { max-width:45%; }
 
 .defense-wait-track {
     height: 6px;
