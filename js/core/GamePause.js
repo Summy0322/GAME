@@ -18,6 +18,7 @@ window.GamePause = {
     portrait() { return window.matchMedia?.('(orientation: portrait)').matches === true; },
     pause() {
         if (!this.owner) return;
+        if (window.TimedChallenge?.active) window.TimedChallenge.resetExitConfirmation();
         this.cancelCountdown();
         if (!this.paused) {
             this.paused = true;
@@ -53,6 +54,7 @@ window.GamePause = {
     },
     continueGame() {
         if (!this.owner || !this.paused || this.countdownTimer != null) return;
+        if (window.TimedChallenge?.active) window.TimedChallenge.resetExitConfirmation();
         if (document.hidden || this.portrait()) {
             document.getElementById('game-pause-status').textContent = '請將畫面橫放後再繼續';
             return;
@@ -88,6 +90,8 @@ window.GamePause = {
     },
     end(owner) {
         if (owner && owner !== this.owner) return;
+        const exitButton = document.getElementById('game-pause-exit');
+        if (exitButton) exitButton.textContent = '返回章節選擇';
         this.generation++;
         this.cancelCountdown();
         if (this.paused && this.root) this.root.inert = this.wasInert;
@@ -107,6 +111,7 @@ window.GamePause = {
     },
     exit() {
         if (!this.owner) return;
+        if (window.TimedChallenge?.active) { window.TimedChallenge.confirmExit(); return; }
         window.LoadingManager?.cancel();
         window.CollectionSystem?.close();
         window.GameEngine?.stopMinigame();

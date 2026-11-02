@@ -115,7 +115,7 @@ window.DefenseAttackRunnerMixin = {
         const label = document.getElementById('defense-wave-progress');
         if (label) {
             const phase = this.currentAttack?.phase;
-            label.textContent = `第 ${this.waveNumber}／${this.totalWaves} 波${phase ? ' · ' + phase : ''}`;
+            label.textContent = this.challenge ? `第 ${this.waveNumber} 波` : `第 ${this.waveNumber}／${this.totalWaves} 波${phase ? ' · ' + phase : ''}`;
         }
     },
 
@@ -216,6 +216,7 @@ window.DefenseAttackRunnerMixin = {
         console.log('processNextAttack 被呼叫, 當前狀態:', this.state);
 
         if (!this.gameActive) return;
+        if (this.challenge && this.attackQueue.length === 0) this.attackQueue.push(this.challenge.nextAttack(this));
         if (this.attackQueue.length === 0) {
             if (this.attackQueue.length === 0 && this.state !== this.states.RESULT) {
                 this.setState(this.states.RESULT);

@@ -122,6 +122,7 @@ const MemoryGameV2 = {
     // 開始遊戲
     start: function(options) {
         this.stop();
+        this.challenge = options.challenge || null;
         this.session = new MinigameSession();
         console.log('🎮 記憶遊戲開始', options);
         
@@ -214,7 +215,7 @@ const MemoryGameV2 = {
         window.addEventListener('resize', this.handleResize);
         
         // 開始動畫和遊戲流程
-        window.GameMusic?.start('memory');
+        if (!this.challenge?.changingBoard) window.GameMusic?.start('memory');
         this.startGameSequence(needMemorize);
     },
 
@@ -868,6 +869,7 @@ const MemoryGameV2 = {
     // ✅ 開始遊戲機制（根據模式啟動計時器或計次器）
     startGameMechanic: function() {
         this.startKnownHints();
+        if (this.challenge) { this.challenge.ready(this); return; }
         if (this.gameMode === 'time') {
             this.startTimer();
         } else {
@@ -1034,6 +1036,7 @@ const MemoryGameV2 = {
             }
             
             this.matchedPairs++;
+            this.challenge?.paired();
             this.updateStats();
             
             this.session.timeout(() => {
@@ -1069,6 +1072,9 @@ const MemoryGameV2 = {
                     if (redeemed) {
                         this.redeemedCount++;
                         this.statusText.innerText = '🛡️ 答題獎勵：抵銷這次紅燈懲罰！';
+                    } else if (this.challenge) {
+                        this.challenge.penalty();
+                        this.statusText.innerText = '⚠️ 三盞紅燈！扣 10 分，繼續挑戰！';
                     } else if (this.gameMode === 'time') {
                         // 限時模式：扣 5 秒
                         this.timeLeft = Math.max(0, this.timeLeft - 5);
@@ -1175,11 +1181,11 @@ const MemoryGameV2 = {
     /**
      * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
      */
-    stop: function () {
+    stop: function (options = {}) {
         window.GamePause?.end(this);
         this.stopKnownHints();
         this.seenCards = new Set();
-        window.GameMusic?.stop('memory');
+        if (!options.keepMusic && !this.challenge?.changingBoard) window.GameMusic?.stop('memory');
         this.gameActive = false;
         this.canFlip = false;
         if (this.session) this.session.dispose();
@@ -1205,6 +1211,10 @@ const MemoryGameV2 = {
 
     // 結束遊戲
     endGame: function(isWin) {
+        if (this.challenge && this.gameActive) {
+            if (isWin) this.challenge.boardComplete(this);
+            return;
+        }
         window.GamePause?.end(this);
         if (!this.gameActive) return;
         this.stopKnownHints();

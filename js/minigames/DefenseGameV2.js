@@ -304,7 +304,8 @@ const DefenseGameV2 = {
         
         this.shieldCooldown = { up: false, down: false, left: false, right: false };
         
-        this.levelConfig = this.getLevelConfig(this.currentLevel);
+        this.challenge = options.challenge || null;
+        this.levelConfig = options.challengeConfig || this.getLevelConfig(this.currentLevel);
         
         this.combo = 0;
         this.score = 0;
@@ -320,6 +321,7 @@ const DefenseGameV2 = {
         }, 16);
         
         this.setState(this.states.IDLE);
+        this.challenge?.ready(this);
         window.GameMusic?.start('defense', this.currentLevel);
         this.queueWaveCallback(() => this.startAttackSequence(), 1000);
     },
@@ -327,10 +329,10 @@ const DefenseGameV2 = {
     /**
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
-    stop: function () {
+    stop: function (options = {}) {
         window.GamePause?.end(this);
         this.pauseClock?.dispose();
-        window.GameMusic?.stop('defense');
+        if (!options.keepMusic) window.GameMusic?.stop('defense');
         this.sessionId = (this.sessionId || 0) + 1;
         this.gameActive = false;
         this.runtimeGameMode = null;
@@ -1154,7 +1156,7 @@ const DefenseGameV2 = {
     },
     
     addScore: function(points, dir = null) {
-        this.score += points;
+        this.score = this.challenge ? Math.max(0,this.score + points) : this.score + points;
         this.updateScoreDisplay();
         
         const scorePop = document.createElement('div');
