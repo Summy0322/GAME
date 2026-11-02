@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="css/dialogue-skip.css">
     <link rel="stylesheet" href="css/game-settings.css">
     <link rel="stylesheet" href="css/game-pause.css">
+    <link rel="stylesheet" href="css/world-switch.css">
 
     <!-- Swiper.js CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -87,6 +88,12 @@
 
         <!-- 關卡選擇頁面 -->
         <div id="level-select" class="scene" style="display:none;">
+            <div class="night-stars" aria-hidden="true"></div>
+            <button id="world-switch" type="button" role="switch" aria-checked="false" aria-label="夜間挑戰模式">
+                <span class="world-switch-sky" aria-hidden="true"><span class="switch-stars">✦ · ✧</span><span class="switch-cloud"></span><span class="switch-orb"></span><span class="switch-hills"></span></span>
+                <span class="world-switch-label">故事<span>白日老街</span></span>
+            </button>
+            <div id="story-directory" class="world-directory">
             <h2>選擇故事章節</h2>
             <div class="level-buttons">
                 <button id="chapter1-btn" onclick="loadChapter('chapter1')">第一章：紅磚市場</button>
@@ -94,6 +101,17 @@
                 <button id="chapter3-btn" onclick="loadChapter('chapter3')">第三章：時光印記</button>
             </div>
             <button class="reset-progress-btn" onclick="if (confirm('確定要重設章節完成紀錄嗎？三個章節將重新開放。')) resetAllChapters()">重設章節進度</button>
+            </div>
+            <div id="challenge-directory" class="world-directory" hidden>
+                <p class="night-eyebrow">月光下的老街</p>
+                <h2>老街夜間挑戰</h2>
+                <p class="night-intro">夜幕落下，另一場挑戰即將開始。</p>
+                <div class="challenge-previews">
+                    <article class="challenge-preview"><span class="challenge-number">01 ／ 防守</span><svg viewBox="0 0 80 64" aria-hidden="true"><path d="M40 6 64 16v18c0 13-24 25-24 25S16 47 16 34V16Z"/><path d="m29 32 8 8 15-19"/></svg><h3>防守挑戰</h3><p>眼明手快，挑戰你的反應。</p><span class="challenge-soon">即將開放</span></article>
+                    <article class="challenge-preview"><span class="challenge-number">02 ／ 配對</span><svg viewBox="0 0 80 64" aria-hidden="true"><rect x="13" y="9" width="30" height="43" rx="5" transform="rotate(-12 28 30)"/><rect x="37" y="13" width="30" height="43" rx="5" transform="rotate(9 52 34)"/><path d="m52 24 4 7 8 2-8 3-4 8-3-8-8-3 8-2Z"/></svg><h3>記憶挑戰</h3><p>翻開卡片，找回成對的記憶。</p><span class="challenge-soon">即將開放</span></article>
+                </div>
+            </div>
+            <p id="world-switch-status" class="visually-hidden" aria-live="polite"></p>
             <button class="back-btn" onclick="showScene('start-menu')">返回</button>
         </div>
 
@@ -233,6 +251,7 @@
     
     <!-- 7. 主入口 - 最後載入 -->
     <script src="js/main.js"></script>
+    <script src="js/core/WorldSwitch.js"></script>
     
     <!-- ========== Service Worker 註冊（PWA） ========== -->
     <script>

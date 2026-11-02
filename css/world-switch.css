@@ -1,0 +1,44 @@
+/* 舞台內的日夜目錄：所有夜色樣式只作用於選章畫面。 */
+#level-select { isolation:isolate; }
+#level-select::before { content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(29,21,15,.28),rgba(50,29,19,.54));transition:background .8s; }
+#level-select::after { content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 78% 8%,#668aa54a,transparent 52%),linear-gradient(180deg,#0c1935ed,#112c47e8 55%,#0d2234f5);opacity:0;transition:opacity .85s ease; }
+#level-select.night-world::after { opacity:1; }
+.world-directory { position:relative;z-index:1;text-align:center;width:100%; }
+.world-directory[hidden] { display:none; }
+#story-directory h2 { margin:0 0 4cqh;text-shadow:0 2px 12px #38230e; }
+#world-switch { position:absolute;right:2.5%;top:3%;z-index:5;display:flex;align-items:center;gap:10px;width:clamp(132px,17cqw,186px);height:clamp(46px,9cqh,66px);box-sizing:border-box;margin:0;padding:6px 10px 6px 6px;border:1px solid #ffe2a19c;border-radius:40px;background:linear-gradient(135deg,#553921e8,#302923ed);box-shadow:0 4px 16px #17120e40,inset 0 1px #fff3;color:#fff0cf;text-align:left;transition:background .7s,border-color .7s,box-shadow .3s; }
+#world-switch:hover { box-shadow:0 5px 22px #17120e66,0 0 0 3px #ffdc8c24; }
+#world-switch:focus-visible { outline:3px solid #ffe1a0;outline-offset:4px; }
+.world-switch-label { font-size:clamp(13px,1.5cqw,18px);font-weight:bold;line-height:1.35;white-space:nowrap; }
+.world-switch-label span { display:block;font-size:clamp(9px,.9cqw,11px);font-weight:normal;opacity:.78;letter-spacing:.06em; }
+.world-switch-sky { position:relative;flex:1;min-width:60px;height:100%;overflow:hidden;border-radius:30px;background:linear-gradient(#82b3c1,#d9e5cc);box-shadow:inset 0 2px 5px #19394f66;transition:background .7s; }
+.switch-orb { position:absolute;left:6px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:50%;background:#ffe6a0;box-shadow:0 0 0 5px #ffe7a02e,0 0 15px #ffe9ad80;transition:left .65s cubic-bezier(.22,.8,.25,1),background .65s,box-shadow .65s;z-index:2; }
+.switch-orb::after { content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 32%,#9fb5c2 0 3px,transparent 3.5px),radial-gradient(circle at 65% 58%,#9fb5c2 0 4px,transparent 4.5px),radial-gradient(circle at 40% 78%,#9fb5c2 0 2px,transparent 2.5px);opacity:0;transition:opacity .6s; }
+.switch-cloud { position:absolute;width:38px;height:12px;right:-4px;bottom:10px;border-radius:20px;background:#fff8e7;box-shadow:-9px 5px #fff8e7;transition:transform .65s,opacity .5s; }
+.switch-cloud::before { content:"";position:absolute;width:19px;height:19px;left:8px;bottom:0;background:inherit;border-radius:50%; }
+.switch-stars { position:absolute;top:4px;left:9px;color:#d9f3ff;font:15px/1.4 serif;letter-spacing:5px;opacity:0;transform:translateY(-18px);transition:opacity .65s,transform .65s; }
+.switch-hills { position:absolute;bottom:-18px;left:-5px;width:78px;height:30px;background:#547d75;border-radius:50%;transform:rotate(-15deg);opacity:.65;transition:background .65s; }
+.night-world #world-switch { background:linear-gradient(135deg,#263c58ed,#101e34f5);border-color:#92c8e17d;color:#e4f4ff; }
+.night-world .world-switch-sky { background:linear-gradient(#14243e,#31526c); }
+.night-world .switch-orb { left:calc(100% - 36px);background:#e0ebed;box-shadow:0 0 0 5px #d8f4ff15,0 0 15px #d1efff66; }
+.night-world .switch-orb::after { opacity:.75; }
+.night-world .switch-cloud { transform:translateY(30px);opacity:0; }
+.night-world .switch-stars { opacity:1;transform:translateY(0); }
+.night-world .switch-hills { background:#0a172d; }
+.night-stars { position:absolute;inset:0;pointer-events:none;opacity:0;background-image:radial-gradient(circle at 12% 20%,#d6edffbb 0 1px,transparent 2px),radial-gradient(circle at 32% 13%,#d6edff88 0 1px,transparent 2px),radial-gradient(circle at 58% 22%,#d6edff99 0 1px,transparent 2px),radial-gradient(circle at 72% 12%,#d6edff99 0 1px,transparent 2px),radial-gradient(circle at 89% 36%,#d6edffaa 0 1px,transparent 2px);transition:opacity 1s; }
+.night-world .night-stars { opacity:1; }
+#challenge-directory { color:#e4f3fc;animation:night-arrival .65s ease both; }
+.night-eyebrow { color:#a8d6e2;font-size:clamp(10px,2.1cqh,15px);letter-spacing:.35em;margin:0 0 1.4cqh; }
+#challenge-directory h2 { margin:0;font-size:clamp(23px,6cqh,42px);letter-spacing:.12em;font-weight:normal;text-shadow:0 0 25px #81d5f34d; }
+.night-intro { font-size:clamp(12px,2.5cqh,18px);color:#bed2e2;margin:1.7cqh 0 4cqh; }
+.challenge-previews { display:flex;justify-content:center;gap:3cqw; }
+.challenge-preview { width:25cqw;max-width:300px;box-sizing:border-box;padding:2.5cqh 2cqw;border:1px solid #9ed0e345;border-radius:16px;background:linear-gradient(145deg,#3655739c,#142b46b8);box-shadow:0 12px 32px #020d202b,inset 0 1px #d4efff17;text-align:left; }
+.challenge-number { display:block;color:#99c4d9;font-size:clamp(10px,2cqh,14px);letter-spacing:.12em; }
+.challenge-preview svg { display:block;width:clamp(42px,10cqh,75px);height:clamp(35px,8cqh,60px);margin:1.5cqh 0;fill:#24415d;stroke:#b8e3ed;stroke-width:2;stroke-linejoin:round;stroke-linecap:round; }
+.challenge-preview h3 { margin:0 0 1cqh;font-size:clamp(16px,3.6cqh,25px);font-weight:normal;letter-spacing:.08em; }
+.challenge-preview p { font-size:clamp(11px,2.2cqh,16px);color:#bfd1de;margin:0 0 2cqh; }
+.challenge-soon { display:inline-block;padding:4px 12px;border:1px solid #86bed15c;border-radius:20px;color:#a8d7e4;font-size:clamp(10px,2cqh,14px); }
+.night-world > .back-btn { background:#29475f;border:1px solid #83b6ce70;color:#e1f1fb; }
+.visually-hidden { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+@keyframes night-arrival { from { opacity:0;transform:translateY(12px); } to { opacity:1;transform:translateY(0); } }
+@media (prefers-reduced-motion:reduce) { #level-select *,#level-select::before,#level-select::after { animation:none!important;transition:none!important; } }
