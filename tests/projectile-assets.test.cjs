@@ -62,3 +62,16 @@ test('every target owns its original target/projectile/result pairing even if th
   assert.equal(f.enemy.element.style.backgroundImage,`url('${source.projectileHitImage}')`);
  }
 });
+test('successful heavy completion leaves original water and soy wave artwork visible until its own hide timer',()=>{
+ for(const level of [2,3]){
+  const f=fixture(),source=f.context.window.DefenseLevels[level].adult;
+  const shield={style:{}};f.context.document.getElementById=id=>id==='shield-up'?shield:null;
+  vm.runInContext(fs.readFileSync('js/minigames/defense/DefenseAttackRunner.js','utf8'),f.context);
+  f.g.currentAttack={type:'HEAVY',materials:f.g.captureMaterialSet(source),resolved:true};
+  Object.assign(f.g,{showAvoidanceProgress(){},clearAllTimers(){},clearTrail(){},stopAllEnemiesBounce(){},clearEnemies(){},clearProjectiles(){},clearHeavySequence(){},clearHeavyProjectiles(){},lightIntervals:{},aoeLines:[],getCurrentGap:()=>800,setState(state){this.state=state;},processNextAttack(){}});
+  f.g.showShield('up');const hideTimer=f.timers.at(-1);
+  f.context.window.DefenseAttackRunnerMixin.finishAttack.call(f.g);
+  assert.equal(shield.style.backgroundImage,`url('${source.shieldImage}')`);assert.equal(shield.style.opacity,'0.8');
+  hideTimer();assert.equal(shield.style.opacity,'0');
+ }
+});

@@ -260,6 +260,7 @@ window.DefenseAttackRunnerMixin = {
 
         this.clearAllTimers();
 
+        this.hideShields?.();
         this.clearHeavySequence();
         this.clearHeavyProjectiles();
         this.clearEnemies();
@@ -454,7 +455,8 @@ window.DefenseAttackRunnerMixin = {
         }
 
         this.isShieldActive = false;
-        this.hideShields?.();
+        // 重擊成功時保留剛顯示的水波／豆漿波，交由原本 500ms 視覺計時器收尾。
+        if (attack.type !== 'HEAVY') this.hideShields?.();
         this.shieldEndTime = 0;
 
         if (this.currentAttack && this.currentAttack.multiTimeout) {
