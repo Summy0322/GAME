@@ -579,6 +579,7 @@ const DefenseGameV2 = {
         this.stage.appendChild(enemy);
         
         const enemyObj = { 
+            materials: this.captureMaterialSet(cfg),
             element: enemy, 
             dir: dir,
             animationId: null,
@@ -1263,18 +1264,22 @@ const DefenseGameV2 = {
         }
     },
     
-    captureProjectileAssets: function() {
-        const image = this.levelConfig.projectileImage;
+    captureMaterialSet: function(config = this.levelConfig) {
+        return Object.freeze(Object.fromEntries(['enemyImage','heavyEnemyImage','projectileImage','projectileHitImage','shieldImage'].map(key=>[key,config[key]])));
+    },
+    captureProjectileAssets: function(dir) {
+        const target = this.enemies.find(enemy => enemy.dir === dir);
+        const materials = target?.materials || this.currentAttack?.materials || this.captureMaterialSet();
         return Object.freeze({
-            projectileImage: image,
-            projectileHitImage: this.challenge ? image : this.levelConfig.projectileHitImage,
+            projectileImage: materials.projectileImage,
+            projectileHitImage: materials.projectileHitImage,
             attack: this.currentAttack,
             session: this.sessionId
         });
     },
     launchProjectile: function(dir, onComplete) {
         const currentSession = this.sessionId;  // ✅ 加這行
-        const cfg = this.captureProjectileAssets();
+        const cfg = this.captureProjectileAssets(dir);
         const target = this.scaledPositions[dir];
         const size = this.scaledSizes.projectile;
 
@@ -1399,7 +1404,7 @@ const DefenseGameV2 = {
 
     // 新增：在玩家位置創建投射物（不發射）
     createProjectileAtPlayer: function(dir) {
-        const cfg = this.captureProjectileAssets();
+        const cfg = this.captureProjectileAssets(dir);
         const size = this.scaledSizes.projectile;
         
         // 獲取玩家實際尺寸
@@ -1456,7 +1461,7 @@ const DefenseGameV2 = {
     // 新增：從指定位置發射投射物到目標方向
     launchProjectileFromPosition: function(dir, projectile, onComplete) {
         const currentSession = this.sessionId;  // ✅ 加這行
-        const cfg = projectile.flightAssets || this.captureProjectileAssets();
+        const cfg = projectile.flightAssets || this.captureProjectileAssets(dir);
         const currentAttackRef = cfg.attack;
         const currentState = this.state;
         const expired = () => !this.gameActive || this.sessionId !== cfg.session || this.currentAttack !== currentAttackRef || currentAttackRef?.finished;
@@ -1575,7 +1580,7 @@ const DefenseGameV2 = {
 
         console.log('spawnHeavySequence 被呼叫，方向:', dir);
         
-        const cfg = this.levelConfig;
+        const cfg = this.currentAttack?.materials || this.levelConfig;
         const size = this.scaledSizes.heavySequence;
         const count = 5;
         const targetPos = this.scaledPositions[dir];
@@ -2110,7 +2115,8 @@ const DefenseGameV2 = {
         const generation = this.shieldVisualGeneration;
         const shield = document.getElementById(`shield-${dir}`);
         if (shield) {
-            if (this.challenge) shield.style.backgroundImage = 'none';
+            const materials = this.currentAttack?.materials || this.captureMaterialSet();
+            shield.style.backgroundImage = `url('${materials.shieldImage}')`;
             shield.style.opacity = '0.8';
             this.shieldVisualTimer = this.clock.setTimeout(() => {
                 if (generation === this.shieldVisualGeneration) this.hideShields();

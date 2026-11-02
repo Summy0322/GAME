@@ -174,7 +174,7 @@ window.TimedChallenge = {
             const aoe=document.getElementById(`aoe-${dir}`);
             if(aoe)aoe.style.backgroundImage=`url('${source.aoeLineImage}')`;
         }
-        return {...attack,resolved:false};
+        return {...attack,resolved:false,materials:Object.freeze({...assets})};
     },
     paired() { if(this.active){this.pairs++;this.score+=10;this.updateHUD();} },
     penalty() { if(this.active){this.penalties++;this.score=Math.max(0,this.score-10);this.updateHUD();} },
