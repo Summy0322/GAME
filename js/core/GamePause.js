@@ -18,6 +18,8 @@ window.GamePause = {
     portrait() { return window.matchMedia?.('(orientation: portrait)').matches === true; },
     pause() {
         if (!this.owner) return;
+        this.phase = 'paused';
+        if (window.TimedChallenge?.active) window.TimedChallenge.resetExitConfirmation();
         this.cancelCountdown();
         if (!this.paused) {
             this.paused = true;
@@ -41,6 +43,11 @@ window.GamePause = {
         document.getElementById('game-pause-overlay').hidden = false;
         document.getElementById('game-pause-status').textContent = '遊戲已暫停';
         const resume = document.getElementById('game-pause-resume');
+        resume.textContent = '繼續遊戲';
+        resume.hidden = false;
+        const exit = document.getElementById('game-pause-exit');
+        exit.hidden = false;
+        exit.disabled = false;
         resume.disabled = false;
         resume.focus();
         window.DialogueSkip?.render();
@@ -53,15 +60,24 @@ window.GamePause = {
     },
     continueGame() {
         if (!this.owner || !this.paused || this.countdownTimer != null) return;
+        if (this.phase === 'confirm-exit') { this.pause(); return; }
+        if (this.phase !== 'paused') return;
+        if (window.TimedChallenge?.active) window.TimedChallenge.resetExitConfirmation();
         if (document.hidden || this.portrait()) {
             document.getElementById('game-pause-status').textContent = '請將畫面橫放後再繼續';
             return;
         }
         const generation = this.generation;
+        this.phase = 'countdown';
         document.getElementById('game-pause-overlay').dataset.countdown = 'true';
         let remaining = 3;
         const status = document.getElementById('game-pause-status');
         document.getElementById('game-pause-resume').disabled = true;
+        for (const id of ['game-pause-resume','game-pause-exit']) {
+            document.getElementById(id).hidden = true;
+            document.getElementById(id).disabled = true;
+        }
+        status.focus();
         const tick = () => {
             if (generation !== this.generation || !this.owner || !this.paused) return;
             if (document.hidden || this.portrait()) { this.pause(); return; }
@@ -79,6 +95,7 @@ window.GamePause = {
         this.animations.forEach(animation=>{try{animation.play();}catch(_){}});
         this.animations = [];
         this.paused = false;
+        this.phase = 'idle';
         this.clock?.resume();
         document.getElementById('game-pause-overlay').hidden = true;
         document.getElementById('game-pause-button').hidden = false;
@@ -88,6 +105,9 @@ window.GamePause = {
     },
     end(owner) {
         if (owner && owner !== this.owner) return;
+        const exitButton = document.getElementById('game-pause-exit');
+        if (exitButton) exitButton.textContent = '返回章節選擇';
+        this.phase = 'idle';
         this.generation++;
         this.cancelCountdown();
         if (this.paused && this.root) this.root.inert = this.wasInert;
@@ -107,6 +127,8 @@ window.GamePause = {
     },
     exit() {
         if (!this.owner) return;
+        if (this.phase === 'countdown') return;
+        if (window.TimedChallenge?.active) { window.TimedChallenge.confirmExit(); return; }
         window.LoadingManager?.cancel();
         window.CollectionSystem?.close();
         window.GameEngine?.stopMinigame();

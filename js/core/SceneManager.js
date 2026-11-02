@@ -13,7 +13,7 @@ const SceneManager = {
     
     show: function(sceneId) {
         if (sceneId !== 'game-container') window.DialogueSkip?.clear();
-        window.GameMusic?.stop();
+        if (sceneId !== 'challenge-results') window.GameMusic?.stop();
         if (window.Logger) window.Logger.info('SceneManager 顯示場景:', sceneId);
         
         // 隱藏所有場景

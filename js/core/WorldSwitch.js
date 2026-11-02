@@ -12,7 +12,7 @@ window.WorldSwitch = {
         button.querySelector('.world-switch-label').innerHTML = this.night
             ? '挑戰<span>月下老街</span>' : '故事<span>白日老街</span>';
         document.getElementById('world-switch-status').textContent = this.night
-            ? '已切換至夜間挑戰，挑戰遊戲即將開放。' : '已切換至故事章節。';
+            ? '已切換至夜間限時挑戰。' : '已切換至故事章節。';
     },
     init() {
         document.getElementById('world-switch')?.addEventListener('click', () => this.setNight(!this.night));
