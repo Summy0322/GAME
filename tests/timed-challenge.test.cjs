@@ -49,6 +49,23 @@ test('actual memory matching clears red lights; third miss penalizes score and t
  g.wrongStreak=2;g.flippedCards=[node('a'),node('a')];queued=[];let advanced=0;f.c.boardComplete=()=>advanced++;
  g.checkMatch();assert.equal(g.wrongStreak,0);assert.equal(f.c.score,20);queued.forEach(fn=>fn());assert.equal(advanced,1);
 });
+test('both modes schedule AOE after 25 and 60 seconds with 400 points and the full reaction window',()=>{
+ for(const mode of ['child','adult']){
+  const {c,window}=fixture();c.kind='defense';c.mode=mode;c.aoeMilestone=0;
+  const game={levelConfig:{bgImage:'fixed',flow:{}}};
+  for(const [elapsed,expected] of [[24999,false],[25000,true],[26000,false],[60000,true],[61000,false]]){
+   c.remaining=90000-elapsed;const attack=c.nextAttack(game);assert.equal(attack.type==='AOE',expected);
+   if(expected){assert.equal(attack.points,400);assert.ok(window.DefenseLevels[3][mode].attackPatterns.some(a=>a.type==='AOE'&&a.wait===attack.wait));}
+  }
+ }
+});
+test('a new mixed wave cannot change the asset settings captured by an in-flight projectile',()=>{
+ const {c}=fixture();c.mode='adult';c.remaining=80000;
+ const game={levelConfig:{bgImage:'fixed',flow:{targetName:'old'},projectileHitImage:'old-hit.png',heavyEnemyImage:'old-heavy.png'}};
+ const flightConfig=game.levelConfig,flightFlow=game.levelConfig.flow;
+ c.nextAttack(game);assert.notEqual(game.levelConfig,flightConfig);assert.notEqual(game.levelConfig.flow,flightFlow);
+ assert.equal(flightConfig.projectileHitImage,'old-hit.png');assert.equal(flightConfig.heavyEnemyImage,'old-heavy.png');assert.equal(flightFlow.targetName,'old');
+});
 test('memory boards grow only to the mobile-friendly cap and preserve run totals through engine restarts',()=>{
  const {c,window}=fixture();const starts=[];
  window.MemoryGameV2={start(options){starts.push(options);}};window.GamePause={attach(){}};c.decorate=()=>{};

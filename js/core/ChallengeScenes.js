@@ -50,14 +50,6 @@ window.ChallengeScenes = {
     },
     close() { this.run++; showScene('level-select'); },
     init() {
-        document.querySelectorAll('.challenge-preview').forEach((card, index) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.textContent = '查看場景';
-            button.dataset.challengePreview = index === 0 ? 'defense' : 'memory';
-            card.appendChild(button);
-        });
-        document.querySelectorAll('[data-challenge-preview]').forEach(button => button.addEventListener('click', () => this.open(button.dataset.challengePreview)));
         document.getElementById('challenge-preview-back').addEventListener('click', () => this.close());
         document.getElementById('challenge-reroll').addEventListener('click', () => this.loadBackground());
     }

@@ -1880,7 +1880,7 @@ const DefenseGameV2 = {
             if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('✨ AOE 防禦成功！');
             if (this.state === this.states.AOE_ACTIVE) {
-                this.addScore(this.scoreTable.AOE);
+                this.addScore(this.currentAttack?.points || this.scoreTable.AOE);
                 this.finishAttack();
             }
         };

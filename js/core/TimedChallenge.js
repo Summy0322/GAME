@@ -22,7 +22,7 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-title').textContent = memory ? '記憶挑戰' : '防守挑戰';
         document.getElementById('challenge-lobby-copy').textContent = memory
             ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
-            : '90 秒連續防守，滑動處理目標、避開石頭；重擊依提示滑動格擋，旋轉時沿畫面畫圈。沿用各操作分數，失誤會扣分但不會提前結束。背景整場固定，素材隨波次混合。';
+            : '90 秒連續防守，滑動處理目標、避開石頭；重擊依提示滑動格擋，旋轉時沿畫面畫圈。約第 25、60 秒後各有一次旋轉，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
         document.getElementById('challenge-lobby-best').textContent = `個人最佳：${this.best(kind, this.mode)} 分`;
     },
     stop() {
@@ -62,6 +62,7 @@ window.TimedChallenge = {
         document.getElementById('game-wrapper').classList.add('challenge-active');
         this.remaining = 90000;
         this.score = this.pairs = this.boards = this.penalties = this.successes = 0;
+        this.aoeMilestone = 0;
         this.session = new window.MinigameSession();
         const run = this.generation;
         this.background = this.kind === 'defense' ? window.ChallengeScenes.pickBackground() : 'assets/images/ch2/bg.png';
@@ -155,15 +156,19 @@ window.TimedChallenge = {
     },
     nextAttack(game) {
         const elapsed = 90000-this.remaining;
-        const level = 1+Math.floor(Math.random()*3);
+        const dueAOE = elapsed >= [25000,60000][this.aoeMilestone || 0];
+        const level = dueAOE ? 3 : 1+Math.floor(Math.random()*3);
         const source = window.DefenseLevels[level][this.mode];
-        const allowed = elapsed<20000 ? ['NORMAL','MULTI'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY','AOE'];
+        const allowed = dueAOE ? ['AOE'] : elapsed<20000 ? ['NORMAL','MULTI'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY'];
         const pool = source.attackPatterns.filter(a => allowed.includes(a.type));
         const attack = JSON.parse(JSON.stringify(pool[Math.floor(Math.random()*pool.length)]));
         const minimum = this.mode === 'child' ? 2400 : 1700;
-        if (attack.wait) attack.wait = Math.max(minimum,attack.wait*(elapsed>60000?.78:elapsed>20000?.9:1));
-        for (const key of ['enemyImage','decoyImage','wrongEnemyImage','heavyEnemyImage','projectileImage','projectileHitImage','shieldImage','aoeLineImage']) game.levelConfig[key]=source[key];
-        game.levelConfig.flow.targetName=source.flow.targetName;
+        if (dueAOE) { this.aoeMilestone=(this.aoeMilestone||0)+1;attack.points=400; }
+        else if (attack.wait) attack.wait = Math.max(minimum,attack.wait*(elapsed>60000?.78:elapsed>20000?.9:1));
+        // 每波建立獨立材質設定，舊投射物／命中特效不會讀到下一波的圖片。
+        const assets = {};
+        for (const key of ['enemyImage','decoyImage','wrongEnemyImage','heavyEnemyImage','projectileImage','projectileHitImage','shieldImage','aoeLineImage']) assets[key]=source[key];
+        game.levelConfig={...game.levelConfig,...assets,flow:{...game.levelConfig.flow,targetName:source.flow.targetName}};
         // 顯示中的盾牌與旋轉素材也跟隨本波，背景與角色整場固定。
         for (const dir of ['up','down','left','right']) {
             const shield=document.getElementById(`shield-${dir}`),aoe=document.getElementById(`aoe-${dir}`);

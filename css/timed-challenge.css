@@ -15,9 +15,15 @@
 .challenge-live-hud { position:absolute;top:1%;left:50%;transform:translateX(-50%);z-index:180;white-space:nowrap;color:#e3f3fd;background:#10283de8;padding:1cqh 2cqw;border:1px solid #92c9dd66;border-radius:30px;font-size:clamp(13px,3cqh,23px);pointer-events:none; }
 .challenge-time-warning { color:#ffd09a;border-color:#ffd09a; }
 .night-challenge-game .memory-panel { top:52%;height:90%;max-height:90%;box-sizing:border-box;border-color:#80b7d0;background-image:linear-gradient(145deg,#345d7fe8,#17334de8);color:#e4f1fa;box-shadow:inset 0 1px #b8ddf33b,0 10px 30px #08192b66; }
-.night-challenge-game .memory-grid { max-height:none;flex-shrink:0; }
+.night-challenge-game .memory-grid { max-width:none;max-height:none;flex-shrink:0; }
 .night-challenge-game .memory-hint,.night-challenge-game .defense-controls-hint { display:none; }
-.timed-challenge .challenge-live-hud { top:2%;left:2%;transform:none; }
+.night-challenge-game .challenge-live-hud { top:2%;left:2%;transform:none; }
+.night-challenge-game .memory-timer-large { display:none; }
+.challenge-preview p { white-space:nowrap;font-size:clamp(10px,1.9cqh,16px); }
+#game-wrapper.challenge-active #loading-screen { color:#d4edfc;background:radial-gradient(ellipse at 75% 15%,#315b7cf2,#0b1c34f5 75%); }
+#game-wrapper.challenge-active .loading-content { background:linear-gradient(135deg,#305571e8,#142e48ed);border-color:#8bc1d6;box-shadow:0 12px 35px #030d2366; }
+#game-wrapper.challenge-active .loading-content .spinner { border-color:#385b76;border-top-color:#b3e4f7; }
+#game-wrapper.challenge-active #loading-progress { color:#b6e9fa; }
 .night-challenge-game .memory-info,.night-challenge-game .memory-info-item,.night-challenge-game .memory-hint,.night-challenge-game .memory-timer-large { color:#e6f4ff; }
 .night-challenge-game .memory-hint { background:#152f49cc;border-color:#7aafc877; }
 .night-challenge-game .memory-card { border-color:#87b8ce; }
