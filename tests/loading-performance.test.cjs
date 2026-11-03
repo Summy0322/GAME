@@ -3,12 +3,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-function worker() {
+function worker({installError} = {}) {
     const events = {}, stored = new Map(), downloads = [], installs = [];
     const cache = {
         match: async r => stored.get(r.url),
         put: async (r, response) => stored.set(r.url, response),
-        addAll: async urls => installs.push(...urls)
+        addAll: async urls => { if (installError) throw installError; installs.push(...urls); }
     };
     const context = {URL,console:{log(){}},self:{location:{origin:'https://example.test'},addEventListener:(name, fn)=>events[name]=fn},
         caches:{open:async()=>cache},fetch:async request=>{
@@ -25,6 +25,14 @@ test('installation caches existing application files without downloading media o
         assert.ok(!url.includes('/assets/'),url);
         assert.ok(fs.existsSync(url==='/GAME/'?'index.html':url.replace('/GAME/','')),url);
     }
+});
+
+test('a missing deployment file rejects worker installation so the working version stays active',async()=>{
+    const failure = new Error('missing deployment file');
+    const w = worker({installError: failure});
+    let pending;
+    w.events.install({waitUntil: p => pending = p});
+    await assert.rejects(pending, error => error === failure);
 });
 
 test('visited images are cached on demand and reused; audio is not cached',async()=>{

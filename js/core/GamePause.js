@@ -46,6 +46,7 @@ window.GamePause = {
         resume.textContent = '繼續遊戲';
         resume.hidden = false;
         const exit = document.getElementById('game-pause-exit');
+        exit.textContent = window.TimedChallenge?.active ? '返回挑戰目錄' : '返回章節選擇';
         exit.hidden = false;
         exit.disabled = false;
         resume.disabled = false;
@@ -129,6 +130,16 @@ window.GamePause = {
         if (!this.owner) return;
         if (this.phase === 'countdown') return;
         if (window.TimedChallenge?.active) { window.TimedChallenge.confirmExit(); return; }
+        if (!this.paused || !['paused', 'confirm-exit'].includes(this.phase)) return;
+        if (this.phase !== 'confirm-exit') {
+            this.phase = 'confirm-exit';
+            document.getElementById('game-pause-status').textContent = '確定要返回章節選擇嗎？本次小遊戲進度不會保存。';
+            document.getElementById('game-pause-exit').textContent = '確認返回';
+            const cancel = document.getElementById('game-pause-resume');
+            cancel.textContent = '取消';
+            cancel.focus();
+            return;
+        }
         window.LoadingManager?.cancel();
         window.CollectionSystem?.close();
         window.GameEngine?.stopMinigame();

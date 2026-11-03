@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>音樂匯入檢查</title>
+<style>body{max-width:800px;margin:40px auto;padding:20px;font:18px/1.7 system-ui;background:#f4efe7;color:#302b28}pre{white-space:pre-wrap}button{padding:12px;font:inherit}</style>
+<h1>小遊戲音樂匯入檢查</h1><p>只檢查載入與解碼，不播放聲音。</p><pre id="result">檢查中…</pre>
+<script src="../js/core/GameMusic.js"></script>
+<script>
+(async()=>{
+const context=new (window.AudioContext||window.webkitAudioContext)();
+const results=[];
+try {
+for(const [key,path] of Object.entries(GameMusic.tracks)) {
+try {
+const response=await fetch('../'+path);if(!response.ok)throw Error('HTTP '+response.status);
+const bytes=await response.arrayBuffer();const buffer=await context.decodeAudioData(bytes);
+results.push({track:key,path,ok:true,seconds:Math.round(buffer.duration*10)/10,channels:buffer.numberOfChannels,sampleRate:buffer.sampleRate});
+}catch(error){results.push({track:key,path,ok:false,error:error.message})}
+document.getElementById('result').textContent=JSON.stringify({allOK:results.length===4&&results.every(r=>r.ok),results},null,2);
+}
+}finally{await context.close()}
+})();
+</script></html>
