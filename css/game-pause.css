@@ -13,3 +13,4 @@
 .game-pause-actions button:disabled { opacity:.55;cursor:wait; }
 #game-pause-exit { background:#687d8a; }
 #game-pause-overlay :focus-visible { outline:3px solid #ffd700;outline-offset:3px; }
+#game-container.story-minigame > .back-btn { display:none!important; }

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>對話電子短音試聽</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4efe7;color:#302b28;font:17px/1.7 system-ui,sans-serif}main{max-width:760px;margin:auto;padding:40px 22px}h1{font-size:30px;margin:0}p{color:#655d57}.voices{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}button,select,input{font:inherit}button{cursor:pointer;border:1px solid #c7b8a8;border-radius:10px;padding:12px 18px;background:white;color:inherit;min-height:48px}button[aria-pressed=true],#play{background:#82452f;color:white;border-color:#82452f}label{display:block;margin:18px 0}input[type=range]{width:min(260px,65%);vertical-align:middle;accent-color:#82452f}textarea{width:100%;min-height:100px;padding:14px;font:inherit;border:1px solid #c7b8a8;border-radius:10px;background:#fffdf9;color:inherit}.dialogue{margin:20px 0;background:#fffdf9;border-left:4px solid #82452f;padding:24px;min-height:145px;font-size:22px;white-space:pre-wrap;overflow-wrap:anywhere}.actions{display:flex;gap:10px;flex-wrap:wrap}small{color:#655d57}#status{min-height:30px}
+</style>
+<main>
+<small>獨立試聽 · 尚未接入遊戲</small>
+<h1>替對話找一個聲音</h1>
+<p>先按音色按鈕聽三個短音，再播放對話，感受連續發聲的效果。</p>
+<div class="voices" role="group" aria-label="音色">
+<button data-voice="soft" aria-pressed="false">柔和電子音</button>
+<button data-voice="bright" aria-pressed="true">清亮電子音</button>
+<button data-voice="sparkle" aria-pressed="false">輕盈清音</button>
+<button data-voice="drop" aria-pressed="false">水滴短音</button>
+<button data-voice="chirp" aria-pressed="false">上揚啾音</button>
+<button data-voice="bell" aria-pressed="false">迷你鈴音</button>
+<button data-voice="crystal" aria-pressed="false">晶亮雙音</button>
+<button data-voice="retro" aria-pressed="false">復古遊戲音</button>
+</div>
+<label>音量 <input id="volume" type="range" min="0" max="100" value="30"> <output id="volumeValue">30%</output></label>
+<label>文字速度 <select id="speed"><option value="80">慢速</option><option value="55" selected>一般</option><option value="30">快速</option></select></label>
+<label for="script">試聽台詞（可自行修改）</label>
+<textarea id="script">你好！歡迎來到紅磚的世界。準備好了嗎？我們一起開始冒險吧！</textarea>
+<div class="dialogue" id="dialogue" aria-label="對話示範">選好音色後，按下「播放對話」。</div>
+<div class="actions"><button id="play">播放對話</button><button id="skip">立即顯示全文</button><button id="stop">停止</button></div>
+<p id="status" role="status">等待試聽</p>
+<small>音效由程式即時產生，不需要音效檔。空白與標點不發聲，發聲間隔至少 75 毫秒。停止或離開頁面時會清除舊聲音。</small>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const voices={soft:{type:'sine',frequency:560,duration:.042,gain:.24},bright:{type:'triangle',frequency:820,duration:.035,gain:.20},sparkle:{type:'sine',frequency:1100,duration:.032,gain:.24},drop:{type:'sine',frequency:1200,end:.52,duration:.052,gain:.24},chirp:{type:'triangle',frequency:660,end:1.5,duration:.04,gain:.18},bell:{type:'sine',frequency:1046,duration:.065,gain:.20,partial:2.76},crystal:{type:'sine',frequency:880,duration:.05,gain:.19,partial:1.5},retro:{type:'square',frequency:440,duration:.028,gain:.075}};
+let context,voice='bright',generation=0,lastTone=-Infinity;
+const timers=new Set(),nodes=new Set();
+function stop(){generation++;for(const timer of timers)clearTimeout(timer);timers.clear();for(const node of nodes){try{node.stop()}catch{}}nodes.clear();lastTone=-Infinity;}
+function later(fn,delay){const timer=setTimeout(()=>{timers.delete(timer);fn()},delay);timers.add(timer);}
+async function ready(){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw new Error('這個瀏覽器不支援音訊，請用 Chrome 或 Edge。');context??=new Audio();if(context.state!=='running')await context.resume();if(context.state!=='running')throw new Error('音訊尚未啟用，請再按一次播放。');}
+function tone(){
+    const settings=voices[voice],now=context.currentTime;
+    if(now-lastTone<.075)return;
+    lastTone=now;
+    const playLayer=(ratio,level)=>{
+        const oscillator=context.createOscillator(),gain=context.createGain();
+        oscillator.type=settings.type;
+        oscillator.frequency.setValueAtTime(settings.frequency*ratio,now);
+        oscillator.frequency.exponentialRampToValueAtTime(settings.frequency*ratio*(settings.end??.91),now+settings.duration);
+        gain.gain.setValueAtTime(0,now);
+        gain.gain.linearRampToValueAtTime(settings.gain*level*Number($('volume').value)/100,now+.004);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+settings.duration);
+        oscillator.connect(gain);gain.connect(context.destination);nodes.add(oscillator);
+        oscillator.onended=()=>{nodes.delete(oscillator);oscillator.disconnect();gain.disconnect()};
+        oscillator.start(now);oscillator.stop(now+settings.duration+.005);
+    };
+    playLayer(1,1);
+    if(settings.partial)playLayer(settings.partial,.28);
+}
+async function start(action){stop();const token=generation;try{await ready();if(token!==generation)return;action(token)}catch(error){if(token===generation)$('status').textContent=error.message}}
+document.querySelectorAll('[data-voice]').forEach(button=>button.addEventListener('click',()=>{voice=button.dataset.voice;document.querySelectorAll('[data-voice]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));start(token=>{[0,140,280].forEach(delay=>later(()=>{if(token===generation)tone()},delay));$('status').textContent='試聽：'+button.textContent})}));
+$('volume').addEventListener('input',()=>{$('volumeValue').value=$('volume').value+'%'});
+$('play').addEventListener('click',()=>start(token=>{const text=Array.from($('script').value);let index=0;$('dialogue').textContent='';$('status').textContent='播放中';function next(){if(token!==generation)return;if(index>=text.length){$('status').textContent='播放完成，可以換音色再比較';return}const char=text[index++];$('dialogue').textContent+=char;if(/[\p{L}\p{N}]/u.test(char))tone();later(next,Number($('speed').value)*(/[，。！？、,.!?]/u.test(char)?3:1))}next()}));
+$('stop').addEventListener('click',()=>{stop();$('status').textContent='已停止'});
+$('skip').addEventListener('click',()=>{stop();$('dialogue').textContent=$('script').value;$('status').textContent='已顯示全文，音效停止'});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();$('status').textContent='頁面切換，已停止'}});
+window.addEventListener('pagehide',()=>{stop();if(context&&context.state!=='closed')context.close().catch(()=>{})});
+</script>
+</html>

@@ -111,6 +111,28 @@ test('challenge return confirmation cancels back to pause; countdown blocks all 
     f.document.hidden=true;f.emit('visibilitychange');assert.equal(pause.phase,'paused');assert.equal(resume.hidden,false);assert.equal(exit.hidden,false);
     f.document.hidden=false;pause.exit();pause.exit();assert.equal(exits,1);
 });
+test('story minigame exit requires confirmation and cancel preserves the paused session in both chapters',()=>{
+    for (const kind of ['defense','memory']) {
+        const f=fixture(),pause=f.window.GamePause,clock=f.clock();
+        let exits=0,work=0;
+        f.context.showScene=scene=>{assert.equal(scene,'level-select');exits++;};
+        const owner={session:{clock}};
+        clock.setTimeout(()=>work++,1000);
+        pause.attach(owner,kind);pause.pause();
+        pause.exit();
+        assert.equal(exits,0);assert.equal(pause.phase,'confirm-exit');
+        assert.equal(f.nodes.get('game-pause-exit').textContent,'確認返回');
+        assert.equal(f.nodes.get('game-pause-resume').textContent,'取消');
+        f.tick(5000);assert.equal(work,0);
+        pause.continueGame();
+        assert.equal(pause.owner,owner);assert.equal(pause.phase,'paused');
+        assert.equal(f.nodes.get('game-pause-exit').textContent,'返回章節選擇');
+        assert.equal(pause.countdownTimer,null);assert.equal(exits,0);
+        pause.exit();pause.exit();pause.exit();
+        assert.equal(exits,1);assert.equal(pause.owner,null);
+    }
+});
+
 test('defense gameplay uses the virtual clock for all timers, animation frames and timestamp checks',()=>{
     for(const file of ['js/minigames/DefenseGameV2.js','js/minigames/defense/DefenseAttackRunner.js','js/minigames/defense/DefenseTrailRender.js']){
         const source=fs.readFileSync(file,'utf8');const gameplay=source.replace(/get clock\(\) \{[\s\S]*?\n    \},/,'');

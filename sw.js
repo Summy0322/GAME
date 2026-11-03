@@ -1,5 +1,5 @@
 // 首頁只預存程式；圖片與字型在實際使用後快取，音樂／影片按需載入。
-const CACHE_NAME = 'game-v67';
+const CACHE_NAME = 'game-v69';
 const urlsToCache = [
   "/GAME/",
   "/GAME/index.html",
@@ -67,6 +67,8 @@ self.addEventListener('install', event => {
       })
       .catch(err => {
         console.log('❌ 快取失敗:', err);
+        // 安裝失敗時保留舊版，避免缺檔的新快取取代可用版本。
+        throw err;
       })
   );
 });
@@ -111,4 +113,3 @@ self.addEventListener('activate', event => {
     })
   );
 });
-
