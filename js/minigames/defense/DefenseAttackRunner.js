@@ -144,7 +144,7 @@ window.DefenseAttackRunnerMixin = {
             attack.hits++;
             this.addScore(mixed ? this.scoreTable.MIXED_CORRECT : this.scoreTable.MULTI, dir);
         } else {
-            this.mistakes++;
+            this.recordMistake();
             this.updateScoreDisplay();
             this.addScore(this.scoreTable.MIXED_WRONG, dir);
             this.showWarning('那是石頭！不要滑向它！');

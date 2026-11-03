@@ -996,7 +996,7 @@ const DefenseGameV2 = {
                         // ✅ 檢查滑動方向是否就是石頭的方向
                         if (dir === this.currentAttack.dir) {
                             // 滑到石頭：扣分
-                            this.mistakes++;
+                            this.recordMistake();
                             this.updateScoreDisplay();
                             this.showWarning('💥 那是石頭！不能滑！');
                             // ✅ 使用權重
@@ -1017,7 +1017,7 @@ const DefenseGameV2 = {
                             // 滑到其他地方：輕微懲罰
                             console.log('⚠️ 滑到空白處，但石頭還在');
                             this.showWarning('⚠️ 滑空了！石頭還在！');
-                            this.mistakes++;
+                            this.recordMistake();
                             this.updateScoreDisplay();
                             // ✅ 使用權重
                             this.addScore(this.scoreTable.DECOY_MISS, dir);
@@ -1053,7 +1053,7 @@ const DefenseGameV2 = {
                                 console.log(`✅ 正確！滑動 ${dir}，+${this.scoreTable.MIXED_CORRECT}分`);
                             } else if (isWrong) {
                                 // ❌ 錯誤方向：滑到石頭扣分
-                                this.mistakes++;
+                                this.recordMistake();
                                 this.updateScoreDisplay();
                                 this.showWarning(`❌ 那是石頭！不能滑 ${dir} 方向！`);
                                 // ✅ 使用權重：錯誤方向扣分
@@ -1102,9 +1102,14 @@ const DefenseGameV2 = {
         }
     },
     
+    recordMistake: function() {
+        this.mistakes++;
+        this.challenge?.loseLife?.(this.currentAttack);
+    },
+
     wrongDirection: function() {
         // 只增加錯誤次數和顯示警告
-        this.mistakes++;
+        this.recordMistake();
         this.updateScoreDisplay();
         this.showWarning('方向錯誤');
         
@@ -1123,7 +1128,7 @@ const DefenseGameV2 = {
         this.addScore(-50);
         
         // 增加錯誤次數
-        this.mistakes++;
+        this.recordMistake();
         this.updateScoreDisplay();
         
         // 觸發紅光特效
@@ -1155,7 +1160,7 @@ const DefenseGameV2 = {
     
     missAttack: function(reason) {
         console.log('missAttack:', reason);
-        this.mistakes++;
+        this.recordMistake();
         this.updateScoreDisplay();
         this.showWarning(reason);
     },
@@ -1917,7 +1922,7 @@ const DefenseGameV2 = {
             if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('💥 AOE 攻擊命中！');
             if (this.state === this.states.AOE_ACTIVE) {
-                this.mistakes++;
+                this.recordMistake();
                 this.updateScoreDisplay();
                 this.showWarning('AOE 攻擊命中！');
                 this.finishAttack();

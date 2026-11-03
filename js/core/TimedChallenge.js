@@ -2,10 +2,12 @@ window.TimedChallenge = {
     active: false,
     generation: 0,
     storageKey: 'redbrick.challenge.best.v1',
+    variant: 'timed',
+    get endless() { return this.variant === 'endless'; },
     best(kind, mode, score) {
         let records = {};
         try { const saved = JSON.parse(localStorage.getItem(this.storageKey)); if (saved && typeof saved === 'object' && !Array.isArray(saved)) records = saved; } catch (_) {}
-        const key = `${kind}:${mode}`;
+        const key = `${this.endless ? 'endless:' : ''}${kind}:${mode}`;
         const old = Number.isFinite(records[key]) && records[key] >= 0 ? records[key] : 0;
         if (score !== undefined && score > old) {
             records[key] = score;
@@ -13,14 +15,23 @@ window.TimedChallenge = {
         }
         return Math.max(old, score || 0);
     },
-    showInfo(kind) {
+    showInfo(kind, variant = 'timed') {
         this.stop();
         this.kind = kind;
+        this.variant = variant === 'endless' ? 'endless' : 'timed';
         this.mode = window.gameMode === 'child' ? 'child' : 'adult';
+        for (const id of ['game-wrapper','challenge-lobby','challenge-countdown','challenge-results']) {
+            document.getElementById(id).dataset.challengeKind = kind;
+        }
         showScene('challenge-lobby');
         const memory = kind === 'memory';
-        document.getElementById('challenge-lobby-title').textContent = memory ? '記憶挑戰' : '防守挑戰';
-        document.getElementById('challenge-lobby-copy').textContent = memory
+        document.getElementById('challenge-lobby-kicker').textContent = this.endless ? '三條命・無限模式' : '90 秒・限時挑戰';
+        document.getElementById('challenge-lobby-title').textContent = `${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
+        document.getElementById('challenge-lobby-copy').textContent = this.endless
+            ? (memory
+                ? '三條命，不限時間、不補命。配對錯誤扣一條命，不再計紅燈；每對 +10 分，完成一盤再 +20 分。卡片逐盤增加至上限，開場記憶時間逐漸縮短。生命歸零時結算。'
+                : '三條命，不限時間、不補命。漏接、方向錯誤、打到石頭或格擋失敗扣一條命，同一波最多扣一條。每 10 波提升一階，逐步加入石頭、重擊與旋轉，反應時限逐漸縮短至下限。生命歸零時結算。')
+            : memory
             ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
             : '90 秒連續防守，滑動處理目標、避開石頭；重擊依提示滑動格擋，旋轉時沿畫面畫圈。約第 25、60 秒後各有一次旋轉，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
         document.getElementById('challenge-lobby-best').textContent = `個人最佳：${this.best(kind, this.mode)} 分`;
@@ -66,6 +77,10 @@ window.TimedChallenge = {
         this.active = true;
         document.getElementById('game-wrapper').classList.add('challenge-active');
         this.remaining = 90000;
+        this.elapsed = 0;
+        this.lives = 3;
+        this.ending = false;
+        this.damagedAttack = null;
         this.score = this.pairs = this.boards = this.penalties = this.successes = 0;
         this.aoeMilestone = 0;
         this.session = new window.MinigameSession();
@@ -74,6 +89,7 @@ window.TimedChallenge = {
         const assets = this.kind === 'defense'
             ? [...window.MinigameAssets.getDefensePreloadUrls(), 'assets/images/challenge/player.png']
             : [...window.MinigameAssets.getMemoryPreloadUrls(), this.background];
+        if (this.endless) assets.push('assets/images/heart.png');
         window.LoadingManager.showAndLoad(assets, () => {
             if (!this.active || run !== this.generation) return;
             showScene('challenge-countdown');
@@ -105,7 +121,8 @@ window.TimedChallenge = {
     },
     launchMemory(common = {challenge:this,gameMode:this.mode,onComplete:() => {}}) {
         const pairs = Math.min(this.mode === 'child' ? 5 : 6, (this.mode === 'child' ? 3 : 4) + this.boards);
-        window.MemoryGameV2.start({...common,cardCount:pairs*2,time:90,lightMode:'red',needMemorize:true,memorizationTime:2000});
+        const memorizationTime = this.endless ? Math.max(this.mode === 'child' ? 1600 : 1200, 3000-this.boards*200) : 2000;
+        window.MemoryGameV2.start({...common,cardCount:pairs*2,time:90,lightMode:this.endless ? 'none' : 'red',needMemorize:true,memorizationTime});
         window.GamePause.attach(window.MemoryGameV2,'memory');
         this.decorate(window.MemoryGameV2);
     },
@@ -147,29 +164,47 @@ window.TimedChallenge = {
     consumeTime() {
         if (!this.active || !this.liveClock) return;
         const now = this.liveClock.now();
-        this.remaining = Math.max(0,this.remaining-(now-this.lastTick));
+        const delta = now-this.lastTick;
+        this.elapsed = (this.elapsed || 0) + delta;
+        if (!this.endless) this.remaining = Math.max(0,this.remaining-delta);
         this.lastTick = now;
         if (this.kind === 'defense') this.score = Math.max(0,this.game.score);
         else { this.game.timeLeft = Math.ceil(this.remaining/1000); this.game.updateStats(); }
         this.updateHUD();
-        if (this.remaining <= 0) this.finish();
+        if (!this.endless && this.remaining <= 0) this.finish();
     },
     updateHUD() {
         if (!this.hud) return;
+        if (this.endless) {
+            const stage = this.kind === 'memory' ? this.boards+1 : Math.floor(Math.max(0,(this.game?.waveNumber || 1)-1)/10)+1;
+            this.hud.innerHTML = `<span class="challenge-hearts" role="img" aria-label="剩餘 ${this.lives} 條命">${[0,1,2].map(i=>`<img src="assets/images/heart.png" alt="" class="${i<this.lives?'':'heart-lost'}">`).join('')}</span><span>${this.score} 分 · ${Math.floor((this.elapsed || 0)/1000)} 秒 · ${this.kind === 'memory' ? `第 ${stage} 盤` : `階段 ${stage}`}</span>`;
+            this.hud.classList.toggle('challenge-time-warning',this.lives===1);
+            return;
+        }
         this.hud.textContent = `${Math.ceil(this.remaining/1000)} 秒　｜　${this.score} 分${this.kind === 'memory' ? `　｜　第 ${this.boards+1} 盤` : ''}`;
         this.hud.classList.toggle('challenge-time-warning',this.remaining<=10000);
     },
     nextAttack(game) {
         const elapsed = 90000-this.remaining;
-        const dueAOE = elapsed >= [25000,60000][this.aoeMilestone || 0];
+        const wave = (game.waveNumber || 0)+1;
+        const stage = Math.floor((wave-1)/10);
+        const dueAOE = this.endless ? wave >= 30 && wave%10===0 : elapsed >= [25000,60000][this.aoeMilestone || 0];
         const level = dueAOE ? 3 : 1+Math.floor(Math.random()*3);
         const source = window.DefenseLevels[level][this.mode];
-        const allowed = dueAOE ? ['AOE'] : elapsed<20000 ? ['NORMAL','MULTI'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY'];
+        const allowed = dueAOE ? ['AOE'] : this.endless
+            ? stage===0 ? ['NORMAL'] : stage===1 ? ['NORMAL','MULTI','MULTI_MIXED'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY']
+            : elapsed<20000 ? ['NORMAL','MULTI'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY'];
         const pool = source.attackPatterns.filter(a => allowed.includes(a.type));
         const attack = JSON.parse(JSON.stringify(pool[Math.floor(Math.random()*pool.length)]));
         const minimum = this.mode === 'child' ? 2400 : 1700;
         if (dueAOE) { this.aoeMilestone=(this.aoeMilestone||0)+1;attack.points=400; }
-        else if (attack.wait) attack.wait = Math.max(minimum,attack.wait*(elapsed>60000?.78:elapsed>20000?.9:1));
+        else if (!this.endless && attack.wait) attack.wait = Math.max(minimum,attack.wait*(elapsed>60000?.78:elapsed>20000?.9:1));
+        if (this.endless) {
+            // 僅在新波次調整，旋轉與重擊保留較長的操作時間。
+            const floor = attack.type==='AOE' ? (this.mode==='child'?5000:4000) : attack.type==='HEAVY' ? (this.mode==='child'?3200:2600) : minimum;
+            attack.wait = Math.max(floor,attack.wait * Math.max(.55,1-stage*.06));
+            game.levelConfig = {...game.levelConfig,flow:{...game.levelConfig.flow,prepareTime:Math.max(180,(this.mode==='child'?400:300)-stage*15),successGap:Math.max(180,(this.mode==='child'?500:380)-stage*20)}};
+        }
         // 每波建立獨立材質設定，舊投射物／命中特效不會讀到下一波的圖片。
         const assets = {};
         for (const key of ['enemyImage','decoyImage','wrongEnemyImage','heavyEnemyImage','projectileImage','projectileHitImage','shieldImage','aoeLineImage']) assets[key]=source[key];
@@ -183,6 +218,20 @@ window.TimedChallenge = {
     },
     paired() { if(this.active){this.pairs++;this.score+=10;this.updateHUD();} },
     penalty() { if(this.active){this.penalties++;this.score=Math.max(0,this.score-10);this.updateHUD();} },
+    loseLife(attack) {
+        if (!this.active || !this.endless || this.ending) return;
+        if (attack && this.damagedAttack === attack) return;
+        this.damagedAttack = attack || null;
+        this.lives = Math.max(0,this.lives-1);
+        this.penalties++;
+        this.updateHUD();
+        if (this.lives === 0) {
+            this.ending = true;
+            // 等當次輸入處理完畢才清理 DOM，避免舊手勢繼續寫入結算畫面。
+            const run = this.generation;
+            this.liveClock.setTimeout(()=>{if(this.active && this.generation===run)this.finish();},0);
+        }
+    },
     boardComplete(game) {
         this.consumeTime();
         if (!this.active) return;
@@ -196,7 +245,9 @@ window.TimedChallenge = {
         if (!this.active) return;
         const old = this.best(this.kind,this.mode);
         const score = this.kind==='defense' ? Math.max(0,this.game.score) : this.score;
-        const detail = this.kind==='defense' ? `處理結果：${this.game.mistakes} 次失誤` : `完成 ${this.boards} 盤・配對 ${this.pairs} 對・紅燈懲罰 ${this.penalties} 次`;
+        const detail = this.endless
+            ? `存活 ${Math.floor((this.elapsed || 0)/1000)} 秒・${this.kind==='defense' ? `進入第 ${this.game.waveNumber} 波` : `完成 ${this.boards} 盤・配對 ${this.pairs} 對`}・生命耗盡`
+            : this.kind==='defense' ? `處理結果：${this.game.mistakes} 次失誤` : `完成 ${this.boards} 盤・配對 ${this.pairs} 對・紅燈懲罰 ${this.penalties} 次`;
         const best = this.best(this.kind,this.mode,score);
         this.game.gameActive=false;
         this.game.challenge = null;
@@ -214,8 +265,11 @@ window.TimedChallenge = {
     },
     init() {
         document.querySelectorAll('.challenge-preview').forEach((card,index)=>{
-            const button=document.createElement('button');button.type='button';button.textContent='開始挑戰';
+            card.dataset.challengeKind=index===0?'defense':'memory';
+            const button=document.createElement('button');button.type='button';button.textContent='限時挑戰';
             button.addEventListener('click',()=>this.showInfo(index===0?'defense':'memory'));card.appendChild(button);
+            const endless=document.createElement('button');endless.type='button';endless.textContent='無限模式';
+            endless.addEventListener('click',()=>this.showInfo(index===0?'defense':'memory','endless'));card.appendChild(endless);
             card.querySelector('.challenge-soon')?.remove();
         });
         document.getElementById('challenge-begin').addEventListener('click',()=>this.start());

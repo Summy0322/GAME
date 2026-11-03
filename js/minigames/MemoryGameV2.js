@@ -1067,6 +1067,10 @@ const MemoryGameV2 = {
             }, 500);
         } else {
             // ✅ 配對失敗
+            if (this.challenge?.endless) {
+                this.challenge.loseLife();
+                this.statusText.innerText = `配對錯誤，剩下 ${this.challenge.lives} 條命`;
+            }
             if (isGreenEnabled) {
                 this.rightStreak = 0;
             }

@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function fixture(blocked=false){
  let now=0,id=0;const jobs=new Map(),saved=new Map(),nodes=new Map();
- const node=()=>({style:{},classList:{add(){},remove(){},toggle(){}},textContent:'',setAttribute(){},remove(){},focus(){}});
+ const node=()=>({style:{},dataset:{},classList:{add(){},remove(){},toggle(){}},textContent:'',setAttribute(){},remove(){},focus(){}});
  const document={addEventListener(){},getElementById(key){if(!nodes.has(key))nodes.set(key,node());return nodes.get(key);}};
  const window={},context=vm.createContext({window,document,console:{log(){},warn(){}},performance:{now:()=>now},
  localStorage:{getItem(k){if(blocked)throw Error();return saved.get(k)||null;},setItem(k,v){if(blocked)throw Error();saved.set(k,v);}},
@@ -15,6 +15,87 @@ test('90 active seconds end once, long pause and the resume countdown do not con
  const f=fixture(),clock=f.clock(),game={challenge:f.c,session:{clock},updateStats(){}};let finished=0;
  f.c.finish=()=>{finished++;f.c.active=false;};f.c.ready(game);f.tick(12400);assert.equal(f.c.remaining,77600);
  clock.pause();f.tick(60000+3000);assert.equal(f.c.remaining,77600);clock.resume();f.tick(77599);assert.equal(finished,0);f.tick(1);assert.equal(finished,1);f.tick(2000);assert.equal(finished,1);
+});
+
+test('endless mode survives beyond 90 active seconds and pauses without consuming survival time',()=>{
+ const f=fixture(),c=f.c,clock=f.clock();c.variant='endless';c.lives=3;
+ const game={challenge:c,session:{clock},updateStats(){}};let ends=0;c.finish=()=>ends++;
+ c.ready(game);f.tick(100000);assert.equal(ends,0);assert.equal(c.elapsed,100000);assert.equal(c.remaining,90000);
+ clock.pause();f.tick(50000);assert.equal(c.elapsed,100000);clock.resume();f.tick(1000);assert.equal(c.elapsed,101000);
+});
+
+test('endless defense loses at most one life per wave and ends exactly once at zero',()=>{
+ const f=fixture(),c=f.c;c.variant='endless';c.lives=3;c.liveClock=f.clock();let ends=0;
+ c.finish=()=>{ends++;c.active=false;};
+ const attack={};c.loseLife(attack);c.loseLife(attack);assert.equal(c.lives,2);assert.equal(c.penalties,1);
+ c.loseLife({});assert.equal(c.lives,1);c.loseLife({});c.loseLife({});assert.equal(c.lives,0);assert.equal(ends,0);
+ f.tick(1);assert.equal(ends,1);assert.equal(c.penalties,3);
+});
+
+test('leaving an endless game invalidates a pending death callback',()=>{
+ const f=fixture(),c=f.c;c.variant='endless';c.lives=1;c.liveClock=f.clock();let ends=0;c.finish=()=>ends++;
+ c.loseLife();c.stop();f.tick(1000);assert.equal(ends,0);
+});
+
+test('real defense mistake reporting deducts only one life for multiple errors in the same attack',()=>{
+ const f=fixture();f.context.DefenseLevels=f.window.DefenseLevels;vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),f.context);
+ const c=f.c,g=f.window.DefenseGameV2;c.variant='endless';c.lives=3;c.liveClock=f.clock();
+ Object.assign(g,{challenge:c,mistakes:0,currentAttack:{}});
+ g.recordMistake();g.recordMistake();assert.equal(g.mistakes,2);assert.equal(c.lives,2);
+ g.currentAttack={};g.recordMistake();assert.equal(c.lives,1);
+});
+
+test('timed and endless best scores are isolated across both games and ages',()=>{
+ const {c}=fixture();
+ for(const kind of ['defense','memory'])for(const mode of ['child','adult']){
+  c.variant='timed';c.best(kind,mode,100);c.variant='endless';assert.equal(c.best(kind,mode),0);c.best(kind,mode,250);
+  c.variant='timed';assert.equal(c.best(kind,mode),100);c.variant='endless';assert.equal(c.best(kind,mode),250);
+ }
+});
+
+test('endless defense introduces mechanics by waves with bounded reaction and preparation times',()=>{
+ for(const mode of ['child','adult']){
+  const {c}=fixture();c.kind='defense';c.variant='endless';c.mode=mode;
+  const game={levelConfig:{flow:{},bgImage:'fixed'}};
+  for(const wave of [1,9,10,11,20,21,29,30,40,1000])for(let i=0;i<30;i++){
+   game.waveNumber=wave-1;const attack=c.nextAttack(game);
+   if(wave<=10)assert.equal(attack.type,'NORMAL');
+   if(wave<=20)assert.ok(!['HEAVY','AOE'].includes(attack.type));
+   if(wave>=30&&wave%10===0)assert.equal(attack.type,'AOE');
+   assert.ok(attack.wait>=(attack.type==='AOE'?(mode==='child'?5000:4000):attack.type==='HEAVY'?(mode==='child'?3200:2600):(mode==='child'?2400:1700)));
+   assert.ok(game.levelConfig.flow.prepareTime>=180);assert.ok(game.levelConfig.flow.successGap>=180);
+   assert.equal(game.levelConfig.bgImage,'fixed');
+  }
+ }
+});
+
+test('endless memory caps card count and progressively shortens memorization with a floor',()=>{
+ const {c,window}=fixture(),options=[];c.variant='endless';
+ window.MemoryGameV2={start:o=>options.push(o)};window.GamePause={attach(){}};c.decorate=()=>{};
+ for(const mode of ['child','adult']){
+  c.mode=mode;let previous=Infinity;
+  for(const boards of [0,1,2,5,10,100]){c.boards=boards;c.launchMemory();const o=options.at(-1);
+   assert.equal(o.lightMode,'none');assert.ok(o.memorizationTime<=previous);previous=o.memorizationTime;
+   assert.ok(o.memorizationTime>=(mode==='child'?1600:1200));assert.ok(o.cardCount<=(mode==='child'?10:12));
+  }
+ }
+});
+
+test('actual endless memory mismatch loses one life immediately without red-light or time penalty',()=>{
+ const f=fixture();vm.runInContext(fs.readFileSync('js/minigames/MemoryGameV2.js','utf8'),f.context);
+ const c=f.c,g=f.window.MemoryGameV2;c.variant='endless';c.lives=3;c.liveClock=f.clock();
+ const card=symbol=>({dataset:{symbol},classList:{add(){},remove(){}}});let callbacks=[];
+ Object.assign(g,{challenge:c,gameActive:true,gameMode:'time',lightMode:'none',wrongStreak:0,matchedPairs:0,totalPairs:2,timeLeft:90,statusText:{style:{}},session:{timeout(fn){callbacks.push(fn);}},updateStats(){},updateStrikes(){}});
+ g.flippedCards=[card('a'),card('b')];g.checkMatch();assert.equal(c.lives,2);assert.equal(c.penalties,1);assert.equal(g.wrongStreak,0);assert.equal(g.timeLeft,90);
+ callbacks.forEach(fn=>fn());assert.equal(g.flippedCards.length,0);assert.equal(g.canFlip,true);
+});
+
+test('challenge lobby retains selected variant, separate best and theme through countdown and results',()=>{
+ const f=fixture();f.context.showScene=()=>{};f.window.gameMode='child';
+ f.c.showInfo('memory','endless');assert.equal(f.c.endless,true);assert.equal(f.c.mode,'child');
+ for(const id of ['game-wrapper','challenge-lobby','challenge-countdown','challenge-results'])assert.equal(f.nodes.get(id).dataset.challengeKind,'memory');
+ assert.match(f.nodes.get('challenge-lobby-copy').textContent,/三條命/);
+ f.c.showInfo('defense');assert.equal(f.c.endless,false);assert.match(f.nodes.get('challenge-lobby-kicker').textContent,/90/);
 });
 test('completed memory boards award once and exclude the following memorization time',()=>{
  const f=fixture(),clock=f.clock(),game={challenge:f.c,session:{clock},updateStats(){}};let next=0;

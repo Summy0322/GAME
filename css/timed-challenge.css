@@ -40,3 +40,43 @@
 #game-wrapper.challenge-active #game-pause-exit { background:#29475e; }
 #game-wrapper.challenge-active #game-pause-overlay { color:#dcefff; }
 @media (prefers-reduced-motion:reduce) { .challenge-blue-scene * { transition:none!important; } }
+
+/* 同亮度的霧藍／靛藍，入口與整場視窗共用主題。 */
+[data-challenge-kind="defense"] {
+    --challenge-light:#3d647b;--challenge-dark:#203c53;--challenge-accent:#507f97;
+    --challenge-border:#96c6d7;--challenge-ink:#e6f4fc;--challenge-soft:#b9d8e7;
+}
+[data-challenge-kind="memory"] {
+    --challenge-light:#4b5e82;--challenge-dark:#2c3757;--challenge-accent:#647b9e;
+    --challenge-border:#aabddd;--challenge-ink:#edf1ff;--challenge-soft:#c7d2ee;
+}
+.challenge-preview[data-challenge-kind] {
+    background:linear-gradient(145deg,var(--challenge-light),var(--challenge-dark));
+    border-color:var(--challenge-border);color:var(--challenge-ink);
+}
+.challenge-preview[data-challenge-kind] .challenge-number,
+.challenge-preview[data-challenge-kind] p { color:var(--challenge-soft); }
+.challenge-preview[data-challenge-kind] svg { fill:var(--challenge-dark);stroke:var(--challenge-border); }
+.challenge-preview[data-challenge-kind] button { background:var(--challenge-accent);border-color:var(--challenge-border);color:var(--challenge-ink);margin-right:.6cqw; }
+.challenge-preview[data-challenge-kind] button:last-child { background:var(--challenge-dark); }
+.challenge-blue-scene[data-challenge-kind] { background:radial-gradient(ellipse at 70% 15%,var(--challenge-light),var(--challenge-dark) 75%);color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] .challenge-blue-window,
+#game-wrapper.challenge-active .loading-content { background:linear-gradient(135deg,var(--challenge-light),var(--challenge-dark));border-color:var(--challenge-border); }
+.challenge-blue-scene[data-challenge-kind] h2 { color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] .challenge-kicker { color:var(--challenge-soft); }
+.challenge-blue-scene[data-challenge-kind] button { background:var(--challenge-dark);border-color:var(--challenge-border);color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] button:last-child { background:var(--challenge-accent); }
+#game-wrapper.challenge-active #loading-screen { background:radial-gradient(ellipse at 75% 15%,var(--challenge-light),var(--challenge-dark) 75%);color:var(--challenge-ink); }
+#game-wrapper.challenge-active #game-pause-overlay { background:color-mix(in srgb,var(--challenge-dark) 85%,transparent);color:var(--challenge-ink); }
+#game-wrapper.challenge-active #game-pause-resume { background:var(--challenge-accent); }
+#game-wrapper.challenge-active #game-pause-exit { background:var(--challenge-dark); }
+#game-wrapper.challenge-active .night-challenge-game .memory-panel { background-image:linear-gradient(145deg,var(--challenge-light),var(--challenge-dark));border-color:var(--challenge-border); }
+#game-wrapper.challenge-active .night-challenge-game .memory-top-bar { background-image:linear-gradient(110deg,var(--challenge-dark),var(--challenge-light));border-color:var(--challenge-border); }
+#game-wrapper.challenge-active .challenge-live-hud { background:var(--challenge-dark);border-color:var(--challenge-border); }
+.challenge-hearts { display:inline-flex;gap:4px;vertical-align:middle;margin-right:1cqw; }
+.challenge-hearts img { width:clamp(16px,3.8cqh,28px);height:clamp(16px,3.8cqh,28px);object-fit:contain;image-rendering:pixelated; }
+.challenge-hearts .heart-lost { opacity:.25;filter:grayscale(1); }
+#challenge-lobby .challenge-blue-window { overflow:auto; }
+#challenge-lobby-title { font-size:clamp(22px,5cqh,38px); }
+#challenge-lobby-copy { font-size:clamp(12px,2.8cqh,20px); }
+@media (max-height:400px) { #challenge-lobby .challenge-blue-window { padding:2cqh 3cqw;width:80%; } #challenge-lobby p { margin:1cqh 0; } #challenge-lobby .challenge-window-actions { margin-top:1.5cqh; } }
