@@ -43,7 +43,7 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-title').textContent = `${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
         document.getElementById('challenge-lobby-copy').textContent = this.endless
             ? (memory
-                ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對消一格、換盤清空。每對 +10 分、每盤 +20 分。第 2 盤起，展示結束會預告隨機干擾：背牌換位、紙片或雲影。換位有移動路徑，已配對的牌不動；操作中會等待。`
+                ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對消一格、換盤清空。每對 +10 分、每盤 +20 分。第 2 盤起，雲影會隨機眨眼，不預告也不影響點擊。每盤隨機換位一次，後段可有兩次；中央大字通知後，翻開的單張牌先蓋回，再追蹤亮框換位。已配對的牌不動。`
                 : '三條命，不限時。漏接、打到石頭或格擋失敗扣一命，同一波最多扣一命。每 10 波加速，多方向題保留連續滑動時間；右上細線顯示作答時間，失誤先回饋再換波。音樂隨波次小幅加速，以分數與波次挑戰紀錄。')
             : memory
             ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
@@ -103,7 +103,6 @@ window.TimedChallenge = {
         this.lastLossReason = '';
         this.feedbackId = 0;
         this.nextWindWave = 41;
-        this.lastMemoryEffect = null;
         this.score = this.pairs = this.boards = this.penalties = this.successes = 0;
         this.aoeMilestone = 0;
         this.session = new window.MinigameSession();
@@ -369,24 +368,21 @@ window.TimedChallenge = {
         wind.timer=wind.clock.setTimeout(()=>{if(this.defenseWind===wind)this.clearDefenseWind();},2200);
     },
     memoryCloudInterval() {
-        const base=Math.max(this.mode==='child'?12000:9000,(this.mode==='child'?16000:12000)-Math.floor(this.boards/2)*500);
-        return base+Math.floor(Math.random()*4000);
+        const base=this.mode==='child'?6500:4500;
+        return Math.max(3000,base-Math.min(1500,this.boards*100))+Math.floor(Math.random()*4000);
     },
     clearMemoryInterference(owner) {
         const effect=this.memoryInterference;
         if (!effect || (owner && effect.game!==owner)) return;
         this.memoryInterference=null;
         effect.timers.forEach(id=>effect.session.clearTimer(id));
-        // 暫停視窗不得在離開時重新播放已取消的換位動畫。
         if (window.GamePause?.animations) window.GamePause.animations=window.GamePause.animations.filter(animation=>!effect.animations.includes(animation));
         effect.animations.forEach(animation=>animation.cancel());
         effect.swapCards?.forEach(card=>card.classList.remove('memory-wind-selected'));
-        effect.node.remove();
-        const game=effect.game;
-        if (game.session===effect.session) {
-            game.interferenceLocked=false;
-            if (effect.locked && game.gameActive && !game.isMemorizing) game.canFlip=true;
-            if (game.statusText?.innerText===effect.message) game.statusText.innerText=effect.previous;
+        effect.node.remove();effect.notice.remove();
+        if (effect.game.session===effect.session) {
+            effect.game.interferenceLocked=false;
+            if(effect.locked && effect.game.gameActive && !effect.game.isMemorizing)effect.game.canFlip=true;
         }
     },
     setupMemoryInterference(game) {
@@ -395,82 +391,71 @@ window.TimedChallenge = {
         if (!this.active || !this.endless || this.kind!=='memory' || this.boards<1 || !game.session?.ownNode || !game.grid?.appendChild) return;
         const session=game.session,run=this.generation;
         const node=document.createElement('div');
-        node.className='memory-blink-cover';node.hidden=true;node.setAttribute('aria-hidden','true');
-        node.innerHTML='<div class="memory-blink-shutter memory-blink-top"></div><div class="memory-blink-shutter memory-blink-bottom"></div><div class="memory-paper-stream"><i></i><i></i><i></i></div>';
+        node.className='memory-blink-cover';node.hidden=true;node.dataset.effect='blink';node.setAttribute('aria-hidden','true');
+        node.innerHTML='<div class="memory-blink-shutter memory-blink-top"></div><div class="memory-blink-shutter memory-blink-bottom"></div>';
         session.ownNode(node);game.grid.appendChild(node);
+        const notice=document.createElement('div');notice.className='memory-swap-notice';notice.hidden=true;
+        notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
+        notice.innerHTML='<strong>背牌即將換位</strong><span>翻開的單張牌將蓋回，請追蹤亮框</span>';
+        session.ownNode(notice);game.container.appendChild(notice);
         const cards=()=>Array.from(game.grid.querySelectorAll('.memory-card'));
         cards().forEach((card,index)=>card.style.order=String(index));
-        const effect=this.memoryInterference={game,session,node,timers:new Set(),animations:[],count:0,locked:false,previous:'',message:'',bag:[]};
+        const effect=this.memoryInterference={game,session,node,notice,timers:new Set(),animations:[],blinkCount:0,swapCount:0,swapLimit:this.boards>=6?1+Math.floor(Math.random()*2):1,locked:false};
         const current=()=>this.active && this.endless && this.kind==='memory' && game.challenge===this && !this.ending && run===this.generation && this.memoryInterference===effect && game.session===session && !session.disposed && game.gameActive;
         const later=(fn,ms)=>{let id=session.timeout(()=>{effect.timers.delete(id);if(current())fn();},ms);effect.timers.add(id);};
-        const idle=()=>current() && !document.hidden && !window.GamePause?.paused && (game.canFlip || effect.locked) && !game.isMemorizing && !game.flippedCards.length && !(game.grid.getAnimations?.({subtree:true})||[]).some(a=>a.playState==='running');
-        const status=text=>{
-            if (game.statusText) {
-                if(game.statusText.innerText!==effect.message)effect.previous=game.statusText.innerText;
-                game.statusText.innerText=text;effect.message=text;
-            }
-        };
-        const restore=()=>{if(game.statusText?.innerText===effect.message)game.statusText.innerText=effect.previous;effect.message='';};
-        const schedule=(retry=false)=>{if(effect.count<(this.boards>=6?3:2))later(warn,retry?1200:this.memoryCloudInterval());};
-        const unlock=()=>{if(effect.locked){game.interferenceLocked=false;game.canFlip=true;effect.locked=false;}};
+        const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        const available=()=>cards().filter(card=>card.style.visibility!=='hidden' && !card.classList.contains('matched'));
+        const visible=()=>!document.hidden && !window.GamePause?.paused && !game.isMemorizing;
         const finish=()=>{
-            node.hidden=true;node.dataset.phase='idle';
             effect.animations.forEach(animation=>animation.cancel());effect.animations=[];
             effect.swapCards?.forEach(card=>card.classList.remove('memory-wind-selected'));effect.swapCards=null;
-            unlock();
-            restore();schedule();
+            notice.hidden=true;
+            if(effect.locked){game.interferenceLocked=false;game.canFlip=true;effect.locked=false;}
+            if(effect.swapCount<effect.swapLimit)later(warnSwap,swapDelay());
         };
-        const begin=()=>{
-            if(!idle()){unlock();restore();schedule(true);return;}
-            effect.count++;
-            this.lastMemoryEffect=effect.type;
-            node.hidden=false;
-            if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
-                unlock();node.dataset.effect='quiet';node.dataset.phase='quiet';status('微風輕掠，繼續配對');later(finish,940);return;
+        const swapDelay=()=> (this.mode==='child'?8000:6000)+Math.floor(Math.random()*(this.mode==='child'?6000:5000));
+        const blink=()=>{
+            // 眨眼完全不改操作旗標，也不等待翻牌或配對判定。
+            if(visible() && !effect.locked && !reduced()) {
+                effect.blinkCount++;node.hidden=false;node.dataset.phase='idle';void node.offsetWidth;node.dataset.phase='closing';
+                later(()=>{node.dataset.phase='opening';later(()=>{node.hidden=true;},380);},560);
             }
-            effect.locked=true;game.interferenceLocked=true;game.canFlip=false;
-            node.dataset.effect=effect.type;node.dataset.phase='idle';void node.offsetWidth;
-            if(effect.type==='swap') {
-                const available=cards().filter(card=>card.style.visibility!=='hidden' && !card.classList.contains('matched') && !card.classList.contains('is-flipped'));
-                if(available.length<3){finish();return;}
-                const a=available.splice(Math.floor(Math.random()*available.length),1)[0];
-                // 不交換相同圖案，確保移動確實帶來新的記憶挑戰。
-                const others=available.filter(card=>card.dataset.symbol!==a.dataset.symbol);
-                const b=others[Math.floor(Math.random()*others.length)];
-                if(!b){finish();return;}
-                game.clearKnownHint?.();effect.swapCards=[a,b];
-                const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
-                const dx=br.left-ar.left,dy=br.top-ar.top;
-                effect.swapCards.forEach(card=>card.classList.add('memory-wind-selected'));
-                status('追蹤亮框：兩張背牌換位');
-                const duration=this.mode==='child'?1200:1000;
-                for(const [card,x,y,arc] of [[a,dx,dy,-18],[b,-dx,-dy,18]]) {
-                    effect.animations.push(card.animate([{transform:'translate(0,0)',offset:0},{transform:'translate(0,0)',offset:.15},{transform:`translate(${x/2}px,${y/2+arc}px)`,offset:.6},{transform:`translate(${x}px,${y}px)`,offset:1}],{duration,easing:'ease-in-out',fill:'forwards'}));
-                }
-                later(()=>{const order=a.style.order;a.style.order=b.style.order;b.style.order=order;finish();},duration);
-                return;
-            }
-            if(effect.type==='paper') {
-                status('紙片掠過，稍等一下');node.dataset.phase='sweeping';later(finish,1200);return;
-            }
-            status('雲影掠過，稍等一下');node.dataset.phase='closing';
-            later(()=>{node.dataset.phase='opening';later(finish,380);},560);
+            later(blink,this.memoryCloudInterval());
         };
-        const warn=(opening=false)=>{
-            if(!opening && !idle()){schedule(true);return;}
-            if(!effect.bag.length) {
-                effect.bag=['swap','paper','blink'];
-                for(let i=effect.bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[effect.bag[i],effect.bag[j]]=[effect.bag[j],effect.bag[i]];}
+        const move=()=>{
+            if(reduced()){finish();return;}
+            const pool=available().filter(card=>!card.classList.contains('is-flipped'));
+            if(pool.length<3){finish();return;}
+            const a=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+            const others=pool.filter(card=>card.dataset.symbol!==a.dataset.symbol);
+            const b=others[Math.floor(Math.random()*others.length)];
+            if(!b){finish();return;}
+            notice.hidden=true;effect.swapCards=[a,b];
+            const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect(),dx=br.left-ar.left,dy=br.top-ar.top;
+            effect.swapCards.forEach(card=>card.classList.add('memory-wind-selected'));
+            const duration=this.mode==='child'?1200:1000;
+            for(const [card,x,y,arc] of [[a,dx,dy,-18],[b,-dx,-dy,18]]) {
+                effect.animations.push(card.animate([{transform:'translate(0,0)',offset:0},{transform:'translate(0,0)',offset:.15},{transform:`translate(${x/2}px,${y/2+arc}px)`,offset:.6},{transform:`translate(${x}px,${y}px)`,offset:1}],{duration,easing:'ease-in-out',fill:'forwards'}));
             }
-            if(effect.bag[0]===this.lastMemoryEffect && effect.bag.length>1)effect.bag.reverse();
-            if(effect.bag.length===1 && effect.bag[0]===this.lastMemoryEffect)effect.bag.unshift(...['swap','paper','blink'].filter(type=>type!==this.lastMemoryEffect));
-            effect.type=effect.bag.shift();
-            // 開場先鎖定：等待翻回背面，再執行第一個效果，不讓玩家搶先翻牌而略過。
-            if(opening && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){effect.locked=true;game.interferenceLocked=true;game.canFlip=false;}
-            status(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'微風將掠過，繼續配對':{swap:'注意亮框：背牌即將換位…',paper:'風起了，紙片即將掠過…',blink:'雲影將掠過…'}[effect.type]);
-            later(begin,this.mode==='child'?1500:1100);
+            later(()=>{const order=a.style.order;a.style.order=b.style.order;b.style.order=order;finish();},duration);
         };
-        warn(true);
+        const fold=()=>{
+            if(reduced()){finish();return;}
+            notice.hidden=true;
+            // 只蓋回玩家尚未組成一對的單張牌，不呼叫配對判定或失誤處理。
+            const single=game.flippedCards[0];
+            if(single){single.classList.remove('is-flipped');game.flippedCards=[];}
+            later(move,single?550:0);
+        };
+        const warnSwap=()=>{
+            if(reduced())return;
+            if(!visible() || !game.canFlip || game.flippedCards.length>1){later(warnSwap,250);return;}
+            if(available().length<3)return;
+            effect.swapCount++;effect.locked=true;game.interferenceLocked=true;game.canFlip=false;
+            game.clearKnownHint?.();node.hidden=true;notice.hidden=false;
+            later(fold,this.mode==='child'?1500:1100);
+        };
+        if(!reduced()){later(blink,this.memoryCloudInterval());later(warnSwap,swapDelay());}
     },
     paired() {
         if (!this.active || this.ending) return;
