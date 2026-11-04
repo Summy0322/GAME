@@ -154,7 +154,8 @@ const InteractSystem = {
         }
         
         if (this.messageArea) {
-            this.messageArea.style.fontSize = `${Math.max(14, Math.min(24, 18 * this.currentScale))}px`;
+            // 面板本身已縮放，文字採設計稿尺寸，避免手機上再縮小一次。
+            this.messageArea.style.fontSize = '24px';
         }
         
         const zoneTitles = document.querySelectorAll('.interact-zone-title');
@@ -958,35 +959,13 @@ const InteractSystem = {
     
     // 顯示提示（修正：允許換行，根據畫面縮放）
     showHint: function(hint) {
-        if (!hint) return;
-        
-        const hintDiv = document.createElement('div');
-        hintDiv.textContent = hint;
-        hintDiv.style.cssText = `
-            position: absolute;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #ffd700;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: ${Math.max(12, Math.min(18, 16 * this.currentScale))}px;
-            z-index: 4010;
-            animation: fadeOut 4s forwards;
-            max-width: 85%;
-            text-align: center;
-            line-height: 1.4;
-            white-space: normal;
-            word-wrap: break-word;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            border: 1px solid #e67e22;
-            pointer-events: none;
-        `;
-        this.container.appendChild(hintDiv);
-        this.session.timeout(() => hintDiv.remove(), 4000);
+        if (!hint || !this.messageArea) return;
+        this.messageArea.textContent = hint;
+        const message = this.messageArea;
+        this.session.timeout(() => {
+            if (message.textContent === hint) message.textContent = '';
+        }, 4000);
     },
-    
     // 完成遊戲
     completeGame: function() {
         window.GamePause?.end(this);

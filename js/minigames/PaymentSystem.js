@@ -134,6 +134,7 @@ const PaymentSystem = {
         
         // 標題區
         const header = document.createElement('div');
+        header.className = 'payment-header';
         header.style.cssText = `
             display: flex;
             justify-content: space-between;
@@ -144,6 +145,7 @@ const PaymentSystem = {
         `;
         
         const title = document.createElement('div');
+        title.className = 'payment-title';
         title.textContent = '💰 付款 💰';
         title.style.cssText = `
             font-size: 24px;
@@ -153,6 +155,7 @@ const PaymentSystem = {
         
         // 金額顯示
         this.amountDisplay = document.createElement('div');
+        this.amountDisplay.className = 'payment-amount';
         this.amountDisplay.style.cssText = `
             font-size: 20px;
             color: #5c4a2a;
@@ -189,6 +192,7 @@ const PaymentSystem = {
         `;
         
         const bossText = document.createElement('div');
+        bossText.className = 'payment-boss-text';
         bossText.textContent = '老闆：請付款！';
         bossText.style.cssText = `
             color: #5c4a2a;
@@ -228,6 +232,7 @@ const PaymentSystem = {
         
         // 左側標籤
         const leftLabel = document.createElement('div');
+        leftLabel.className = 'payment-zone-label';
         leftLabel.textContent = '💰 你的錢袋';
         leftLabel.style.cssText = `
             font-size: 14px;
@@ -268,6 +273,7 @@ const PaymentSystem = {
         
         // 右側標籤
         const rightLabel = document.createElement('div');
+        rightLabel.className = 'payment-zone-label';
         rightLabel.textContent = '🧑‍🍳 老闆收款區';
         rightLabel.style.cssText = `
             font-size: 14px;
@@ -293,6 +299,7 @@ const PaymentSystem = {
         this.paymentArea.appendChild(this.paidCoinsContainer);
         
         const paymentHint = document.createElement('div');
+        paymentHint.className = 'payment-hint';
         paymentHint.textContent = '⬅️ 將銅板拖曳到此區付款';
         paymentHint.style.cssText = `
             color: #8b7355;
@@ -306,6 +313,7 @@ const PaymentSystem = {
         
         // 訊息區域
         this.messageArea = document.createElement('div');
+        this.messageArea.className = 'payment-message';
         this.messageArea.style.cssText = `
             margin-top: 15px;
             padding: 8px;
@@ -325,6 +333,7 @@ const PaymentSystem = {
         `;
         
         const closeBtn = document.createElement('button');
+        closeBtn.className = 'payment-close-btn';
         closeBtn.textContent = '取消';
         closeBtn.style.cssText = `
             background: #95a5a6;

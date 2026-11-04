@@ -13,10 +13,12 @@ function fixture(mode = 'adult', level = 1, virtualClock = false) {
         'defense-wait-meter': {hidden:true, querySelector: () => ({style:{},offsetWidth:100})}
     };
     const context = vm.createContext({ window: {}, console: { log() {}, warn() {}, error() {} },
-        document: {getElementById: id => elements[id] || null},
+        document: {getElementById: id => elements[id] || null,addEventListener(){}},
         Date: {now: () => now},
         setTimeout(fn, delay = 0) { const id = ++next; timers.set(id,{fn,at:now+delay}); return id; },
-        clearTimeout(id) { timers.delete(id); }, clearInterval(id) { timers.delete(id); }
+        clearTimeout(id) { timers.delete(id); }, clearInterval(id) { timers.delete(id); },
+        requestAnimationFrame(fn) { const id=++next;timers.set(id,{fn:()=>fn(now),at:now+16});return id; },
+        cancelAnimationFrame(id) { timers.delete(id); }
     });
     const read = file => fs.readFileSync(path.join(root, file), 'utf8');
     vm.runInContext(read('js/minigames/DefenseLevels.js'), context);
@@ -69,8 +71,115 @@ function fixture(mode = 'adult', level = 1, virtualClock = false) {
         game.executeAttack(attack);
         return attack;
     };
-    return { game, tick, enter, timers, elements, levels:context.DefenseLevels };
+    return { game, tick, enter, timers, elements, context, levels:context.DefenseLevels };
 }
+
+function challengeFixture(mode='adult',stage=20) {
+    const f=fixture(mode,1,true);
+    vm.runInContext(fs.readFileSync(path.join(root,'js/core/TimedChallenge.js'),'utf8'),f.context);
+    const c=f.context.window.TimedChallenge,g=f.game;
+    Object.assign(c,{active:true,kind:'defense',variant:'endless',mode,lives:3,penalties:0,score:0,ending:false,game:g,liveClock:g.clock});
+    c.finish=()=>{c.active=false;g.gameActive=false;c.finished=(c.finished||0)+1;};g.challenge=c;
+    const speed=c.defenseSpeed(stage,0);
+    g.levelConfig={...g.levelConfig,flow:{...g.levelConfig.flow,prepareTime:speed.prepareTime,successGap:speed.gap}};
+    return {...f,c,speed};
+}
+
+test('accelerated real challenge waves accept rapid and last-millisecond answers without losing lives',()=>{
+    for(const mode of ['adult','child'])for(const stage of [0,2,5,20])for(const type of ['NORMAL','MULTI','MULTI_MIXED']){
+        const f=challengeFixture(mode,stage),g=f.game,wait=f.speed.minimumWait;
+        const dirs=['up','left','down'];
+        const attack=f.enter(type==='NORMAL'?{type,dir:'up',wait}:{type,dirs:type==='MULTI'?dirs:[...dirs,'right'],correctDirs:dirs,wrongDirs:['right'],wait});
+        // 三個不同方向的有效手勢均可在最後 41ms 內送出；重複方向不重複計分。
+        f.tick(wait-(type==='NORMAL'?1:41));
+        for(const dir of type==='NORMAL'?['up']:dirs){g.handleSwipe(dir);g.handleSwipe(dir);if(type!=='NORMAL'&&dir!=='down')f.tick(20);}
+        f.tick(600+(type==='MULTI_MIXED'?g.levelConfig.flow.avoidHold:0));
+        assert.equal(attack.finished,true,`${mode}/${stage}/${type}`);assert.equal(f.c.lives,3);assert.equal(g.mistakes,0);
+    }
+});
+
+test('stone mistakes deduct once, honest misses still deduct, and stale damage cannot touch a later wave',()=>{
+    const f=challengeFixture(),g=f.game;
+    const first=f.enter({type:'MULTI_MIXED',dirs:['left','right'],correctDirs:['left'],wrongDirs:['right'],wait:850});
+    g.handleSwipe('right');assert.equal(f.c.lives,2);f.tick(850);assert.equal(g.mistakes,2);assert.equal(f.c.lives,2);
+    const next=f.enter({type:'NORMAL',dir:'up',wait:850});
+    f.c.loseLife(first);g.recordMistake(first);assert.equal(f.c.lives,2);
+    g.handleSwipe('up',first,g.sessionId);assert.equal(next.correctHit,undefined);
+    f.tick(850);assert.equal(f.c.lives,1);
+    f.enter({type:'NORMAL',dir:'left',wait:850});f.tick(851);assert.equal(f.c.lives,0);assert.equal(f.c.finished,undefined);f.tick(699);assert.equal(f.c.finished,1);
+});
+
+test('stone hold and final impacts remain paused together at maximum challenge speed',()=>{
+    const f=challengeFixture(),g=f.game;
+    const a=f.enter({type:'MULTI_MIXED',dirs:['left','right'],correctDirs:['left'],wrongDirs:['right'],wait:850});
+    f.tick(849);g.handleSwipe('left');f.tick(600);
+    assert.ok(a.avoidTimer);assert.equal(f.elements['defense-wait-meter'].hidden,false);
+    g.clock.pause();f.tick(10000);assert.equal(a.finished,undefined);assert.equal(f.c.lives,3);
+    g.clock.resume();f.tick(g.levelConfig.flow.avoidHold);assert.equal(a.finished,true);assert.equal(f.c.lives,3);
+    assert.equal(f.elements['defense-wait-meter'].hidden,true);
+});
+
+test('endless timeout gives feedback before the next wave, and final life cannot advance into another wave',()=>{
+ const f=challengeFixture(),g=f.game;g.waveNumber=94;f.c.lives=1;
+ const attack=f.enter({type:'MULTI',dirs:['up','left','down'],wait:1370});
+ g.handleSwipe('up');f.tick(1370);assert.equal(f.c.lives,0);assert.equal(attack.closing,true);assert.equal(attack.finished,undefined);
+ assert.match(f.c.lastLossReason,/漏接 2/);g.handleSwipe('left');assert.equal(attack.swipedDirs.length,1);
+ f.tick(349);assert.equal(attack.finished,undefined);f.tick(1);assert.equal(attack.finished,true);
+ f.tick(f.speed.gap+1);assert.equal(g.waveNumber,94);assert.equal(f.c.finished,undefined);
+ f.tick(700-350-f.speed.gap-1);assert.equal(f.c.finished,1);
+});
+
+test('an active correct early shield blocks accelerated heavy attacks exactly once and stale checks are harmless',()=>{
+    for(const mode of ['adult','child']){
+        const f=challengeFixture(mode),g=f.game;
+        f.context.document.createElement=()=>({style:{},remove(){}});
+        g.stage={appendChild(){}};g.showShield=()=>{};
+        const attack={type:'HEAVY',dir:'up',resolved:false};g.currentAttack=attack;g.state=g.states.HEAVY_CHARGING;
+        g.handleSwipe('up');f.tick(100);g.state=g.states.HEAVY_FLYING;g.launchHeavyProjectile('up');
+        assert.equal(attack.finished,true);assert.equal(g.score,g.scoreTable.HEAVY);assert.equal(f.c.lives,3);
+        g.resolveHeavyBlock('up',attack,g.sessionId);assert.equal(g.score,g.scoreTable.HEAVY);
+        const next={type:'HEAVY',dir:'right',resolved:false};g.currentAttack=next;g.state=g.states.HEAVY_FLYING;g.heavyBlockReady=true;
+        f.tick(500);assert.equal(next.finished,undefined);assert.equal(f.c.lives,3);
+        g.isShieldActive=false;g.shieldEndTime=0;f.tick(399);g.handleSwipe('right');
+        assert.equal(next.successful,true);assert.equal(f.c.lives,3);assert.equal(g.score,2*g.scoreTable.HEAVY);
+        // 方向錯誤仍是一次真實失誤。
+        const wrong={type:'HEAVY',dir:'right',resolved:false};g.currentAttack=wrong;g.state=g.states.HEAVY_FLYING;
+        g.resolveHeavyBlock('left',wrong,g.sessionId);assert.equal(f.c.lives,2);
+    }
+});
+
+test('cross-wave, canceled and multi-touch gestures never become a swipe in the next wave',()=>{
+    const f=challengeFixture(),g=f.game,events={};
+    vm.runInContext(fs.readFileSync(path.join(root,'js/minigames/defense/DefenseInput.js'),'utf8'),f.context);
+    Object.assign(g,f.context.window.DefenseInputMixin);
+    g.container={addEventListener(type,fn){(events[type]||=[]).push(fn);}};
+    g.stage={getBoundingClientRect:()=>({left:0,top:0})};g.addTrailPoint=()=>{};
+    g.initEventListeners();
+    const touch=(x,y,id=1)=>({identifier:id,clientX:x,clientY:y});
+    const emit=(type,touches,changed=[])=>events[type].forEach(fn=>fn({touches,changedTouches:changed}));
+    const first=f.enter({type:'NORMAL',dir:'up',wait:850});emit('touchstart',[touch(50,100)]);
+    first.finished=true;const next=f.enter({type:'DECOY',dir:'up',wait:850});emit('touchend',[],[touch(50,20)]);
+    assert.equal(g.mistakes,0);assert.equal(next.resolved,false);
+    emit('touchstart',[touch(50,100)]);emit('touchcancel',[]);emit('touchend',[],[touch(50,20)]);assert.equal(g.mistakes,0);
+    emit('touchstart',[touch(50,100)]);emit('touchstart',[touch(50,100),touch(60,100,2)]);emit('touchend',[],[touch(50,20)]);assert.equal(g.mistakes,0);
+    f.tick(850);assert.equal(f.c.lives,3);
+    f.enter({type:'NORMAL',dir:'up',wait:850});emit('touchstart',[touch(50,100)]);emit('touchend',[],[touch(50,20)]);f.tick(600);assert.equal(f.c.lives,3);assert.equal(g.score,150);
+});
+
+test('ending AOE cancels its real interval handles and old collision or completion callbacks cannot damage the next AOE',()=>{
+    const f=challengeFixture(),g=f.game;
+    const lines={};for(const d of ['up','down','left','right'])lines['aoe-'+d]={style:{},getBoundingClientRect:()=>({bottom:-1000,top:1000,left:1000,right:-1000})};
+    const original=f.context.document.getElementById;
+    f.context.document.getElementById=id=>lines[id]||original(id);
+    g.stage={clientWidth:844,clientHeight:390,getBoundingClientRect:()=>({left:0,top:0,width:844,height:390})};
+    g.player={getBoundingClientRect:()=>({left:350,top:120,width:140,height:140})};
+    g.currentAttack={type:'AOE',resolved:false};g.state=g.states.AOE_ACTIVE;g.startAOE(2600);f.tick(50);
+    assert.equal(g.aoeTimers.length,2);
+    const old=g.aoeTimers.map(t=>({job:t.id,callback:t.id.callback}));
+    g.finishAttack();assert.ok(old.every(t=>!g.clock.jobs.has(t.job)));
+    const next={type:'AOE',resolved:false};g.currentAttack=next;g.state=g.states.AOE_ACTIVE;
+    old.forEach(t=>t.callback());assert.equal(next.finished,undefined);assert.equal(f.c.lives,3);
+});
 
 test('first sublevel has ten waves, one stone lesson and a mixed final challenge in both modes', () => {
     for (const mode of ['adult','child']) {

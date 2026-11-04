@@ -40,3 +40,130 @@
 #game-wrapper.challenge-active #game-pause-exit { background:#29475e; }
 #game-wrapper.challenge-active #game-pause-overlay { color:#dcefff; }
 @media (prefers-reduced-motion:reduce) { .challenge-blue-scene * { transition:none!important; } }
+
+/* 同亮度的霧藍／靛藍，入口與整場視窗共用主題。 */
+[data-challenge-kind="defense"] {
+    --challenge-light:#3d647b;--challenge-dark:#203c53;--challenge-accent:#507f97;
+    --challenge-border:#96c6d7;--challenge-ink:#e6f4fc;--challenge-soft:#b9d8e7;
+}
+[data-challenge-kind="memory"] {
+    --challenge-light:#4b5e82;--challenge-dark:#2c3757;--challenge-accent:#647b9e;
+    --challenge-border:#aabddd;--challenge-ink:#edf1ff;--challenge-soft:#c7d2ee;
+}
+.challenge-preview[data-challenge-kind] {
+    background:linear-gradient(145deg,var(--challenge-light),var(--challenge-dark));
+    border-color:var(--challenge-border);color:var(--challenge-ink);
+}
+.challenge-preview[data-challenge-kind] .challenge-number,
+.challenge-preview[data-challenge-kind] p { color:var(--challenge-soft); }
+.challenge-preview[data-challenge-kind] svg { fill:var(--challenge-dark);stroke:var(--challenge-border); }
+.challenge-preview[data-challenge-kind] button { background:var(--challenge-accent);border-color:var(--challenge-border);color:var(--challenge-ink);margin-right:.6cqw; }
+.challenge-preview[data-challenge-kind] button:last-child { background:var(--challenge-dark); }
+.challenge-blue-scene[data-challenge-kind] { background:radial-gradient(ellipse at 70% 15%,var(--challenge-light),var(--challenge-dark) 75%);color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] .challenge-blue-window,
+#game-wrapper.challenge-active .loading-content { background:linear-gradient(135deg,var(--challenge-light),var(--challenge-dark));border-color:var(--challenge-border); }
+.challenge-blue-scene[data-challenge-kind] h2 { color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] .challenge-kicker { color:var(--challenge-soft); }
+.challenge-blue-scene[data-challenge-kind] button { background:var(--challenge-dark);border-color:var(--challenge-border);color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] button:last-child { background:var(--challenge-accent); }
+#game-wrapper.challenge-active #loading-screen { background:radial-gradient(ellipse at 75% 15%,var(--challenge-light),var(--challenge-dark) 75%);color:var(--challenge-ink); }
+#game-wrapper.challenge-active #game-pause-overlay { background:color-mix(in srgb,var(--challenge-dark) 85%,transparent);color:var(--challenge-ink); }
+#game-wrapper.challenge-active #game-pause-resume { background:var(--challenge-accent); }
+#game-wrapper.challenge-active #game-pause-exit { background:var(--challenge-dark); }
+#game-wrapper.challenge-active .night-challenge-game .memory-panel { background-image:linear-gradient(145deg,var(--challenge-light),var(--challenge-dark));border-color:var(--challenge-border); }
+#game-wrapper.challenge-active .night-challenge-game .memory-top-bar { background-image:linear-gradient(110deg,var(--challenge-dark),var(--challenge-light));border-color:var(--challenge-border); }
+#game-wrapper.challenge-active .challenge-live-hud { background:var(--challenge-dark);border-color:var(--challenge-border); }
+.challenge-hearts { display:inline-flex;gap:4px;vertical-align:middle;margin-right:1cqw; }
+.challenge-hearts img { width:clamp(16px,3.8cqh,28px);height:clamp(16px,3.8cqh,28px);object-fit:contain;image-rendering:pixelated; }
+.challenge-hearts .heart-lost { opacity:.25;filter:grayscale(1); }
+#challenge-lobby .challenge-blue-window { overflow:auto; }
+#challenge-lobby-title { font-size:clamp(22px,5cqh,38px); }
+#challenge-lobby-copy { font-size:clamp(12px,2.8cqh,20px); }
+@media (max-height:400px) { #challenge-lobby .challenge-blue-window { padding:2cqh 3cqw;width:80%; } #challenge-lobby p { margin:1cqh 0; } #challenge-lobby .challenge-window-actions { margin-top:1.5cqh; } }
+
+/* 無限防守：資訊分居兩角，中央與四方向目標保留完整視線。 */
+#game-wrapper.challenge-active .challenge-live-hud.defense-endless-hud {
+    inset:0;left:0;top:0;width:100%;height:100%;box-sizing:border-box;
+    transform:none;padding:0;border:0;border-radius:0;background:none;pointer-events:none;
+    font-variant-numeric:tabular-nums;
+}
+.defense-endless-game #defense-wave-progress { display:none; }
+.endless-score-card,.endless-wave-card {
+    position:absolute;top:2%;width:clamp(84px,11cqw,118px);box-sizing:border-box;
+    padding:7px 9px;border:1px solid #9dcddd66;border-radius:12px 4px 12px 4px;
+    background:linear-gradient(145deg,#31566bd9,#122d42d9);
+    box-shadow:inset 0 1px #d5f3ff18,0 3px 10px #06182633;
+    color:#e5f4fc;text-align:left;
+}
+.endless-score-card { left:2%; }
+.endless-wave-card { right:2%; }
+.endless-vitality { display:flex;align-items:center;justify-content:space-between;gap:4px; }
+.defense-endless-hud .challenge-hearts { gap:3px;margin:0; }
+.defense-endless-hud .challenge-hearts img { width:clamp(12px,3cqh,17px);height:clamp(12px,3cqh,17px); }
+.endless-mark { font-size:14px;line-height:1;color:#9dcddd99; }
+.endless-score-line,.endless-wave-line { display:flex;align-items:baseline;gap:4px;margin-top:4px; }
+.endless-score-value,.endless-wave-value { font-size:clamp(18px,4.5cqh,26px);line-height:1.1;font-weight:600;letter-spacing:-.025em; }
+.endless-score-line>span,.endless-wave-line>span { font-size:clamp(9px,2cqh,12px);color:#a5c9da; }
+.endless-stage { display:block;font-size:clamp(9px,2cqh,12px);line-height:1;letter-spacing:.08em;color:#b8d8e6; }
+.endless-wave-line { margin-top:3px; }
+.endless-wave-ticks { display:flex;gap:2px;margin-top:5px; }
+.endless-wave-ticks i { height:3px;flex:1;min-width:0;border-radius:1px;background:#adcddd28; }
+.endless-wave-ticks i.is-lit { background:#a7d9e9; }
+.defense-endless-hud.challenge-time-warning .endless-score-card { border-color:#f4bb8caa; }
+.defense-endless-hud.challenge-time-warning .endless-mark { color:#f4bb8c; }
+#game-pause-detail { margin:0;max-width:90%;font-size:clamp(13px,3cqh,21px);line-height:1.6;color:#bdd9e8;font-variant-numeric:tabular-nums;text-align:center; }
+#game-pause-detail[hidden] { display:none; }
+.defense-endless-hud #defense-wait-meter {
+    position:static;width:100%;margin:6px 0 0;padding:5px 0 0;
+    border-top:1px solid #a7d9e944;border-radius:0;background:none;
+    font-size:clamp(9px,2cqh,12px);line-height:1.2;color:#c2e4ef;white-space:normal;
+}
+.defense-endless-hud .defense-wait-track { height:3px;margin-top:4px;background:#adcddd28; }
+.defense-endless-hud .defense-wait-fill { background:#a7d9e9; }
+.defense-response-meter { height:3px;margin-top:6px;border-radius:2px;background:#e4be8733;overflow:hidden; }
+.defense-response-fill { height:100%;background:#e8c189;transform-origin:left; }
+.defense-response-meter[hidden],.defense-wave-feedback[hidden] { display:none; }
+.defense-wave-feedback { position:absolute;bottom:4%;left:50%;transform:translateX(-50%);max-width:82%;padding:6px 12px;border:1px solid #e4bc7c88;border-radius:10px 4px 10px 4px;background:#203c53ed;color:#ffe3b5;white-space:normal;text-align:center;font-size:clamp(12px,2.8cqh,20px); }
+.memory-challenge-vitality { display:flex;align-items:center;gap:9px; }
+.memory-mistake-meter { display:flex;gap:3px; }
+.memory-mistake-meter i { display:block;width:clamp(5px,1.5cqh,9px);height:clamp(5px,1.5cqh,9px);border:1px solid #e4be8766;border-radius:2px;background:#e4be8722; }
+.memory-mistake-meter i.is-lit { background:#e8c189; }
+/* 雲影只遮牌區，380ms 合攏、180ms 停留、380ms 打開，無白色閃光。 */
+.night-challenge-game .memory-grid { position:relative;isolation:isolate; }
+.memory-blink-cover { position:absolute;inset:0;z-index:5;overflow:hidden;border-radius:10px;pointer-events:none; }
+.memory-blink-cover[hidden] { display:none; }
+.memory-blink-shutter { position:absolute;left:0;right:0;height:50.1%;background:linear-gradient(145deg,#203553,#101e35);transform:scaleY(0);transition:transform 380ms cubic-bezier(.2,.7,.3,1); }
+.memory-blink-top { top:0;transform-origin:top; }
+.memory-blink-bottom { bottom:0;transform-origin:bottom; }
+.memory-blink-cover[data-phase="closing"] .memory-blink-shutter { transform:scaleY(1); }
+.memory-blink-cover[data-effect="quiet"] { box-shadow:inset 0 0 0 2px #aabddd66; }
+.memory-blink-cover[data-effect="quiet"] .memory-blink-shutter { display:none; }
+.memory-blink-cover:not([data-effect="blink"]) .memory-blink-shutter { display:none; }
+.memory-paper-stream { display:none;position:absolute;inset:0;overflow:hidden;clip-path:polygon(0 0,100% 0,100% 100%,14% 100%,14% 72%,0 72%); }
+.memory-blink-cover[data-effect="paper"][data-phase="sweeping"] .memory-paper-stream { display:block; }
+.memory-paper-stream i { position:absolute;left:-30%;top:12%;width:22%;height:20%;border-radius:3px;background:linear-gradient(135deg,#e1d5b9ee,#a79778dd);box-shadow:0 4px 10px #07142755;animation:memory-paper-sweep 1000ms ease-in-out both; }
+.memory-paper-stream i:nth-child(2) { top:42%;width:18%;animation-delay:80ms; }
+.memory-paper-stream i:nth-child(3) { top:73%;width:25%;animation-delay:160ms; }
+.memory-wind-selected { outline:2px solid #ffe0a0;outline-offset:3px;border-radius:12px;z-index:3; }
+@keyframes memory-paper-sweep { from { transform:translateX(0) rotate(-22deg); } to { transform:translateX(650%) rotate(55deg); } }
+@media (prefers-reduced-motion:reduce) { .memory-blink-shutter { transition:none; } }
+/* 夜風走兩條對角邊帶，裁切範圍不進入中央與四向目標軸線。 */
+.defense-night-wind { position:absolute;inset:0;z-index:60;pointer-events:none;overflow:hidden; }
+.defense-wind-lane { position:absolute;width:25%;height:12%;overflow:hidden;pointer-events:none; }
+.wind-upper-left { left:2%;top:23%; }
+.wind-lower-right { right:2%;bottom:23%;transform:scaleX(-1); }
+.defense-wind-leaf {
+    position:absolute;left:-24px;top:50%;width:clamp(14px,5.2cqh,26px);height:clamp(8px,2.8cqh,14px);
+    border-radius:85% 0 85% 0;background:linear-gradient(135deg,#b6a47b,#80745e);border:1px solid #c6bb9633;
+    opacity:0;will-change:transform;animation:defense-night-leaf 1800ms cubic-bezier(.25,.45,.55,.8) both;
+}
+.defense-wind-leaf::after { content:"";position:absolute;left:15%;right:12%;top:48%;height:1px;background:#f2dfaf55;transform:rotate(-28deg); }
+.wind-lower-right .defense-wind-leaf { animation-delay:180ms;background:linear-gradient(135deg,#a1ad8c,#68786e); }
+@keyframes defense-night-leaf {
+    0% { transform:translate3d(0,1cqh,0) rotate(-35deg);opacity:0; }
+    15% { opacity:.58; }
+    50% { transform:translate3d(13cqw,-1cqh,0) rotate(30deg);opacity:.58; }
+    85% { opacity:.45; }
+    100% { transform:translate3d(28cqw,-4cqh,0) rotate(105deg);opacity:0; }
+}
+@media (prefers-reduced-motion:reduce) { .defense-night-wind { display:none; } }

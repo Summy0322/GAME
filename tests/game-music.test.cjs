@@ -62,6 +62,18 @@ test('missing audio fails silently and volume zero pauses',()=>{
     p.onerror();assert.equal(music.owner,null);assert.equal(p.src,'');
 });
 
+test('challenge tempo is pitch-preserving, owner-scoped, stable through pause and mute, and reset for the next game',()=>{
+    const {music,window}=fixture();music.start('defense',1);const player=music.player;
+    assert.equal(player.playbackRate,1);assert.equal(player.preservesPitch,true);assert.equal(player.webkitPreservesPitch,true);
+    music.setPlaybackRate(1.12,'defense');assert.equal(player.playbackRate,1.12);
+    window.GamePause={paused:true};player.pause();window.GamePause.paused=false;music.play();assert.equal(player.playbackRate,1.12);
+    music.setVolume(0);music.setVolume(.2);assert.equal(player.playbackRate,1.12);
+    music.setPlaybackRate(9,'defense');assert.equal(player.playbackRate,1.16);
+    music.setPlaybackRate(NaN,'defense');assert.equal(player.playbackRate,1.16);
+    music.start('memory');assert.equal(music.player.playbackRate,1);assert.equal(music.playbackRate,1);
+    music.setPlaybackRate(1.16,'defense');assert.equal(music.player.playbackRate,1);
+});
+
 test('mobile touchend and click retry blocked music, including synchronous rejection',async()=>{
     for (const gesture of ['touchend','click']) {
         const {music,events}=fixture();

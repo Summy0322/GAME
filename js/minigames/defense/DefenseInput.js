@@ -4,6 +4,12 @@
 window.DefenseInputMixin = {
     initEventListeners: function () {
         this.container.addEventListener('touchstart', (e) => {
+            this.touchGesture = null;
+            if (!this.gameActive || window.GamePause?.paused || e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            if (this.currentAttack && !this.currentAttack.finished && this.state !== this.states.PREPARING) {
+                this.touchGesture = {id:touch.identifier,attack:this.currentAttack,session:this.sessionId,x:touch.clientX,y:touch.clientY};
+            }
             this.touchStart.x = e.touches[0].clientX;
             this.touchStart.y = e.touches[0].clientY;
 
@@ -15,7 +21,7 @@ window.DefenseInputMixin = {
         });
 
         this.container.addEventListener('touchmove', (e) => {
-            if (!this.gameActive) return;
+            if (!this.gameActive || window.GamePause?.paused || e.touches.length !== 1) return;
 
             const rect = this.stage.getBoundingClientRect();
             const x = e.touches[0].clientX - rect.left;
@@ -50,16 +56,24 @@ window.DefenseInputMixin = {
         });
 
         this.container.addEventListener('touchend', (e) => {
-            if (e.changedTouches.length === 0) return;
-            const dx = e.changedTouches[0].clientX - this.touchStart.x;
-            const dy = e.changedTouches[0].clientY - this.touchStart.y;
+            const gesture = this.touchGesture;
+            this.touchGesture = null;
+            if (!gesture || window.GamePause?.paused || e.touches.length !== 0) return;
+            const touch = [...e.changedTouches].find(t=>t.identifier===gesture.id);
+            if (!touch) return;
+            const dx = touch.clientX - gesture.x;
+            const dy = touch.clientY - gesture.y;
             let swipe = null;
             if (Math.abs(dx) > Math.abs(dy)) {
                 if (Math.abs(dx) > 30) swipe = dx > 0 ? 'right' : 'left';
             } else {
                 if (Math.abs(dy) > 30) swipe = dy > 0 ? 'down' : 'up';
             }
-            if (swipe && this.gameActive) this.handleSwipe(swipe);
+            if (swipe && this.gameActive) this.handleSwipe(swipe,gesture.attack,gesture.session);
+        });
+        this.container.addEventListener('touchcancel', () => {
+            this.touchGesture = null;
+            this.lastTrailX = this.lastTrailY = null;
         });
 
         if (window.ZingTouch) {

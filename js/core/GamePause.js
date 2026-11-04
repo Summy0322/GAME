@@ -26,6 +26,7 @@ window.GamePause = {
             this.clock?.pause();
             this.owner.cancelDrag?.();
             if (this.kind === 'defense') {
+                this.owner.touchGesture = null;
                 this.owner.lastTrailX = this.owner.lastTrailY = null;
                 this.owner.touchStart = {x:0,y:0};
             }
@@ -42,6 +43,11 @@ window.GamePause = {
         document.getElementById('game-pause-button').hidden = true;
         document.getElementById('game-pause-overlay').hidden = false;
         document.getElementById('game-pause-status').textContent = '遊戲已暫停';
+        const detail = document.getElementById('game-pause-detail');
+        if (detail) {
+            detail.textContent = window.TimedChallenge?.pauseDetail?.() || '';
+            detail.hidden = !detail.textContent;
+        }
         const resume = document.getElementById('game-pause-resume');
         resume.textContent = '繼續遊戲';
         resume.hidden = false;
@@ -106,6 +112,8 @@ window.GamePause = {
     },
     end(owner) {
         if (owner && owner !== this.owner) return;
+        const detail = document.getElementById('game-pause-detail');
+        if (detail) { detail.hidden = true; detail.textContent = ''; }
         const exitButton = document.getElementById('game-pause-exit');
         if (exitButton) exitButton.textContent = '返回章節選擇';
         this.phase = 'idle';

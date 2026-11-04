@@ -122,6 +122,7 @@ const MemoryGameV2 = {
     // 開始遊戲
     start: function(options) {
         this.stop();
+        this.interferenceLocked=false;
         this.challenge = options.challenge || null;
         this.challengeCardBasis = null;
         this.session = new MinigameSession();
@@ -434,7 +435,7 @@ const MemoryGameV2 = {
                 const imageUrl = imageMap[symbol];
                 if (imageUrl) {
                     // 有圖片 → 顯示圖片
-                    frontDiv.innerHTML = `<img src="${imageUrl}" alt="card" style="max-width:70%; max-height:70%; object-fit:contain;">`;
+                    frontDiv.innerHTML = `<img src="${imageUrl}" alt="card" decoding="async" draggable="false" style="max-width:70%; max-height:70%; object-fit:contain;">`;
                 } else {
                     // 沒圖片 → 顯示 emoji
                     frontDiv.innerHTML = symbol;
@@ -752,9 +753,9 @@ const MemoryGameV2 = {
     
     // 更新統計
     updateStats: function() {
-        if (this.matchedText) this.matchedText.innerText = this.matchedPairs;
-        if (this.timerText) this.timerText.innerText = this.timeLeft;
-        if (this.attemptsText) this.attemptsText.innerText = this.attemptsLeft;
+        for (const [node,value] of [[this.matchedText,this.matchedPairs],[this.timerText,this.timeLeft],[this.attemptsText,this.attemptsLeft]]) {
+            if (node && node.textContent !== String(value)) node.textContent = String(value);
+        }
     },
     
     // 調整卡片大小（以高度為基準，確保所有卡片在畫面內）
@@ -959,6 +960,8 @@ const MemoryGameV2 = {
     // 處理卡片點擊
     handleCardClick: function(card) {
         if (window.GamePause?.paused) return;
+        if (this.interferenceLocked) return;
+        if (this.challenge?.ending) return;
         if (!this.canFlip || this.isMemorizing) return;
         if (card.classList.contains('is-flipped')) return;
         if (card.classList.contains('matched')) return;
@@ -1067,6 +1070,9 @@ const MemoryGameV2 = {
             }, 500);
         } else {
             // ✅ 配對失敗
+            if (this.challenge?.endless) {
+                this.statusText.innerText = this.challenge.memoryMiss();
+            }
             if (isGreenEnabled) {
                 this.rightStreak = 0;
             }
@@ -1192,6 +1198,7 @@ const MemoryGameV2 = {
      * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
      */
     stop: function (options = {}) {
+        this.challenge?.clearMemoryInterference?.(this);
         window.GamePause?.end(this);
         this.stopKnownHints();
         this.seenCards = new Set();

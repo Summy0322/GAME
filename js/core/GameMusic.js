@@ -10,6 +10,7 @@ window.GameMusic = {
     owner: null,
     generation: 0,
     volume: 0.20,
+    playbackRate: 1,
     needsGesture: false,
     fading: new Map(),
     start(owner, level = 1) {
@@ -20,6 +21,10 @@ window.GameMusic = {
         this.owner = owner;
         const player = document.createElement('audio');
         this.player = player;
+        this.playbackRate = 1;
+        player.defaultPlaybackRate = player.playbackRate = 1;
+        player.preservesPitch = true;
+        player.webkitPreservesPitch = true;
         player.loop = true;
         player.preload = 'auto';
         player.volume = this.volume;
@@ -45,6 +50,12 @@ window.GameMusic = {
                 this.needsGesture = error.name === 'NotAllowedError';
         }
     },
+    setPlaybackRate(value, owner) {
+        if (!Number.isFinite(value) || owner !== this.owner || !this.player) return;
+        const rate = Math.min(1.16,Math.max(1,value));
+        this.playbackRate = rate;
+        if (this.player.playbackRate !== rate) this.player.playbackRate = rate;
+    },
     stop(owner) {
         if (!owner) {
             for (const [player, fade] of this.fading) {
@@ -56,6 +67,7 @@ window.GameMusic = {
         if (owner && owner !== this.owner) return;
         this.generation++;
         this.owner = null;
+        this.playbackRate = 1;
         this.needsGesture = false;
         const player = this.player;
         this.player = null;
