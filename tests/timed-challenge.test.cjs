@@ -112,6 +112,16 @@ test('endless pause summary uses progress instead of survival time',()=>{
  c.kind='memory';c.boards=5;assert.match(c.pauseDetail(),/完成 5 盤/);
 });
 
+test('endless defense music rises gently every ten waves and stops at sixteen percent',()=>{
+ const {c,window}=fixture();c.variant='endless';c.kind='defense';c.mode='adult';const rates=[];
+ window.GameMusic={setPlaybackRate:(rate,owner)=>rates.push({rate,owner})};
+ const game={levelConfig:{flow:{}}};
+ for(const [wave,rate] of [[1,1],[10,1],[11,1.02],[31,1.06],[81,1.16],[94,1.16],[1000,1.16]]){
+  game.waveNumber=wave-1;c.nextAttack(game);assert.ok(Math.abs(rates.at(-1).rate-rate)<1e-9);assert.equal(rates.at(-1).owner,'defense');
+ }
+ const count=rates.length;c.variant='timed';c.nextAttack(game);assert.equal(rates.length,count);
+});
+
 test('endless defense introduces mechanics by waves with bounded reaction and preparation times',()=>{
  for(const mode of ['child','adult']){
   const {c}=fixture();c.kind='defense';c.variant='endless';c.mode=mode;

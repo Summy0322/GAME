@@ -122,6 +122,7 @@ const MemoryGameV2 = {
     // 開始遊戲
     start: function(options) {
         this.stop();
+        this.interferenceLocked=false;
         this.challenge = options.challenge || null;
         this.challengeCardBasis = null;
         this.session = new MinigameSession();
@@ -959,6 +960,7 @@ const MemoryGameV2 = {
     // 處理卡片點擊
     handleCardClick: function(card) {
         if (window.GamePause?.paused) return;
+        if (this.interferenceLocked) return;
         if (this.challenge?.ending) return;
         if (!this.canFlip || this.isMemorizing) return;
         if (card.classList.contains('is-flipped')) return;

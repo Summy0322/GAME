@@ -128,3 +128,14 @@
 .memory-mistake-meter { display:flex;gap:3px; }
 .memory-mistake-meter i { display:block;width:clamp(5px,1.5cqh,9px);height:clamp(5px,1.5cqh,9px);border:1px solid #e4be8766;border-radius:2px;background:#e4be8722; }
 .memory-mistake-meter i.is-lit { background:#e8c189; }
+/* 雲影只遮牌區，380ms 合攏、180ms 停留、380ms 打開，無白色閃光。 */
+.night-challenge-game .memory-grid { position:relative;isolation:isolate; }
+.memory-blink-cover { position:absolute;inset:0;z-index:5;overflow:hidden;border-radius:10px;pointer-events:none; }
+.memory-blink-cover[hidden] { display:none; }
+.memory-blink-shutter { position:absolute;left:0;right:0;height:50.1%;background:linear-gradient(145deg,#203553,#101e35);transform:scaleY(0);transition:transform 380ms cubic-bezier(.2,.7,.3,1); }
+.memory-blink-top { top:0;transform-origin:top; }
+.memory-blink-bottom { bottom:0;transform-origin:bottom; }
+.memory-blink-cover[data-phase="closing"] .memory-blink-shutter { transform:scaleY(1); }
+.memory-blink-cover[data-effect="quiet"] { box-shadow:inset 0 0 0 2px #aabddd66; }
+.memory-blink-cover[data-effect="quiet"] .memory-blink-shutter { display:none; }
+@media (prefers-reduced-motion:reduce) { .memory-blink-shutter { transition:none; } }

@@ -43,14 +43,15 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-title').textContent = `${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
         document.getElementById('challenge-lobby-copy').textContent = this.endless
             ? (memory
-                ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對成功消除一格，完成一盤清空失誤，不補命。每對 +10 分、每盤再 +20 分。卡片與記憶難度逐盤提升，以完成盤數挑戰紀錄。`
-                : '三條命，不限時。漏接、打到石頭或格擋失敗扣一命，同一波最多扣一命。每 10 波加速，多方向題依目標數保留連續滑動時間；右上細線顯示作答時間，失誤後會先顯示原因再換波。以分數與波次挑戰紀錄。')
+                ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對消一格、換盤清空。每對 +10 分、每盤 +20 分。第 4 盤起偶有雲影，先預告再短暫遮牌；翻牌中會略過，牌位固定不變。`
+                : '三條命，不限時。漏接、打到石頭或格擋失敗扣一命，同一波最多扣一命。每 10 波加速，多方向題保留連續滑動時間；右上細線顯示作答時間，失誤先回饋再換波。音樂隨波次小幅加速，以分數與波次挑戰紀錄。')
             : memory
             ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
             : '90 秒連續防守，滑動處理目標、避開石頭；重擊逐格點燃速度會隨時間加快，依提示滑動格擋。約第 25、60 秒後各有一次旋轉，沿畫面畫圈，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
         document.getElementById('challenge-lobby-best').textContent = this.bestLabel(kind,this.mode);
     },
     stop() {
+        this.clearMemoryInterference();
         this.generation++;
         this.active = false;
         this.session?.dispose();
@@ -208,6 +209,7 @@ window.TimedChallenge = {
         this.lastTick = clock.now();
         this.liveClock = clock;
         this.liveTimer = clock.setInterval(() => this.consumeTime(),100);
+        if (this.kind==='memory' && this.endless) this.setupMemoryInterference(game);
     },
     consumeTime() {
         if (!this.active || !this.liveClock) return;
@@ -284,6 +286,7 @@ window.TimedChallenge = {
     nextAttack(game) {
         const elapsed = 90000-this.remaining;
         const wave = (game.waveNumber || 0)+1;
+        if (this.active && this.endless && this.kind==='defense') window.GameMusic?.setPlaybackRate?.(this.defenseMusicRate(wave),'defense');
         const stage = Math.floor((wave-1)/10);
         const speed = this.defenseSpeed(stage,elapsed);
         const dueAOE = this.endless ? wave >= 30 && wave%10===0 : elapsed >= [25000,60000][this.aoeMilestone || 0];
@@ -334,6 +337,69 @@ window.TimedChallenge = {
             prepareTime:Math.max(child?140:100,Math.round((child?400:300)*factor)),
             gap:Math.max(child?180:120,Math.round((child?500:380)*factor))
         };
+    },
+    defenseMusicRate(wave) {
+        return 1 + Math.min(8,Math.floor(Math.max(0,wave-1)/10))*.02;
+    },
+    memoryCloudInterval() {
+        return Math.max(this.mode==='child'?16000:12000,(this.mode==='child'?22000:18000)-Math.floor(Math.max(0,this.boards-3)/2)*1000);
+    },
+    clearMemoryInterference() {
+        const effect=this.memoryInterference;
+        if (!effect) return;
+        this.memoryInterference=null;
+        effect.timers.forEach(id=>effect.session.clearTimer(id));
+        effect.node.remove();
+        const game=effect.game;
+        if (game.session===effect.session) {
+            game.interferenceLocked=false;
+            if (effect.locked && game.gameActive && !game.isMemorizing) game.canFlip=true;
+            if (game.statusText?.innerText===effect.message) game.statusText.innerText=effect.previous;
+        }
+    },
+    setupMemoryInterference(game) {
+        if (this.memoryInterference?.session===game.session) return;
+        this.clearMemoryInterference();
+        if (!this.active || !this.endless || this.kind!=='memory' || this.boards<3 || !game.session?.ownNode || !game.grid?.appendChild) return;
+        const session=game.session,run=this.generation;
+        const node=document.createElement('div');
+        node.className='memory-blink-cover';node.hidden=true;node.setAttribute('aria-hidden','true');
+        node.innerHTML='<div class="memory-blink-shutter memory-blink-top"></div><div class="memory-blink-shutter memory-blink-bottom"></div>';
+        session.ownNode(node);game.grid.appendChild(node);
+        const effect=this.memoryInterference={game,session,node,timers:new Set(),count:0,locked:false,previous:'',message:''};
+        const current=()=>this.active && this.endless && this.kind==='memory' && game.challenge===this && !this.ending && run===this.generation && this.memoryInterference===effect && game.session===session && !session.disposed && game.gameActive;
+        const later=(fn,ms)=>{let id=session.timeout(()=>{effect.timers.delete(id);if(current())fn();},ms);effect.timers.add(id);};
+        const idle=()=>current() && !document.hidden && !window.GamePause?.paused && game.canFlip && !game.isMemorizing && !game.flippedCards.length && !(game.grid.getAnimations?.({subtree:true})||[]).some(a=>a.playState==='running');
+        const status=text=>{
+            if (game.statusText) {
+                if(game.statusText.innerText!==effect.message)effect.previous=game.statusText.innerText;
+                game.statusText.innerText=text;effect.message=text;
+            }
+        };
+        const restore=()=>{if(game.statusText?.innerText===effect.message)game.statusText.innerText=effect.previous;effect.message='';};
+        const schedule=()=>{if(effect.count<2)later(warn,this.memoryCloudInterval());};
+        const finish=()=>{
+            node.hidden=true;node.dataset.phase='idle';
+            if(effect.locked){game.interferenceLocked=false;game.canFlip=true;effect.locked=false;}
+            restore();schedule();
+        };
+        const begin=()=>{
+            if(!idle()){restore();schedule();return;}
+            effect.count++;
+            node.hidden=false;
+            if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+                node.dataset.effect='quiet';node.dataset.phase='quiet';status('雲影輕掠，繼續配對');later(finish,940);return;
+            }
+            node.dataset.effect='blink';node.dataset.phase='idle';void node.offsetWidth;
+            effect.locked=true;game.interferenceLocked=true;game.canFlip=false;
+            status('雲影掠過，稍等一下');node.dataset.phase='closing';
+            later(()=>{node.dataset.phase='opening';later(finish,380);},560);
+        };
+        const warn=()=>{
+            if(!idle()){schedule();return;}
+            status('雲影將掠過…');later(begin,1200);
+        };
+        later(warn,this.mode==='child'?9000:7000);
     },
     paired() {
         if (!this.active || this.ending) return;
