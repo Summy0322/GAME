@@ -6,7 +6,7 @@ function fixture(blocked=false){
  const window={},context=vm.createContext({window,document,console:{log(){},warn(){}},performance:{now:()=>now},
  localStorage:{getItem(k){if(blocked)throw Error();return saved.get(k)||null;},setItem(k,v){if(blocked)throw Error();saved.set(k,v);}},
  setTimeout(fn,ms=0){jobs.set(++id,{fn,at:now+ms});return id;},clearTimeout(k){jobs.delete(k);},requestAnimationFrame(){},cancelAnimationFrame(){}});
- for(const file of ['js/core/GameClock.js','js/core/TimedChallenge.js','js/minigames/DefenseLevels.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
+ for(const file of ['js/core/GameClock.js','js/core/TimedChallenge.js','js/data/minigameAssets.js','js/minigames/DefenseLevels.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
  const c=window.TimedChallenge;c.active=true;c.kind='memory';c.mode='child';c.remaining=90000;c.score=c.pairs=c.boards=c.penalties=0;
  const tick=ms=>{const end=now+ms;let count=0;while(true){const next=[...jobs].filter(([,j])=>j.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;if(++count>20000)throw Error('loop');now=next[1].at;jobs.delete(next[0]);next[1].fn();}now=end;};
  return {c,window,context,saved,tick,nodes,clock:()=>new window.GameClock()};

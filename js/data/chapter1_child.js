@@ -54,7 +54,7 @@ window.Chapter1_Child = {
             id: 'kid_reply1',
             name: '小朋友',
             text: '真的嗎？那以前是什麼樣子？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level1_story1'
         },
         {
@@ -68,7 +68,7 @@ window.Chapter1_Child = {
             id: 'kid_reply2',
             name: '小朋友',
             text: '感覺好像很好玩！',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level1_story2'
         },
         {
@@ -82,7 +82,7 @@ window.Chapter1_Child = {
             id: 'kid_reply3',
             name: '小朋友',
             text: '哇！那怎麼辦？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level1_challenge'
         },
         {
@@ -114,7 +114,7 @@ window.Chapter1_Child = {
             id: 'kid_happy',
             name: '小朋友',
             text: '耶！我接到好多肉圓！',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level1_transition'
         },
         {
@@ -160,7 +160,7 @@ window.Chapter1_Child = {
             id: 'kid_ask_fire',
             name: '小朋友',
             text: '阿斗仔，後來這裡怎麼變成紅磚市場的呢？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_story1'
         },
         {
@@ -181,7 +181,7 @@ window.Chapter1_Child = {
             id: 'kid_scared',
             name: '小朋友',
             text: '大火？那不是很可怕嗎？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_story2'
         },
         {
@@ -202,7 +202,7 @@ window.Chapter1_Child = {
             id: 'kid_help',
             name: '小朋友',
             text: '我要怎麼幫忙？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_challenge'
         },
         {
@@ -234,7 +234,7 @@ window.Chapter1_Child = {
             id: 'kid_proud',
             name: '小朋友',
             text: '耶！我保護了市場！',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_transition'
         },
         {
@@ -280,7 +280,7 @@ window.Chapter1_Child = {
             id: 'kid_question',
             name: '小朋友',
             text: '所以它像一個會說故事的地方嗎？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level3_story1'
         },
         {
@@ -294,7 +294,7 @@ window.Chapter1_Child = {
             id: 'kid_understand',
             name: '小朋友',
             text: '我知道了，這裡是裝滿回憶的紅磚市場！',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level3_challenge'
         },
         {
@@ -326,7 +326,7 @@ window.Chapter1_Child = {
             id: 'kid_celebrate',
             name: '小朋友',
             text: '哇～我成功了！謝謝阿斗仔帶我認識紅磚市場！',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             // ✅ 根據通關進度動態決定跳轉目標（參考 teen 版）
             get next() {
                 if (window.Chapter1_Child.isAllCompleted()) {

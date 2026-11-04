@@ -7,56 +7,56 @@ const chapter2TeenData = {
     cardGallery: [
             {
                 id: "card1",
-                thumb: "assets/images/memory/詹永豐米店.png",
-                fullImage: "assets/images/memory/詹永豐米店.png",
+                thumb: "assets/images/minigames/memory/cards/詹永豐米店.png",
+                fullImage: "assets/images/minigames/memory/cards/詹永豐米店.png",
                 title: "詹永豐米店",
                 summary: "創立於日治時期、以試吃選米與職人精神聞名的百年米店。",
                 story: "詹永豐米店位於西門大榕樹旁，創立於日治時期，至今已傳承至第三代。早期店內設有大型碾米機，象徵著過去勞動密集的產業型態，後因環保法規拆除，改由外部碾米廠供應。儘管設備改變，店家仍堅持「實在、正直」的理念，透過親自試吃來挑選米種，強調米飯必須Q彈且冷食亦佳。第三代並創立品牌與展示模型，將家族記憶轉化為具體的文化呈現。"
             },
             {
                 id: "card2",
-                thumb: "assets/images/memory/其實豆製所.png",
-                fullImage: "assets/images/memory/其實豆製所.png",
+                thumb: "assets/images/minigames/memory/cards/其實豆製所.png",
+                fullImage: "assets/images/minigames/memory/cards/其實豆製所.png",
                 title: "其實豆製所",
                 summary: "以國產大豆為核心、重新活化紅磚市場的在地品牌。",
                 story: "其實豆製所創立於2016年，曾短暫停業，並於2023年與在地品牌合作後重新出發。店家堅持使用國產大豆製作豆漿與豆製品，強調傳統濃郁風味的再現。其選址於具有百年歷史的紅磚市場，不僅推廣在地農業，也賦予老市場新的功能與文化意義，使其成為地方飲食文化的延續據點。"
             },
             {
                 id: "card3",
-                thumb: "assets/images/memory/彰化北斗肉圓.png",
-                fullImage: "assets/images/memory/彰化北斗肉圓.png",
+                thumb: "assets/images/minigames/memory/cards/彰化北斗肉圓.png",
+                fullImage: "assets/images/minigames/memory/cards/彰化北斗肉圓.png",
                 title: "彰化北斗肉圓",
                 summary: "以三角錐造型與先蒸後炸工法著稱的在地肉圓。",
                 story: "彰化北斗肉圓位於奠安宮周邊，其特色在於手工捏製的三角錐外型，與一般圓形肉圓有所區別。製作上採用先蒸再炸的傳統工序，使外皮呈現半透明狀，並保有高度的彈性與嚼勁。這種外型與口感的結合，成為當地極具代表性的飲食特色。"
             },
             {
                 id: "card4",
-                thumb: "assets/images/memory/正老店阿美.png",
-                fullImage: "assets/images/memory/正老店阿美.png",
+                thumb: "assets/images/minigames/memory/cards/正老店阿美.png",
+                fullImage: "assets/images/minigames/memory/cards/正老店阿美.png",
                 title: "正老店阿美",
                 summary: "傳承三代、以濕潤口感與豬皮為特色的在地經典主食。",
                 story: "正老店阿美位於奠安宮周邊，營業超過50年，已傳承至第三代。其招牌高麗菜飯透過爆炒與慢火燉煮，使高麗菜釋放甜味並滲入米飯，形成微濕潤的口感。搭配滷製軟嫩的豬皮、肉燥與鴨蛋，構成層次豐富的風味組合。此種將湯汁與食材融合於米飯中的作法，反映北斗在地飲食的樸實與日常性。"
             },
             {
                 id: "card5",
-                thumb: "assets/images/memory/阿在伯炸彈蔥油餅.png",
-                fullImage: "assets/images/memory/阿在伯炸彈蔥油餅.png",
+                thumb: "assets/images/minigames/memory/cards/阿在伯炸彈蔥油餅.png",
+                fullImage: "assets/images/minigames/memory/cards/阿在伯炸彈蔥油餅.png",
                 title: "阿在伯炸彈蔥油餅",
                 summary: "以油炸膨脹效果為特色的廟口視覺型小吃。",
                 story: "阿在伯炸彈蔥油餅位於奠安宮美食廣場，其最大特色是在高溫油炸過程中，麵皮會迅速膨脹，形成如氣球般的外觀。外層經油炸後略帶酥脆，內部則保有柔軟口感並包覆青蔥香氣。此種強烈的視覺變化，使其成為具有辨識度的街邊小吃。"
             },
             {
                 id: "card6",
-                thumb: "assets/images/memory/奠安宮楊記炸物.png",
-                fullImage: "assets/images/memory/奠安宮楊記炸物.png",
+                thumb: "assets/images/minigames/memory/cards/奠安宮楊記炸物.png",
+                fullImage: "assets/images/minigames/memory/cards/奠安宮楊記炸物.png",
                 title: "奠安宮楊記炸物",
                 summary: "以外酥內嫩對比口感為特色的傳統炸豆腐。",
                 story: "奠安宮楊記炸物位於廟口周邊，主打將白豆腐經高溫油炸，使外層形成酥脆的金黃色外皮，而內部仍保有原本的柔軟與水分。這種外酥內嫩的口感對比，是其吸引人的關鍵，也體現傳統街邊炸物的製作特色。"
             },
             {
                 id: "card7",
-                thumb: "assets/images/memory/碗粿.png",
-                fullImage: "assets/images/memory/碗粿.png",
+                thumb: "assets/images/minigames/memory/cards/碗粿.png",
+                fullImage: "assets/images/minigames/memory/cards/碗粿.png",
                 title: "碗粿",
                 summary: "以米漿盛碗蒸製，搭配餡料的傳統米食。",
                 story: "碗粿以在來米或在來米粉調製米漿，盛入碗中蒸熟。常見的鹹口味會搭配香菇、豬肉、紅蔥頭或蝦米等餡料，各家的配料與調味不盡相同。從米漿到一碗成形的點心，可以認識臺灣傳統米食的製作方式。"

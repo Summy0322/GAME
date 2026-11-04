@@ -869,7 +869,7 @@ const InteractSystem = {
         this.showMessage('✓ 正確！', '#00ff88');
         
         if (typeof AudioManager !== 'undefined') {
-            AudioManager.playSFX('assets/sounds/success.mp3', 0.3);
+            AudioManager.playSFX('assets/audio/sfx/correct.mp3', 0.3);
         }
         
         if (this.matchedItems.length >= this.totalMatches) {

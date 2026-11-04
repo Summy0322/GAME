@@ -234,7 +234,7 @@ const Typewriter = {
                     
                     // 播放點擊音效
                     if (typeof AudioManager !== 'undefined') {
-                        AudioManager.playSFX('assets/sounds/click.mp3');
+                        AudioManager.playSFX('assets/audio/sfx/click.mp3');
                     }
                     
                     // 清除選項

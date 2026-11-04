@@ -596,7 +596,7 @@ const PaymentSystem = {
         
         // 播放音效
         if (typeof AudioManager !== 'undefined') {
-            AudioManager.playSFX('assets/sounds/click.mp3', 0.3);
+            AudioManager.playSFX('assets/audio/sfx/click.mp3', 0.3);
         }
         
         this.showMessage(`✅ 已支付 ${this.paidAmount} / ${this.amount} 銅板`, '#00aa00');

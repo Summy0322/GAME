@@ -1,0 +1,900 @@
+{
+  "schemaVersion": 1,
+  "description": "Every tracked asset before migration, including exact-duplicate aliases. Paths relative to repository root.",
+  "beforeBytes": 142762158,
+  "afterBytes": 125573618,
+  "assets": [
+    {
+      "oldPath": "assets/fonts/BpmfZihiKaiStd-Regular.ttf",
+      "path": "assets/fonts/BpmfZihiKaiStd-Regular.ttf",
+      "bytes": 17141668,
+      "sha256": "b5de180c456840edc57d07256d7d167a95306c81ab1936677c4706491a9e7d37"
+    },
+    {
+      "oldPath": "assets/fonts/LICENSE-2.0.txt",
+      "path": "assets/fonts/LICENSE-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "normalization": "lf"
+    },
+    {
+      "oldPath": "assets/fonts/LICENSE-ZihiKaiStd.txt",
+      "path": "assets/fonts/LICENSE-ZihiKaiStd.txt",
+      "bytes": 5610,
+      "sha256": "3956be709a6e77c77a55240b40530aa7ad6171d2ddcc794a2982e9ece1f2895f",
+      "normalization": "lf"
+    },
+    {
+      "oldPath": "assets/fonts/NOTICE.txt",
+      "path": "assets/fonts/NOTICE.txt",
+      "bytes": 1008,
+      "sha256": "34ed00ebf3c9ec93390900873d3c3695c3d6928be6ca0b52543f06b7197115d1",
+      "normalization": "lf"
+    },
+    {
+      "oldPath": "assets/icons/game_icon.ico",
+      "path": "assets/icons/game-icon.ico",
+      "bytes": 4785,
+      "sha256": "34df3b54c263b3462684207d178dc9db795eb0a0ff5c403f7763603551db8179"
+    },
+    {
+      "oldPath": "assets/icons/icon-128.png",
+      "path": "assets/icons/icon-128.png",
+      "bytes": 21901,
+      "sha256": "61e89d6d962c89521e7a5115b4de62c0a6fe422d1ad60d99c83aafe2555576b9"
+    },
+    {
+      "oldPath": "assets/icons/icon-16.png",
+      "path": "assets/icons/icon-16.png",
+      "bytes": 905,
+      "sha256": "abe5e253e5a344d906fb3c8e097e57fc41da8a072368c9bbba80384bbcc9e5ce"
+    },
+    {
+      "oldPath": "assets/icons/icon-256.png",
+      "path": "assets/icons/icon-256.png",
+      "bytes": 62079,
+      "sha256": "bcd4793d73e8bda1bfe46330974abcdbd58c7180c0f5727e949b451282cd31f5"
+    },
+    {
+      "oldPath": "assets/icons/icon-32.png",
+      "path": "assets/icons/icon-32.png",
+      "bytes": 2624,
+      "sha256": "99bbd5bb6771cb8bf79bcd47dca5333ad15376ad49303b8b1c3af61f43d60a17"
+    },
+    {
+      "oldPath": "assets/icons/icon-64.png",
+      "path": "assets/icons/icon-64.png",
+      "bytes": 7685,
+      "sha256": "4a2cadffed4925f090be70ad0bea9c8cf2d1bec4c6a7e1e45dcc1f8f6aa44ffd"
+    },
+    {
+      "oldPath": "assets/images/002-1.jpg",
+      "path": "assets/images/reference/002-1.jpg",
+      "bytes": 193893,
+      "sha256": "860757ba15da6796c29c227dcb8c1b42b983a1031a0ef66f55fb6a06af8fd580"
+    },
+    {
+      "oldPath": "assets/images/3-1.jpg",
+      "path": "assets/images/reference/3-1.jpg",
+      "bytes": 378540,
+      "sha256": "301e25489447a2e53a48f71c5e9c72631ab94c7de11b4739fd7060d9018b936a"
+    },
+    {
+      "oldPath": "assets/images/3-2.jpg",
+      "path": "assets/images/reference/3-2.jpg",
+      "bytes": 494457,
+      "sha256": "8006954aebecb06bb27faeb75e7be040a6aef9f22f6ae31877ef63c031ae4cce"
+    },
+    {
+      "oldPath": "assets/images/3-3.jpg",
+      "path": "assets/images/reference/3-3.jpg",
+      "bytes": 146082,
+      "sha256": "f5c09f827592863985b286e1f5164e2f517b28684e441a7851304d0bcd482176"
+    },
+    {
+      "oldPath": "assets/images/ch1/background.png",
+      "path": "assets/images/shared/market-background-source.png",
+      "bytes": 8347709,
+      "sha256": "b267fd039a17f563d92259465a37b4fc844a0dbd33b6dbfc3fa194e570d213ee"
+    },
+    {
+      "oldPath": "assets/images/ch2/background.png",
+      "path": "assets/images/shared/market-background-source.png",
+      "bytes": 8347709,
+      "sha256": "b267fd039a17f563d92259465a37b4fc844a0dbd33b6dbfc3fa194e570d213ee"
+    },
+    {
+      "oldPath": "assets/images/ch2/bg.png",
+      "path": "assets/images/minigames/memory/background.png",
+      "bytes": 1419116,
+      "sha256": "1bd7e72e66d0280d9fde6b76aee74505d6afea47449a0bbfb4224fbe40e8ca3e"
+    },
+    {
+      "oldPath": "assets/images/ch2/卡背.png",
+      "path": "assets/images/minigames/memory/card-back.png",
+      "bytes": 32609,
+      "sha256": "8ed048d9469c20d8115d4198db247487224ef9d7cfa539e52a21854e0fefeb3f"
+    },
+    {
+      "oldPath": "assets/images/ch2/資訊欄.png",
+      "path": "assets/images/minigames/memory/hud.png",
+      "bytes": 4094,
+      "sha256": "654f50b9db7c3805c2773ca1adecea8598889b0061068060d02b3db74fde66a7"
+    },
+    {
+      "oldPath": "assets/images/ch2/面板.png",
+      "path": "assets/images/minigames/memory/panel.png",
+      "bytes": 10899,
+      "sha256": "e0f02afcc09bd5e0d071dffd3f9ef43905df3a386bff0063007dbec5496881e9"
+    },
+    {
+      "oldPath": "assets/images/ch3/background.png",
+      "path": "assets/images/shared/market-background-source.png",
+      "bytes": 8347709,
+      "sha256": "b267fd039a17f563d92259465a37b4fc844a0dbd33b6dbfc3fa194e570d213ee"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/black_pepper.png",
+      "path": "assets/images/minigames/ingredients/black-pepper.png",
+      "bytes": 63207,
+      "sha256": "0fbed95691716ed3855b338f818f02635f072fd49a36b0cb86ab2f368f41be87"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/broken_mushroom.png",
+      "path": "assets/images/minigames/ingredients/broken-mushroom.png",
+      "bytes": 139526,
+      "sha256": "ade3749575e3969258f1fd0d036e280b2422ee4b0c97ed4675d1abbbb473ace1"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/coarse_stone.png",
+      "path": "assets/images/minigames/ingredients/coarse-stone.png",
+      "bytes": 195290,
+      "sha256": "95f9aaa32062bbe71d7e9579fc6c04cd6d6f19e14fe40ad05f744eac5e714e88"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/fine_stone.png",
+      "path": "assets/images/minigames/ingredients/fine-stone.png",
+      "bytes": 190367,
+      "sha256": "b4038c6c1661de29d969bed84db6a3ec044df7ad351e874584bef3da7b4eeff2"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/newspaper.png",
+      "path": "assets/images/minigames/ingredients/newspaper.png",
+      "bytes": 153861,
+      "sha256": "715167562c68a7870629555aae2d7112d1d07658798027b574b0d4353545f55c"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/sichuan_pepper.png",
+      "path": "assets/images/minigames/ingredients/sichuan-pepper.png",
+      "bytes": 95780,
+      "sha256": "e8bfe0dbfbd99d93e08da3997e415a621c247116da40ac0eefaffcf5ee01dddf"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/star_anise.png",
+      "path": "assets/images/minigames/ingredients/star-anise.png",
+      "bytes": 182443,
+      "sha256": "babf46d1d190ba018a6637cfcb0062f5f2a9e75452cf8cf216b40b3e468a7ee4"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/thick_mushroom.png",
+      "path": "assets/images/minigames/ingredients/thick-mushroom.png",
+      "bytes": 237318,
+      "sha256": "bd02c8010abd187b35ced8802a3b67100dc10b1596d2bf78e464013d316b1fd4"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/thin_mushroom.png",
+      "path": "assets/images/minigames/ingredients/thin-mushroom.png",
+      "bytes": 179919,
+      "sha256": "6770bb558a8e20df63be4492d9a36653531f196104fc912c8269c3b6f63dab47"
+    },
+    {
+      "oldPath": "assets/images/ch3/game/white_pepper.png",
+      "path": "assets/images/minigames/ingredients/white-pepper.png",
+      "bytes": 73726,
+      "sha256": "4038e72d9b2baf196ee11c6af52a95e1c3bd23d5052daba1dce8613b9dbd98e7"
+    },
+    {
+      "oldPath": "assets/images/ch3/items/herbal.png",
+      "path": "assets/images/story/chapter-3/collection/herbal.png",
+      "bytes": 163202,
+      "sha256": "bd3042ca6fe4425a2cf9a34478fb0e0089b3372eb98b87b0a0923d28d48d4108"
+    },
+    {
+      "oldPath": "assets/images/ch3/items/herbal_black.png",
+      "path": "assets/images/story/chapter-3/collection/herbal-black.png",
+      "bytes": 62562,
+      "sha256": "3eddca26a343ce53688dbab443be1b26e259a343398aabfce1bf3b6933dac4ce"
+    },
+    {
+      "oldPath": "assets/images/ch3/items/knife.png",
+      "path": "assets/images/story/chapter-3/collection/knife.png",
+      "bytes": 78392,
+      "sha256": "37efdee42971551ffb0b22ac12c326cc76399fc5fa3af01cdb6f4a160725b5f7"
+    },
+    {
+      "oldPath": "assets/images/ch3/items/knife_black.png",
+      "path": "assets/images/story/chapter-3/collection/knife-black.png",
+      "bytes": 34369,
+      "sha256": "43358f185207e2794c6e60bf8f61925dd9b1bc4856b15cf72b84624b05d986c3"
+    },
+    {
+      "oldPath": "assets/images/ch3/items/mushroom.png",
+      "path": "assets/images/story/chapter-3/collection/mushroom.png",
+      "bytes": 133669,
+      "sha256": "83f636c1fd35b9c5a4dea92e4196e706256e45be38d09b388f1047d28a99f2f8"
+    },
+    {
+      "oldPath": "assets/images/ch3/items/mushroom_black.png",
+      "path": "assets/images/story/chapter-3/collection/mushroom-black.png",
+      "bytes": 31899,
+      "sha256": "5bc8cca26365ca2647b525a6bf67a10f9d5ae9143f6a24cc6438874cd8bdf2d3"
+    },
+    {
+      "oldPath": "assets/images/ch3/kitchen.png",
+      "path": "assets/images/story/chapter-3/kitchen.png",
+      "bytes": 905636,
+      "sha256": "e1d867e18a61e988fcbe2f8033b4e7650f575cbded10a3f1565f77afe93e422b"
+    },
+    {
+      "oldPath": "assets/images/ch3/map.png",
+      "path": "assets/images/story/chapter-3/map.png",
+      "bytes": 1698726,
+      "sha256": "125489b1a5eaec9c4b6073974355efc88b9fa247dbf414e896e491a85c190213"
+    },
+    {
+      "oldPath": "assets/images/ch3/shop_grocery.png",
+      "path": "assets/images/story/chapter-3/shop-grocery.png",
+      "bytes": 1750968,
+      "sha256": "0d265f66176239e842440f83695b63e5d5637d764b50190236089b356351f73c"
+    },
+    {
+      "oldPath": "assets/images/ch3/shop_grocery_s.png",
+      "path": "assets/images/story/chapter-3/shop-grocery-s.png",
+      "bytes": 164949,
+      "sha256": "7888e018e0af1afa7126abd51337b65df34d3c7ad391bdb935f48bf538bceb1a"
+    },
+    {
+      "oldPath": "assets/images/ch3/shop_herbal.png",
+      "path": "assets/images/story/chapter-3/shop-herbal.png",
+      "bytes": 1431729,
+      "sha256": "3220b58269d1b2347c4cbdb8531f78b2be562655732e6823037b2440881797d5"
+    },
+    {
+      "oldPath": "assets/images/ch3/shop_herbal_s.png",
+      "path": "assets/images/story/chapter-3/shop-herbal-s.png",
+      "bytes": 172264,
+      "sha256": "d6bf3b85bf5e62bfeedcd252167ee79259c43d6a82e18e9ad19e7e0902ec0214"
+    },
+    {
+      "oldPath": "assets/images/ch3/shop_knife.png",
+      "path": "assets/images/story/chapter-3/shop-knife.png",
+      "bytes": 1495736,
+      "sha256": "8ea002f12e1b752c1ccf9d8b3f6fb9043162abab56352921985d6239b802b8c3"
+    },
+    {
+      "oldPath": "assets/images/ch3/shop_knife_s.png",
+      "path": "assets/images/story/chapter-3/shop-knife-s.png",
+      "bytes": 158789,
+      "sha256": "fd94dc19de719971d0aa501b021c51cef49717f5495a87675f3afd82d09baff3"
+    },
+    {
+      "oldPath": "assets/images/ch3/temple.png",
+      "path": "assets/images/story/chapter-3/temple.png",
+      "bytes": 1427121,
+      "sha256": "771dea3b64c061f1388f58d28028da0c364089e1dd4917af4f9d07190a9aa050"
+    },
+    {
+      "oldPath": "assets/images/challenge/player.png",
+      "path": "assets/images/characters/challenge-player.png",
+      "bytes": 27844,
+      "sha256": "26b0ca51b9f0e3dd208251d82a2f394f547e409045b903aeb21576f62702f0f0"
+    },
+    {
+      "oldPath": "assets/images/characters/grocery_owner.png",
+      "path": "assets/images/characters/grocery-owner.png",
+      "bytes": 202745,
+      "sha256": "3f91e92f628bcc11b204111396fab95a39922703e40094af69bd2095db1800b4"
+    },
+    {
+      "oldPath": "assets/images/characters/herbal_owner.png",
+      "path": "assets/images/characters/herbal-owner.png",
+      "bytes": 265100,
+      "sha256": "15a41f079390a306fabaa922bd49ac1e3fe844f2d78146ae05aebfa1ba9f80d9"
+    },
+    {
+      "oldPath": "assets/images/characters/knife_smith.png",
+      "path": "assets/images/characters/knife-smith.png",
+      "bytes": 212845,
+      "sha256": "aca79acdba4a377301b2c9c413c76ad9ffcdce3862038b55c76a7faeabd5a582"
+    },
+    {
+      "oldPath": "assets/images/characters/mom.png",
+      "path": "assets/images/characters/mom.png",
+      "bytes": 209729,
+      "sha256": "a28a57a0a8abbdb468b9906b502f5c98b31f61950360212ed051a9fb1cd0e20d"
+    },
+    {
+      "oldPath": "assets/images/characters/non_character.png",
+      "path": "assets/images/characters/non-character.png",
+      "bytes": 6211,
+      "sha256": "51bc5d3ca57b921ee72c4d9722b48b10a17fb532eef51bc4b07e586baf272f78"
+    },
+    {
+      "oldPath": "assets/images/characters/阿斗仔.png",
+      "path": "assets/images/characters/阿斗仔.png",
+      "bytes": 547217,
+      "sha256": "648830e62724e9c5cffcedcf9311974bd410d21cc75ab5bd9c82bfee1394cbce"
+    },
+    {
+      "oldPath": "assets/images/characters/阿斗仔1.png",
+      "path": "assets/images/characters/阿斗仔1.png",
+      "bytes": 138279,
+      "sha256": "90ef59c354db427306fa6c5b939374f17a88968872f168abd0c5ee82f0a8eab7"
+    },
+    {
+      "oldPath": "assets/images/characters/阿斗仔頭像.png",
+      "path": "assets/images/characters/阿斗仔頭像.png",
+      "bytes": 84990,
+      "sha256": "de9b1378f1d9111828c68e16df4a12c8132ba72e44f8eaf25e70d8a0714abdce"
+    },
+    {
+      "oldPath": "assets/images/close_icon.png",
+      "path": "assets/images/ui/close.png",
+      "bytes": 18276,
+      "sha256": "e1be90391db7e10da86a2c71b9428fcb7f4e0f296efd4d1d1742e96479fdaac1"
+    },
+    {
+      "oldPath": "assets/images/cursor.png",
+      "path": "assets/images/ui/cursor.png",
+      "bytes": 13254,
+      "sha256": "b7304961dcf88d92f0d776b5d66a96de4a436770006bad399cff8b53f4946fde"
+    },
+    {
+      "oldPath": "assets/images/cursor2.png",
+      "path": "assets/images/ui/cursor-active.png",
+      "bytes": 9038,
+      "sha256": "87ec13f1da578f5b8c8f10c34d338ee9dd559677cd9c04482d88a8e1f9f930a6"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/aoe_line.png",
+      "path": "assets/images/minigames/defense/level1/aoe-line.png",
+      "bytes": 756,
+      "sha256": "71a42efc841318cd9c44f029fc7c1eb236eda4ebe8d9fe3527033787dcfd97e1"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/bg.png",
+      "path": "assets/images/minigames/defense/level1/bg.png",
+      "bytes": 3338790,
+      "sha256": "37fe3c5bc83e61c1b19c1ba26a56900fbe687fecdafcdeaed81411a9c0e7264f"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/enemy.png",
+      "path": "assets/images/minigames/defense/level1/enemy.png",
+      "bytes": 29240,
+      "sha256": "4113fdc8542f7ee8fca50cf6f5d0db8173862b0dba9b082105db050b90a4ef1d"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/player.png",
+      "path": "assets/images/minigames/defense/shared/player.png",
+      "bytes": 51675,
+      "sha256": "2006d8a1a30ec25f26f92f6a8ec08c9153b5bc943ff0d436cffa5ebdc78c0ab5"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/projectile.png",
+      "path": "assets/images/minigames/defense/level1/projectile.png",
+      "bytes": 18803,
+      "sha256": "00a3c5ca8d9fed5e36dd49a3f6d96a34ed794d69b71c1cbfd9bc284e08dd4b78"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/projectile_hit.png",
+      "path": "assets/images/minigames/defense/level1/projectile-hit.png",
+      "bytes": 36083,
+      "sha256": "2679d43d4cbeb69e3381019dcf190a9e1d74f499ac5ba2d34a7899c9719da26b"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/shield.png",
+      "path": "assets/images/minigames/defense/level1/shield.png",
+      "bytes": 356,
+      "sha256": "797713c3862594e30045c2952b3e9f6ece5fbe716cbce9e6fe4abc2737f7dd54"
+    },
+    {
+      "oldPath": "assets/images/defense/level1/stone.png",
+      "path": "assets/images/minigames/defense/shared/stone.png",
+      "bytes": 28062,
+      "sha256": "88072ddc3c71a03ebe78ebf93721a2ecfde39428f9caa3f96d2d7740a8fdd186"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/aoe_line.png",
+      "path": "assets/images/minigames/defense/level2/aoe-line.png",
+      "bytes": 5581,
+      "sha256": "cea43db666b650713e32fa88706202a576e48adccb5ce23f1af14a76d2e03842"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/bg.png",
+      "path": "assets/images/minigames/defense/level2/bg.png",
+      "bytes": 3407262,
+      "sha256": "580dd28635f958c6d7f58d44b6eb859c42a93a665be7cc7a0ed188e0071365e4"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/enemy.png",
+      "path": "assets/images/minigames/defense/level2/enemy.png",
+      "bytes": 14471,
+      "sha256": "8c8236ee2244954bd3dd243e1de3a9bba1acb071085e5234212e47f16093c295"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/player.png",
+      "path": "assets/images/minigames/defense/shared/player.png",
+      "bytes": 51675,
+      "sha256": "2006d8a1a30ec25f26f92f6a8ec08c9153b5bc943ff0d436cffa5ebdc78c0ab5"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/projectile.png",
+      "path": "assets/images/minigames/defense/level2/projectile.png",
+      "bytes": 26533,
+      "sha256": "cc3e2ea0b0045f556483be7397a7b94eec1b0f7b85e3833716cfb45ad11bca93"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/projectile_hit.png",
+      "path": "assets/images/minigames/defense/level2/projectile-hit.png",
+      "bytes": 11514,
+      "sha256": "5c3bd5e6437f937316778047ae9fd8f98208223367cd3eaceaa8bf6527c46d47"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/shield.png",
+      "path": "assets/images/minigames/defense/level2/shield.png",
+      "bytes": 70199,
+      "sha256": "db98fddab9d0b9bec5bb90608a2ba3890d10ce45c5778e22c89545bccdbc6e2e"
+    },
+    {
+      "oldPath": "assets/images/defense/level2/stone.png",
+      "path": "assets/images/minigames/defense/shared/stone.png",
+      "bytes": 28062,
+      "sha256": "88072ddc3c71a03ebe78ebf93721a2ecfde39428f9caa3f96d2d7740a8fdd186"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/aoe_line.png",
+      "path": "assets/images/minigames/defense/level3/aoe-line.png",
+      "bytes": 142301,
+      "sha256": "a77099b4cb327ae9056ff6f517dabd9bf3e5e9d1cb84b1e18adc189399f6a8a9"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/bg.png",
+      "path": "assets/images/minigames/defense/level3/bg.png",
+      "bytes": 3173729,
+      "sha256": "082e99b7b865db18adbbcd91e26de11b993f18900604817faa7604af7a5cd2d8"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/enemy.png",
+      "path": "assets/images/minigames/defense/level3/enemy.png",
+      "bytes": 15776,
+      "sha256": "2fa6ad6fe08de046a9ab877440d5395f7997a24bb166f5187b6a2d5aca2e4782"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/heavy_enemy.png",
+      "path": "assets/images/minigames/defense/level2/projectile-hit.png",
+      "bytes": 11514,
+      "sha256": "5c3bd5e6437f937316778047ae9fd8f98208223367cd3eaceaa8bf6527c46d47"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/player.png",
+      "path": "assets/images/minigames/defense/shared/player.png",
+      "bytes": 51675,
+      "sha256": "2006d8a1a30ec25f26f92f6a8ec08c9153b5bc943ff0d436cffa5ebdc78c0ab5"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/projectile.png",
+      "path": "assets/images/minigames/defense/level1/projectile.png",
+      "bytes": 18803,
+      "sha256": "00a3c5ca8d9fed5e36dd49a3f6d96a34ed794d69b71c1cbfd9bc284e08dd4b78"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/projectile_hit.png",
+      "path": "assets/images/minigames/defense/level3/projectile-hit.png",
+      "bytes": 27767,
+      "sha256": "b9ffce5146c3f662bde19c88bab287eecc69aba7aed8e191335df4b0a0a99c99"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/shield.png",
+      "path": "assets/images/minigames/defense/level3/shield.png",
+      "bytes": 38446,
+      "sha256": "f1cb0544f3c48a627d5c796a7aae9de06cf6a734a97163b38a370c274341d73f"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/shield2.png",
+      "path": "assets/images/minigames/defense/level1/shield.png",
+      "bytes": 356,
+      "sha256": "797713c3862594e30045c2952b3e9f6ece5fbe716cbce9e6fe4abc2737f7dd54"
+    },
+    {
+      "oldPath": "assets/images/defense/level3/stone.png",
+      "path": "assets/images/minigames/defense/shared/stone.png",
+      "bytes": 28062,
+      "sha256": "88072ddc3c71a03ebe78ebf93721a2ecfde39428f9caa3f96d2d7740a8fdd186"
+    },
+    {
+      "oldPath": "assets/images/heart.png",
+      "path": "assets/images/ui/heart.png",
+      "bytes": 2825,
+      "sha256": "e12f024d7a49c1e32845e27bc66972e5728e635fdca87ff7ef976aa1be4afd1a"
+    },
+    {
+      "oldPath": "assets/images/heros/保安館.png",
+      "path": "assets/images/gallery/places/保安館.png",
+      "bytes": 3202052,
+      "sha256": "2a2fb4049d15669876cb83ef4ca248b0d4b99b854171e23f06befa52d2922622"
+    },
+    {
+      "oldPath": "assets/images/heros/其實豆製所.png",
+      "path": "assets/images/gallery/places/其實豆製所.png",
+      "bytes": 2428658,
+      "sha256": "23871bfdb10176f5aa9674f39f3a1827382dcb0968a75064fff9878a63940b68"
+    },
+    {
+      "oldPath": "assets/images/heros/寶斗青村未來式.jpg",
+      "path": "assets/images/gallery/places/寶斗青村未來式.jpg",
+      "bytes": 111403,
+      "sha256": "c1e6da06222a1a46879a0679006cb4d74b107f1c331269ded0509b1830f41972"
+    },
+    {
+      "oldPath": "assets/images/heros/攤販.png",
+      "path": "assets/images/gallery/places/攤販.png",
+      "bytes": 2732683,
+      "sha256": "419e3e6d4cf34392c0520076ea6460cab4e488740f49bb2bdf2f4c87c8144a09"
+    },
+    {
+      "oldPath": "assets/images/intro/封面.jpg",
+      "path": "assets/images/story/intro/market-cover.jpg",
+      "bytes": 163728,
+      "sha256": "26c244853445486f687698b2db0534cd606b75581a9628f1385a9f2f6d8e1613"
+    },
+    {
+      "oldPath": "assets/images/items/寶斗青村.jpg",
+      "path": "assets/images/gallery/places/寶斗青村未來式.jpg",
+      "bytes": 111403,
+      "sha256": "c1e6da06222a1a46879a0679006cb4d74b107f1c331269ded0509b1830f41972"
+    },
+    {
+      "oldPath": "assets/images/items/平安符.png",
+      "path": "assets/images/gallery/items/平安符.png",
+      "bytes": 1793552,
+      "sha256": "c63c72c00a01db60feaa2117ea4550accd24110a928b2d0ae805a11387234b2b"
+    },
+    {
+      "oldPath": "assets/images/items/豆花.png",
+      "path": "assets/images/gallery/items/豆花.png",
+      "bytes": 1980011,
+      "sha256": "57873ebfc3f7bbcf41318fb7218f88697464dc3dc82d9199a94559b2a00f6ede"
+    },
+    {
+      "oldPath": "assets/images/items/電子秤.png",
+      "path": "assets/images/gallery/items/電子秤.png",
+      "bytes": 2394477,
+      "sha256": "604bb652b07b7d705a39dffdd985a01b5b6b08b17cca600c0feb1b440d3f5df4"
+    },
+    {
+      "oldPath": "assets/images/market.jpg",
+      "path": "assets/images/story/intro/market-cover.jpg",
+      "bytes": 163728,
+      "sha256": "26c244853445486f687698b2db0534cd606b75581a9628f1385a9f2f6d8e1613"
+    },
+    {
+      "oldPath": "assets/images/memory/card-back.jpg",
+      "path": "assets/images/minigames/memory/cards/card-back.jpg",
+      "bytes": 170393,
+      "sha256": "5e1aa15bc825925956b6935c3fabb822f0ff20f921e73b9b2debf1fbb546fe05"
+    },
+    {
+      "oldPath": "assets/images/memory/card.jpg",
+      "path": "assets/images/minigames/memory/cards/card.jpg",
+      "bytes": 6786,
+      "sha256": "306bc0f52ea507e47a455062bf7a9ea06fbf1eb3459ce0f21a052bedbc737956"
+    },
+    {
+      "oldPath": "assets/images/memory/cardA.png",
+      "path": "assets/images/minigames/memory/cards/cardA.png",
+      "bytes": 34271,
+      "sha256": "fa0cb50d45fc76fe5875e612d9b17ef10d8115999ddef8e1d118811897eed278"
+    },
+    {
+      "oldPath": "assets/images/memory/cardB.png",
+      "path": "assets/images/minigames/memory/cards/cardB.png",
+      "bytes": 34491,
+      "sha256": "696ee322a23c6bbbb61f4a08b39c2b9d59daaa747489e461ce89b5d0334977e0"
+    },
+    {
+      "oldPath": "assets/images/memory/cardC.png",
+      "path": "assets/images/minigames/memory/cards/cardC.png",
+      "bytes": 34857,
+      "sha256": "f92370112c0fc74cb97d52918826327940696b5c7f87a19fee15ba707725a9ed"
+    },
+    {
+      "oldPath": "assets/images/memory/cardD.png",
+      "path": "assets/images/minigames/memory/cards/cardD.png",
+      "bytes": 34388,
+      "sha256": "f727e12e0338a21e4cea1f3b0891d85651ebab64b0907ee8f760a59105750f91"
+    },
+    {
+      "oldPath": "assets/images/memory/cardE.png",
+      "path": "assets/images/minigames/memory/cards/cardE.png",
+      "bytes": 32978,
+      "sha256": "c84c6ad05a5aad2bf3ba52c81353799180b8f0e22d1eb61eef0a8a3c1898fc00"
+    },
+    {
+      "oldPath": "assets/images/memory/其實豆製所.png",
+      "path": "assets/images/minigames/memory/cards/其實豆製所.png",
+      "bytes": 126820,
+      "sha256": "956f8f717d5e0d627b6aa2841a6397b5f317c0415e8d92a8aac71c83741254e3"
+    },
+    {
+      "oldPath": "assets/images/memory/刈包.png",
+      "path": "assets/images/minigames/memory/cards/刈包.png",
+      "bytes": 252102,
+      "sha256": "b688d1a2110aea3b3f65256596bbbfecc1ecd96bf2f39d33e76417414c355b60"
+    },
+    {
+      "oldPath": "assets/images/memory/奠安宮楊記炸物.png",
+      "path": "assets/images/minigames/memory/cards/奠安宮楊記炸物.png",
+      "bytes": 125874,
+      "sha256": "cc19173430b23373f75d12ed809a8b5da1d1466fbd2d986a25e5381b4e500cd1"
+    },
+    {
+      "oldPath": "assets/images/memory/彰化北斗肉圓.png",
+      "path": "assets/images/minigames/memory/cards/彰化北斗肉圓.png",
+      "bytes": 166578,
+      "sha256": "bd88608607a25d4ddb39b2bf1e07657f0a946f6fc5c1e3d8f0fd644a30d51df7"
+    },
+    {
+      "oldPath": "assets/images/memory/擔仔麵.png",
+      "path": "assets/images/minigames/memory/cards/擔仔麵.png",
+      "bytes": 120067,
+      "sha256": "6cdc0a4769e3f4a06280ad236d47816ce9fc35059c29c9c105cd7def40abaa93"
+    },
+    {
+      "oldPath": "assets/images/memory/正老店阿美.png",
+      "path": "assets/images/minigames/memory/cards/正老店阿美.png",
+      "bytes": 147930,
+      "sha256": "c8dce3545dd54f71055729f816cb5e0b1c9eaca712c3d12e051e3c7668ec53a6"
+    },
+    {
+      "oldPath": "assets/images/memory/珍珠奶茶.png",
+      "path": "assets/images/minigames/memory/cards/珍珠奶茶.png",
+      "bytes": 262144,
+      "sha256": "250a709def5a51b296dd1468dda723efac36e00502b7d5e6ef2c7d085c90e656"
+    },
+    {
+      "oldPath": "assets/images/memory/碗粿.png",
+      "path": "assets/images/minigames/memory/cards/碗粿.png",
+      "bytes": 169135,
+      "sha256": "d88ba8bc07ee174b783eee0470af699cf1204f3823307e0ee6d75464bd1e6134"
+    },
+    {
+      "oldPath": "assets/images/memory/紅豆餅.png",
+      "path": "assets/images/minigames/memory/cards/紅豆餅.png",
+      "bytes": 160061,
+      "sha256": "1b8e3abf2d5c9071aa12d06cf629c390b720223f25c2e93d9e647a7a267f1c27"
+    },
+    {
+      "oldPath": "assets/images/memory/芋圓.png",
+      "path": "assets/images/minigames/memory/cards/芋圓.png",
+      "bytes": 145062,
+      "sha256": "5e120e69b1f916b206bccad7ce4e28a9ead8eda35d03496e5149640c29e7041a"
+    },
+    {
+      "oldPath": "assets/images/memory/蚵仔煎.png",
+      "path": "assets/images/minigames/memory/cards/蚵仔煎.png",
+      "bytes": 3077126,
+      "sha256": "93e2abde6ac9c32f068ac075be22758693b19c9ea51dcaff19a9c062fc715b4e"
+    },
+    {
+      "oldPath": "assets/images/memory/詹永豐米店.png",
+      "path": "assets/images/minigames/memory/cards/詹永豐米店.png",
+      "bytes": 119528,
+      "sha256": "06442caecfe44ad22a32ca6d40f9d715da981cd7b8b7efbdd449df784e41923d"
+    },
+    {
+      "oldPath": "assets/images/memory/阿在伯炸彈蔥油餅.png",
+      "path": "assets/images/minigames/memory/cards/阿在伯炸彈蔥油餅.png",
+      "bytes": 162295,
+      "sha256": "7d146984c0dc1d30e747eb1255b2915015b1208c9a65b5394523582e7689768e"
+    },
+    {
+      "oldPath": "assets/images/old_paper.png",
+      "path": "assets/images/ui/old-paper.png",
+      "bytes": 430957,
+      "sha256": "d000acc6074bc763c5b939793617f78a16771be42435825ca2c80ce49d7ffaef"
+    },
+    {
+      "oldPath": "assets/images/order/002-2.png",
+      "path": "assets/images/order/002-2.png",
+      "bytes": 3446766,
+      "sha256": "c59ee60142b8722ff786f30c61d5ad04f249f30403a6a46878e9108d5c457406"
+    },
+    {
+      "oldPath": "assets/images/order/002-3.png",
+      "path": "assets/images/order/002-3.png",
+      "bytes": 3387240,
+      "sha256": "20aa78efbefb4bd77962b367112736bbebf8c9a4bb103b9fc7c402bb3ac44faa"
+    },
+    {
+      "oldPath": "assets/images/order/002-4.png",
+      "path": "assets/images/order/002-4.png",
+      "bytes": 3239224,
+      "sha256": "1b7d2a012f182cf081ce49dce09d07822645702ec9b28c767ebed1ad9b3afe35"
+    },
+    {
+      "oldPath": "assets/images/order/002-5.png",
+      "path": "assets/images/order/002-5.png",
+      "bytes": 3344332,
+      "sha256": "d40592ca14bde1eadb45c08bf3b2b43275f001bc2ebab1e449febcb03a2bf8ae"
+    },
+    {
+      "oldPath": "assets/images/order/002-6.png",
+      "path": "assets/images/order/002-6.png",
+      "bytes": 2756263,
+      "sha256": "76f39ea97fffeaf6c68d784f3df4cb3ddb4b27be211dc069d5b6130373714880"
+    },
+    {
+      "oldPath": "assets/images/red-brick-market.jpg",
+      "path": "assets/images/reference/red-brick-market.jpg",
+      "bytes": 198911,
+      "sha256": "39cc7cf27f5827cfdda1349191333a6b3b446cbc06a3f90555e4ed8c4cf73488"
+    },
+    {
+      "oldPath": "assets/images/shared/market-background.webp",
+      "path": "assets/images/shared/market-background.webp",
+      "bytes": 618554,
+      "sha256": "e30e83757ae14f6ff417d952ec7200d3238bfd954b62db7aea8b9449207ee8a0"
+    },
+    {
+      "oldPath": "assets/images/title.png",
+      "path": "assets/images/title/title-legacy.png",
+      "bytes": 917542,
+      "sha256": "39e3cd1e9af4500a6097f8247c3e1d6ef8bc6d3a7fa535bbca229a4e5a3b3b85"
+    },
+    {
+      "oldPath": "assets/images/title/background.png",
+      "path": "assets/images/title/background.png",
+      "bytes": 3422891,
+      "sha256": "f1ec71cae1ab9f6e96f6dfe2027725a035037da0d44bfeda7c89a2473c70dd0d"
+    },
+    {
+      "oldPath": "assets/images/title/background.webp",
+      "path": "assets/images/title/background.webp",
+      "bytes": 309476,
+      "sha256": "4f652cdc3c6ba0c3ebda6425045d4da92e8e5b1aafe8005cfdadb9e19771aa5a"
+    },
+    {
+      "oldPath": "assets/images/title/enter.png",
+      "path": "assets/images/title/enter.png",
+      "bytes": 31549,
+      "sha256": "73b084ca2178f00e545acab7d89e7724033c6107ef3d86f70689088fcdb631f3"
+    },
+    {
+      "oldPath": "assets/images/title/leave.png",
+      "path": "assets/images/title/leave.png",
+      "bytes": 29985,
+      "sha256": "106cf3e37eb9a95a65242b5fbff01bfc86746a7a3050be75651ce79f455ffe1e"
+    },
+    {
+      "oldPath": "assets/images/title/title.png",
+      "path": "assets/images/title/title.png",
+      "bytes": 186150,
+      "sha256": "9d5fd8a846dc86cf4f616f1683ab19a9e82278ea36560776b3679d834a73ef37"
+    },
+    {
+      "oldPath": "assets/images/title2.png",
+      "path": "assets/images/title/chapter-title.png",
+      "bytes": 214867,
+      "sha256": "318f09ec1f971ae57eb671af05213698afa47b9905f3d91f24525c12a797c243"
+    },
+    {
+      "oldPath": "assets/images/人物設計.png",
+      "path": "assets/images/characters/challenge-player.png",
+      "bytes": 27844,
+      "sha256": "26b0ca51b9f0e3dd208251d82a2f394f547e409045b903aeb21576f62702f0f0"
+    },
+    {
+      "oldPath": "assets/images/背景.png",
+      "path": "assets/images/reference/背景.png",
+      "bytes": 128478,
+      "sha256": "c738c63af75f149a36b59063915ae7539ad880fd6072850eabba32cffa42a125"
+    },
+    {
+      "oldPath": "assets/images/遊戲.png",
+      "path": "assets/images/reference/遊戲.png",
+      "bytes": 3850839,
+      "sha256": "1e5eb3a1ef0aaf2dc3604b491e15fb44cdb878b421bff5b0e2a8fcb3b063aaaa"
+    },
+    {
+      "oldPath": "assets/music/README.md",
+      "path": "assets/audio/music/README.md",
+      "bytes": 1970,
+      "sha256": "d46fc9c687e6294932df8698f87e7c9c647ed198be78c0f5bec858e77b2f505c",
+      "normalization": "lf"
+    },
+    {
+      "oldPath": "assets/music/ready-for-adventure.mp3",
+      "path": "assets/audio/music/ready-for-adventure.mp3",
+      "bytes": 5490396,
+      "sha256": "3b80810d1a8a765d81d1965a663f0075ae3a848857f484bccb03eef19afdab8e"
+    },
+    {
+      "oldPath": "assets/music/restaurant-han.mp3",
+      "path": "assets/audio/music/restaurant-han.mp3",
+      "bytes": 1749145,
+      "sha256": "b393c24f2b1caacda3b568f113c4f7ebdefff9d1f5e28e749db4c778f4abedd6"
+    },
+    {
+      "oldPath": "assets/music/small-town-great-journey.mp3",
+      "path": "assets/audio/music/small-town-great-journey.mp3",
+      "bytes": 9388956,
+      "sha256": "910a110f9cb6b2f26e452ecdf04ee510df60c2718d5212f78757d1f3473329a6"
+    },
+    {
+      "oldPath": "assets/music/walk-little-adventure.mp3",
+      "path": "assets/audio/music/walk-little-adventure.mp3",
+      "bytes": 7434393,
+      "sha256": "a282de886c69ab387052690287f3fdb1e4156211ae550867a161c1d60d74873d"
+    },
+    {
+      "oldPath": "assets/sounds/click.mp3",
+      "path": "assets/audio/sfx/click.mp3",
+      "bytes": 29376,
+      "sha256": "94a8eaae204a4dac8fc25bf7db68b29ac93fd239cc50a0e821d3e9f24f8c763a"
+    },
+    {
+      "oldPath": "assets/sounds/correct.mp3",
+      "path": "assets/audio/sfx/correct.mp3",
+      "bytes": 68335,
+      "sha256": "4188eb4cd6dbdad59b70bd68feb2242202301a24c943308af16824584db88cb3"
+    },
+    {
+      "oldPath": "assets/sounds/hover.mp3",
+      "path": "assets/audio/sfx/hover.mp3",
+      "bytes": 25703,
+      "sha256": "483d5aad210c1575e7b5d9ce8e88112460f7908ad489b4f57207723c1755d194"
+    },
+    {
+      "oldPath": "assets/sounds/menu_hover.mp3",
+      "path": "assets/audio/sfx/menu-hover.mp3",
+      "bytes": 27584,
+      "sha256": "06628ff4134731ac1bf367774bfc4c5a3d0fa326614075b0356c6f5a46e3dcba"
+    },
+    {
+      "oldPath": "assets/sounds/place_card.mp3",
+      "path": "assets/audio/sfx/place-card.mp3",
+      "bytes": 26496,
+      "sha256": "8c331b98b06b34e9e2a7eebf1d9f718e608d5ae47990311287592cf5ab269486"
+    },
+    {
+      "oldPath": "assets/sounds/sfx-blipfemale.wav",
+      "path": "assets/audio/sfx/sfx-blipfemale.wav",
+      "bytes": 2394,
+      "sha256": "5f5d12e9d966a53712f581ce1a7317613ad3b71d4647e704691bda380e37fd22"
+    },
+    {
+      "oldPath": "assets/sounds/sfx-blipmale.wav",
+      "path": "assets/audio/sfx/sfx-blipmale.wav",
+      "bytes": 2340,
+      "sha256": "5c5768836cd720c83884c6ef50d0177fdce37c0c34d7f47c35630f1209f8c587"
+    },
+    {
+      "oldPath": "assets/sounds/text_blip.wav",
+      "path": "assets/audio/sfx/text-blip.wav",
+      "bytes": 58022,
+      "sha256": "04837e10d65b23aede5626d833e4e46001e90e908817200da1dcf21a51d36205"
+    },
+    {
+      "oldPath": "assets/sounds/wrong.mp3",
+      "path": "assets/audio/sfx/wrong.mp3",
+      "bytes": 42004,
+      "sha256": "2cc83c6f18df39f5c9448422dee7cea4f1d853ba59861eab2c9993e089e77692"
+    },
+    {
+      "oldPath": "assets/videos/intro.mp4",
+      "path": "assets/videos/intro.mp4",
+      "bytes": 2838863,
+      "sha256": "4dde0ed57b95d3a928b91c94b0497aa8a42e5fe0e59194c1505b23df08ecec82"
+    }
+  ]
+}

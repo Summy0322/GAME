@@ -1,6 +1,6 @@
 // 限時玩法接入前，先確認角色、混合素材與夜色；不寫入劇情成績。
 window.ChallengeScenes = {
-    backgrounds: [1, 2, 3].map(level => `assets/images/defense/level${level}/bg.png`),
+    backgrounds: [1, 2, 3].map(level => `assets/images/minigames/defense/level${level}/bg.png`),
     lastBackground: -1,
     run: 0,
     pickBackground(random = Math.random) {
@@ -24,7 +24,7 @@ window.ChallengeScenes = {
     },
     async loadBackground() {
         const run = ++this.run;
-        const url = this.kind === 'defense' ? this.pickBackground() : 'assets/images/ch2/bg.png';
+        const url = this.kind === 'defense' ? this.pickBackground() : 'assets/images/minigames/memory/background.png';
         const scene = document.getElementById('challenge-scene');
         const reroll = document.getElementById('challenge-reroll');
         scene.setAttribute('aria-busy', 'true');

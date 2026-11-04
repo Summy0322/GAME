@@ -21,7 +21,7 @@ function showAgeSelect() {
         // 小朋友版選擇
         childBtn.onclick = () => {
             if (typeof AudioManager !== 'undefined') {
-                AudioManager.playSFX('assets/sounds/click.mp3');
+                AudioManager.playSFX('assets/audio/sfx/click.mp3');
             }
             window.gameMode = 'child';
             gameMode = 'child';
@@ -38,7 +38,7 @@ function showAgeSelect() {
         // 一般版選擇
         adultBtn.onclick = () => {
             if (typeof AudioManager !== 'undefined') {
-                AudioManager.playSFX('assets/sounds/click.mp3');
+                AudioManager.playSFX('assets/audio/sfx/click.mp3');
             }
             window.gameMode = 'adult';
             gameMode = 'adult';
@@ -143,8 +143,8 @@ function preloadIntroAssets(onComplete) {
     
     // 4. 加入常見的 UI 圖片
     const commonImages = [
-        'assets/images/title2.png',
-        'assets/images/intro/封面.jpg'
+        'assets/images/title/chapter-title.png',
+        'assets/images/story/intro/market-cover.jpg'
     ];
     commonImages.forEach(img => {
         if (!assetsToPreload.includes(img)) {
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         startBtn.addEventListener('click', () => {
             if (window.Logger) window.Logger.info('👉 點擊開始遊戲');
             if (typeof AudioManager !== 'undefined') {
-                AudioManager.playSFX('assets/sounds/click.mp3');
+                AudioManager.playSFX('assets/audio/sfx/click.mp3');
             }
             
             if (startBtn.dataset.loading === 'true') return;
@@ -311,7 +311,7 @@ function loadChapter(chapterId) {
     if (window.Logger) window.Logger.info('📖 載入章節:', chapterId);
     
     if (typeof AudioManager !== 'undefined') {
-        AudioManager.playSFX('assets/sounds/click.mp3');
+        AudioManager.playSFX('assets/audio/sfx/click.mp3');
     }
     
     const chapterData = getChapterByMode(chapterId);
@@ -410,7 +410,7 @@ function showExitConfirm(callback, options = {}) {
     
     newYesBtn.onclick = () => {
         if (typeof AudioManager !== 'undefined') {
-            AudioManager.playSFX('assets/sounds/click.mp3');
+            AudioManager.playSFX('assets/audio/sfx/click.mp3');
         }
         dialog.style.display = 'none';
         document.getElementById('game-container').style.pointerEvents = 'auto';
@@ -419,7 +419,7 @@ function showExitConfirm(callback, options = {}) {
     
     newNoBtn.onclick = () => {
         if (typeof AudioManager !== 'undefined') {
-            AudioManager.playSFX('assets/sounds/click.mp3');
+            AudioManager.playSFX('assets/audio/sfx/click.mp3');
         }
         dialog.style.display = 'none';
         document.getElementById('game-container').style.pointerEvents = 'auto';
@@ -441,7 +441,7 @@ function setupBackButton() {
             }
             
             if (typeof AudioManager !== 'undefined') {
-                AudioManager.playSFX('assets/sounds/click.mp3');
+                AudioManager.playSFX('assets/audio/sfx/click.mp3');
             }
             
             showExitConfirm((confirmed) => {

@@ -21,6 +21,7 @@ function fixture(mode = 'adult', level = 1, virtualClock = false) {
         cancelAnimationFrame(id) { timers.delete(id); }
     });
     const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+    vm.runInContext(read('js/data/minigameAssets.js'), context);
     vm.runInContext(read('js/minigames/DefenseLevels.js'), context);
     context.DefenseLevels = context.window.DefenseLevels;
     vm.runInContext(read('js/minigames/defense/DefenseAttackRunner.js'), context);

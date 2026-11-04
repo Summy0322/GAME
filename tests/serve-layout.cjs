@@ -104,7 +104,7 @@ http.createServer((req, res) => {
                         return;
                     }
                     if (scene === 'cleanup') {
-                        const config = { mode:'matching', title:'互動清理測試', hint:'拖曳物品至購物籃', items:[{id:'star',name:'八角',correctZone:'basket',image:'assets/images/ch3/game/star_anise.png'}], zones:[{id:'basket',name:'購物籃'}] };
+                        const config = { mode:'matching', title:'互動清理測試', hint:'拖曳物品至購物籃', items:[{id:'star',name:'八角',correctZone:'basket',image:'assets/images/minigames/ingredients/star-anise.png'}], zones:[{id:'basket',name:'購物籃'}] };
                         let cleanupOK = true;
                         for (let i=0; i<20; i++) {
                             InteractSystem.start(config, () => {});

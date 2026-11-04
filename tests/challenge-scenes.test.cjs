@@ -20,6 +20,6 @@ test('late background completion cannot repaint a closed or newer scene; failed 
     const second=c.loadBackground(),third=c.loadBackground();images[2].onload();await third;
     const current=nodes.get('challenge-night-background').style.backgroundImage;
     images[1].onload();await second;assert.equal(nodes.get('challenge-night-background').style.backgroundImage,current);
-    c.kind='memory';const failed=c.loadBackground();assert.equal(images[3].src,'assets/images/ch2/bg.png');images[3].onerror();await failed;
+    c.kind='memory';const failed=c.loadBackground();assert.equal(images[3].src,'assets/images/minigames/memory/background.png');images[3].onerror();await failed;
     assert.equal(nodes.get('challenge-reroll').disabled,false);assert.match(nodes.get('challenge-scene-status').textContent,/失敗/);
 });

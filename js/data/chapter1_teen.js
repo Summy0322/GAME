@@ -54,7 +54,7 @@ window.Chapter1_Teen = {
             id: 'player_reply1',
             name: '你',
             text: '原來以前的市場，是從這樣開始的。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level1_story1'
         },
         {
@@ -68,7 +68,7 @@ window.Chapter1_Teen = {
             id: 'player_reply2',
             name: '你',
             text: '等等，肉圓怎麼飛出來了？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level1_story2'
         },
         {
@@ -100,7 +100,7 @@ window.Chapter1_Teen = {
             id: 'player_satisfied',
             name: '你',
             text: '還好來得及。繼續前進吧。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'intro_level2'
         },
         {
@@ -139,7 +139,7 @@ window.Chapter1_Teen = {
             id: 'player_observe',
             name: '你',
             text: '這裡看起來……像是剛發生過什麼事。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_story1'
         },
         {
@@ -153,7 +153,7 @@ window.Chapter1_Teen = {
             id: 'player_sympathy',
             name: '你',
             text: '所以這就是市場受傷的樣子。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_story2'
         },
         {
@@ -167,7 +167,7 @@ window.Chapter1_Teen = {
             id: 'player_determine',
             name: '你',
             text: '只要把火擋住，就還有機會把市場救回來，對吧？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level2_challenge'
         },
         {
@@ -199,7 +199,7 @@ window.Chapter1_Teen = {
             id: 'player_relieved',
             name: '你',
             text: '呼……還好來得及。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'intro_level3'
         },
         {
@@ -238,7 +238,7 @@ window.Chapter1_Teen = {
             id: 'player_reflect',
             name: '你',
             text: '也就是說，它的價值不只在「市場」，還在它承載的記憶。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level3_story1'
         },
         {
@@ -252,7 +252,7 @@ window.Chapter1_Teen = {
             id: 'player_understand',
             name: '你',
             text: '我懂了。那最後要做什麼？',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             next: 'level3_challenge'
         },
         {
@@ -284,7 +284,7 @@ window.Chapter1_Teen = {
             id: 'player_appreciate',
             name: '你',
             text: '謝謝你帶我走這一趟。',
-            characterImage: 'assets/images/characters/non_character.png',
+            characterImage: 'assets/images/characters/non-character.png',
             // ✅ 根據通關進度動態決定跳轉目標
             get next() {
                 if (window.Chapter1_Teen.isAllCompleted()) {

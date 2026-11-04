@@ -1,7 +1,7 @@
 // js/data/intro.js
 window.IntroChapter = {
     id: 'intro',
-    background: 'assets/images/intro/封面.jpg',
+    background: 'assets/images/story/intro/market-cover.jpg',
     
     dialogue: [
         {
