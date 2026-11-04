@@ -1,10 +1,10 @@
 // 僅由小遊戲生命週期呼叫；載入腳本與一般對話都不會播放。
 window.GameMusic = {
     tracks: {
-        ready: 'assets/music/ready-for-adventure.mp3',
-        han: 'assets/music/restaurant-han.mp3',
-        town: 'assets/music/small-town-great-journey.mp3',
-        walk: 'assets/music/walk-little-adventure.mp3'
+        ready: 'assets/audio/music/ready-for-adventure.mp3',
+        han: 'assets/audio/music/restaurant-han.mp3',
+        town: 'assets/audio/music/small-town-great-journey.mp3',
+        walk: 'assets/audio/music/walk-little-adventure.mp3'
     },
     player: null,
     owner: null,

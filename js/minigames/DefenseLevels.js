@@ -8,19 +8,19 @@
      * @param {string} [heavyFile='enemy.png'] heavyEnemy 圖檔名
      */
     function defenseAssets(level, name, heavyFile) {
-        const b = `assets/images/defense/level${level}/`;
+        const asset = file => window.MinigameAssets.getDefenseAssetUrl(level, file);
         return {
             name: name,
-            bgImage: b + 'bg.png',
-            playerImage: b + 'player.png',
-            enemyImage: b + 'enemy.png',
-            decoyImage: b + 'stone.png',
-            wrongEnemyImage: b + 'stone.png',
-            heavyEnemyImage: b + (heavyFile || 'enemy.png'),
-            projectileImage: b + 'projectile.png',
-            projectileHitImage: b + 'projectile_hit.png',
-            shieldImage: b + 'shield.png',
-            aoeLineImage: b + 'aoe_line.png'
+            bgImage: asset('bg.png'),
+            playerImage: asset('player.png'),
+            enemyImage: asset('enemy.png'),
+            decoyImage: asset('stone.png'),
+            wrongEnemyImage: asset('stone.png'),
+            heavyEnemyImage: asset(heavyFile || 'enemy.png'),
+            projectileImage: asset('projectile.png'),
+            projectileHitImage: asset('projectile-hit.png'),
+            shieldImage: asset('shield.png'),
+            aoeLineImage: asset('aoe-line.png')
         };
     }
 
@@ -154,7 +154,7 @@
         },
 
         3: {
-            adult: Object.assign(defenseAssets(3, '豆乳研磨戰', 'heavy_enemy.png'), {
+            adult: Object.assign(defenseAssets(3, '豆乳研磨戰', 'heavy-enemy.png'), {
                 attackPatterns: [
                     { type: 'NORMAL', dir: 'up', wait: 3500, text: '⬆️ 黃豆' },
                     { type: 'NORMAL', dir: 'down', wait: 3500, text: '⬇️ 黃豆' },
@@ -211,7 +211,7 @@
                     { type: 'END', text: '' }
                 ]
             }),
-            child: Object.assign(defenseAssets(3, '豆乳研磨戰', 'heavy_enemy.png'), {
+            child: Object.assign(defenseAssets(3, '豆乳研磨戰', 'heavy-enemy.png'), {
                 attackPatterns: [
                     { type: 'NORMAL', dir: 'up', wait: 4500, text: '⬆️ 黃豆' },
                     { type: 'NORMAL', dir: 'down', wait: 4500, text: '⬇️ 黃豆' },
@@ -242,15 +242,15 @@
         99: {
             adult: {
                 name: '🧪 測試關卡',
-                bgImage: 'assets/images/defense/level2/bg.png',
-                playerImage: 'assets/images/defense/level2/player.png',
-                enemyImage: 'assets/images/defense/level2/enemy.png',
-                decoyImage: 'assets/images/defense/level1/stone.png',
-                wrongEnemyImage: 'assets/images/defense/level1/stone.png',
-                projectileImage: 'assets/images/defense/level2/projectile.png',
-                projectileHitImage: 'assets/images/defense/level2/projectile_hit.png',
-                shieldImage: 'assets/images/defense/level2/shield.png',
-                aoeLineImage: 'assets/images/defense/level3/aoe_line.png',
+                bgImage: 'assets/images/minigames/defense/level2/bg.png',
+                playerImage: 'assets/images/minigames/defense/shared/player.png',
+                enemyImage: 'assets/images/minigames/defense/level2/enemy.png',
+                decoyImage: 'assets/images/minigames/defense/shared/stone.png',
+                wrongEnemyImage: 'assets/images/minigames/defense/shared/stone.png',
+                projectileImage: 'assets/images/minigames/defense/level2/projectile.png',
+                projectileHitImage: 'assets/images/minigames/defense/level2/projectile-hit.png',
+                shieldImage: 'assets/images/minigames/defense/level2/shield.png',
+                aoeLineImage: 'assets/images/minigames/defense/level3/aoe-line.png',
                 attackPatterns: [
                     { type: 'HEAVY', dir: 'left', wait: 6000, text: '💨 蒸氣' },
                     { type: 'HEAVY', dir: 'right', wait: 6000, text: '💨 蒸氣' },
@@ -273,13 +273,13 @@
             },
             child: {
                 name: '🧪 測試關卡',
-                bgImage: 'assets/images/defense/level1/bg.png',
-                playerImage: 'assets/images/defense/level1/player.png',
-                enemyImage: 'assets/images/defense/level1/enemy.png',
-                projectileImage: 'assets/images/defense/level1/projectile.png',
-                projectileHitImage: 'assets/images/defense/level1/projectile_hit.png',
-                shieldImage: 'assets/images/defense/level1/shield.png',
-                aoeLineImage: 'assets/images/defense/level1/aoe_line.png',
+                bgImage: 'assets/images/minigames/defense/level1/bg.png',
+                playerImage: 'assets/images/minigames/defense/shared/player.png',
+                enemyImage: 'assets/images/minigames/defense/level1/enemy.png',
+                projectileImage: 'assets/images/minigames/defense/level1/projectile.png',
+                projectileHitImage: 'assets/images/minigames/defense/level1/projectile-hit.png',
+                shieldImage: 'assets/images/minigames/defense/level1/shield.png',
+                aoeLineImage: 'assets/images/minigames/defense/level1/aoe-line.png',
                 attackPatterns: [
                     { type: 'NORMAL', dir: 'up', wait: 4000, text: '⬆️' },
                     { type: 'MULTI', dirs: ['up', 'down'], wait: 5000, text: '⬆️⬇️' },

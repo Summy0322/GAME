@@ -417,13 +417,13 @@ const MemoryGameV2 = {
             window.MinigameAssets && window.MinigameAssets.memoryEmojiToImageUrl
                 ? window.MinigameAssets.memoryEmojiToImageUrl
                 : {
-                      '🫘': 'assets/images/memory/詹永豐米店.png',
-                      '🥛': 'assets/images/memory/其實豆製所.png',
-                      '🍮': 'assets/images/memory/彰化北斗肉圓.png',
-                      '🧈': 'assets/images/memory/正老店阿美.png',
-                      '🥢': 'assets/images/memory/阿在伯炸彈蔥油餅.png',
-                      '🍜': 'assets/images/memory/奠安宮楊記炸物.png',
-                      '🌱': 'assets/images/memory/碗粿.png'
+                      '🫘': 'assets/images/minigames/memory/cards/詹永豐米店.png',
+                      '🥛': 'assets/images/minigames/memory/cards/其實豆製所.png',
+                      '🍮': 'assets/images/minigames/memory/cards/彰化北斗肉圓.png',
+                      '🧈': 'assets/images/minigames/memory/cards/正老店阿美.png',
+                      '🥢': 'assets/images/minigames/memory/cards/阿在伯炸彈蔥油餅.png',
+                      '🍜': 'assets/images/minigames/memory/cards/奠安宮楊記炸物.png',
+                      '🌱': 'assets/images/minigames/memory/cards/碗粿.png'
                   };
         
         for (let i = 0; i < cards.length; i++) {
@@ -975,7 +975,7 @@ const MemoryGameV2 = {
         this.flippedCards.push(card);
         
         if (typeof AudioManager !== 'undefined') {
-            AudioManager.playSFX('assets/sounds/click.mp3', 0.2);
+            AudioManager.playSFX('assets/audio/sfx/click.mp3', 0.2);
         }
         
         if (this.flippedCards.length === 2) {
@@ -1059,7 +1059,7 @@ const MemoryGameV2 = {
                 this.canFlip = true;
                 
                 if (typeof AudioManager !== 'undefined') {
-                    AudioManager.playSFX('assets/sounds/correct.mp3', 0.3);
+                    AudioManager.playSFX('assets/audio/sfx/correct.mp3', 0.3);
                 }
                 
                 if (this.matchedPairs === this.totalPairs) {
@@ -1119,7 +1119,7 @@ const MemoryGameV2 = {
             } else {
                 // 無燈光模式：只播放音效，不計連續失敗次數
                 if (typeof AudioManager !== 'undefined') {
-                    AudioManager.playSFX('assets/sounds/wrong.mp3', 0.3);
+                    AudioManager.playSFX('assets/audio/sfx/wrong.mp3', 0.3);
                 }
             }
             
@@ -1187,9 +1187,9 @@ const MemoryGameV2 = {
         
         if (typeof AudioManager !== 'undefined') {
             if (isWin) {
-                AudioManager.playSFX('assets/sounds/correct.mp3', 0.5);
+                AudioManager.playSFX('assets/audio/sfx/correct.mp3', 0.5);
             } else {
-                AudioManager.playSFX('assets/sounds/wrong.mp3', 0.5);
+                AudioManager.playSFX('assets/audio/sfx/wrong.mp3', 0.5);
             }
         }
     },

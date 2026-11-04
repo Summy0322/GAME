@@ -305,9 +305,9 @@ const CollectionSystem = {
         // ✅ 3. 店家小圖片（地圖上的地標）
         if (config.hotspots) {
             const shopImages = {
-                'herbal': 'assets/images/ch3/shop_herbal_s.png',
-                'knife': 'assets/images/ch3/shop_knife_s.png',
-                'grocery': 'assets/images/ch3/shop_grocery_s.png'
+                'herbal': 'assets/images/story/chapter-3/shop-herbal-s.png',
+                'knife': 'assets/images/story/chapter-3/shop-knife-s.png',
+                'grocery': 'assets/images/story/chapter-3/shop-grocery-s.png'
             };
             
             config.hotspots.forEach(hotspot => {
@@ -712,9 +712,9 @@ const CollectionSystem = {
         
         // 店家圖片對應
         const shopImages = {
-            'herbal': 'assets/images/ch3/shop_herbal_s.png',
-            'knife': 'assets/images/ch3/shop_knife_s.png',
-            'grocery': 'assets/images/ch3/shop_grocery_s.png'
+            'herbal': 'assets/images/story/chapter-3/shop-herbal-s.png',
+            'knife': 'assets/images/story/chapter-3/shop-knife-s.png',
+            'grocery': 'assets/images/story/chapter-3/shop-grocery-s.png'
         };
         
         // ✅ 使用 vh 單位，圖片大小隨螢幕高度縮放
@@ -915,7 +915,7 @@ const CollectionSystem = {
                             e.stopPropagation();
                             
                             if (typeof AudioManager !== 'undefined') {
-                                AudioManager.playSFX('assets/sounds/click.mp3');
+                                AudioManager.playSFX('assets/audio/sfx/click.mp3');
                             }
                             
                             optionsContainer.innerHTML = '';
@@ -1184,7 +1184,7 @@ const CollectionSystem = {
                 // this.checkAllCollected();
                 
                 if (typeof AudioManager !== 'undefined') {
-                    AudioManager.playSFX('assets/sounds/collect.mp3', 0.5);
+                    AudioManager.playSFX('assets/audio/sfx/correct.mp3', 0.5);
                 }
                 
                 this.afterCollectionComplete(itemIndex);

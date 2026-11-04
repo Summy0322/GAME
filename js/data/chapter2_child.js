@@ -7,56 +7,56 @@ const chapter2ChildData = {
     cardGallery: [
             {
                 id: "card1",
-                thumb: "assets/images/memory/詹永豐米店.png",
-                fullImage: "assets/images/memory/詹永豐米店.png",
+                thumb: "assets/images/minigames/memory/cards/詹永豐米店.png",
+                fullImage: "assets/images/minigames/memory/cards/詹永豐米店.png",
                 title: "詹永豐米店",
                 summary: "大榕樹下，有一家會親自試吃米飯的老米店。",
                 story: "在大榕樹旁，有一家很老的米店，已經傳到第三代了。以前店裡有很大的碾米機，工作時會有很多灰塵，是長輩辛苦工作的地方。現在雖然沒有機器了，但老闆還是會自己試吃每一種米，確定米飯吃起來很Q、放冷也好吃才會賣。店裡還有一個小小的模型，把以前的米店樣子留下來。"
             },
             {
                 id: "card2",
-                thumb: "assets/images/memory/其實豆製所.png",
-                fullImage: "assets/images/memory/其實豆製所.png",
+                thumb: "assets/images/minigames/memory/cards/其實豆製所.png",
+                fullImage: "assets/images/minigames/memory/cards/其實豆製所.png",
                 title: "其實豆製所",
                 summary: "在紅磚市場裡，用台灣黃豆做豆漿的店。",
                 story: "紅磚市場裡有一家豆製所，會用台灣種的黃豆做出香香的豆漿、豆腐和豆花。這家店曾經休息過，後來又重新開張，讓市場變得更熱鬧，也讓大家重新認識豆子的味道。"
             },
             {
                 id: "card3",
-                thumb: "assets/images/memory/彰化北斗肉圓.png",
-                fullImage: "assets/images/memory/彰化北斗肉圓.png",
+                thumb: "assets/images/minigames/memory/cards/彰化北斗肉圓.png",
+                fullImage: "assets/images/minigames/memory/cards/彰化北斗肉圓.png",
                 title: "彰化北斗肉圓",
                 summary: "這裡的肉圓是三角形，而且吃起來很Q。",
                 story: "一般的肉圓是圓形的，但這裡的肉圓是用手捏成三角形。做的時候會先蒸，再拿去炸，外皮會變得有點透明，吃起來很有彈性，很特別。"
             },
             {
                 id: "card4",
-                thumb: "assets/images/memory/正老店阿美.png",
-                fullImage: "assets/images/memory/正老店阿美.png",
+                thumb: "assets/images/minigames/memory/cards/正老店阿美.png",
+                fullImage: "assets/images/minigames/memory/cards/正老店阿美.png",
                 title: "正老店阿美",
                 summary: "一碗加了高麗菜和軟軟豬皮的古早味飯。",
                 story: "這家店已經開了很久，很多人從小就吃這碗飯。高麗菜會先炒過，再慢慢煮到很入味，米飯會吸滿湯汁。上面還會放一片軟軟的豬皮、肉燥和鴨蛋，每一口都有不同的味道。"
             },
             {
                 id: "card5",
-                thumb: "assets/images/memory/阿在伯炸彈蔥油餅.png",
-                fullImage: "assets/images/memory/阿在伯炸彈蔥油餅.png",
+                thumb: "assets/images/minigames/memory/cards/阿在伯炸彈蔥油餅.png",
+                fullImage: "assets/images/minigames/memory/cards/阿在伯炸彈蔥油餅.png",
                 title: "阿在伯炸彈蔥油餅",
                 summary: "放進油鍋後會膨起來的蔥油餅。",
                 story: "把麵團放進熱油裡後，餅會慢慢鼓起來，變得像氣球一樣大。外面炸得有點脆，裡面還有很多蔥，聞起來很香。"
             },
             {
                 id: "card6",
-                thumb: "assets/images/memory/奠安宮楊記炸物.png",
-                fullImage: "assets/images/memory/奠安宮楊記炸物.png",
+                thumb: "assets/images/minigames/memory/cards/奠安宮楊記炸物.png",
+                fullImage: "assets/images/minigames/memory/cards/奠安宮楊記炸物.png",
                 title: "奠安宮楊記炸物",
                 summary: "外面酥酥、裡面軟軟的炸豆腐。",
                 story: "白色的豆腐放進油鍋後，外面會變成金黃色，吃起來脆脆的，但裡面還是軟軟又熱熱的，一口咬下去有兩種不同的感覺。"
             },
             {
                 id: "card7",
-                thumb: "assets/images/memory/碗粿.png",
-                fullImage: "assets/images/memory/碗粿.png",
+                thumb: "assets/images/minigames/memory/cards/碗粿.png",
+                fullImage: "assets/images/minigames/memory/cards/碗粿.png",
                 title: "碗粿",
                 summary: "把米漿裝進碗裡蒸熟的傳統點心。",
                 story: "碗粿是用米漿做的。把米漿裝進碗裡，搭配香菇、豬肉等配料，再放進鍋裡蒸熟，就成了一碗米食點心。每家的配料可能不一樣，看看你認得哪些食材！"

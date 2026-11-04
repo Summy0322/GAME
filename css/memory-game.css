@@ -22,7 +22,7 @@
     background-position: center;
     background-repeat: no-repeat;
     /* background: #f1e4d0;  ✅ 米黃色背景 */
-    background-image: url('../assets/images/ch2/bg.png');
+    background-image: url('../assets/images/minigames/memory/background.png');
 }
 
 /* 遊戲主面板 - 相對於舞台，使用 flex 佈局 */
@@ -36,7 +36,7 @@
     height: 85%;
     max-height: 85%;
     /* 替換成圖片 */
-    background-image: url('../assets/images/ch2/面板.png');
+    background-image: url('../assets/images/minigames/memory/panel.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -70,7 +70,7 @@
     gap: 12px;
     padding: 5px 16px;
     /* 替換成圖片 */
-    background-image: url('../assets/images/ch2/資訊欄.png');
+    background-image: url('../assets/images/minigames/memory/hud.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -350,7 +350,7 @@
 /* 背面 - 圖片風格 */
 .memory-card-back {
     background: linear-gradient(135deg, #d4a574, #c49464);  /* ✅ 溫暖木質色調 */
-    background-image: url('../assets/images/ch2/卡背.png');
+    background-image: url('../assets/images/minigames/memory/card-back.png');
     background-size: cover;
     background-position: center;
 }

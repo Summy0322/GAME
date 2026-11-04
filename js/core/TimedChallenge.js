@@ -107,11 +107,11 @@ window.TimedChallenge = {
         this.aoeMilestone = 0;
         this.session = new window.MinigameSession();
         const run = this.generation;
-        this.background = this.kind === 'defense' ? window.ChallengeScenes.pickBackground() : 'assets/images/ch2/bg.png';
+        this.background = this.kind === 'defense' ? window.ChallengeScenes.pickBackground() : 'assets/images/minigames/memory/background.png';
         const assets = this.kind === 'defense'
-            ? [...window.MinigameAssets.getDefensePreloadUrls(), 'assets/images/challenge/player.png']
+            ? [...window.MinigameAssets.getDefensePreloadUrls(), 'assets/images/characters/challenge-player.png']
             : [...window.MinigameAssets.getMemoryPreloadUrls(), this.background];
-        if (this.endless) assets.push('assets/images/heart.png');
+        if (this.endless) assets.push('assets/images/ui/heart.png');
         window.LoadingManager.showAndLoad(assets, () => {
             if (!this.active || run !== this.generation) return;
             showScene('challenge-countdown');
@@ -135,7 +135,7 @@ window.TimedChallenge = {
         const common = {challenge:this,gameMode:this.mode,onComplete:() => {}};
         if (this.kind === 'defense') {
             const base = window.DefenseLevels[1][this.mode];
-            const config = {...base, bgImage:this.background, playerImage:'assets/images/challenge/player.png', attackPatterns:[],flow:{...base.flow,randomizeAfter:0}};
+            const config = {...base, bgImage:this.background, playerImage:'assets/images/characters/challenge-player.png', attackPatterns:[],flow:{...base.flow,randomizeAfter:0}};
             window.GameEngine._startMinigameImmediately('defense',{...common,level:1,challengeConfig:config});
         } else {
             this.launchMemory(common);
@@ -162,7 +162,7 @@ window.TimedChallenge = {
         stage.prepend(background);
         if (this.kind === 'defense') {
             game.player.style.background = 'none';
-            game.player.innerHTML = '<svg viewBox="48 21 150 229" width="100%" height="100%" aria-label="挑戰角色" role="img"><image href="assets/images/challenge/player.png" width="250" height="250"/></svg>';
+            game.player.innerHTML = '<svg viewBox="48 21 150 229" width="100%" height="100%" aria-label="挑戰角色" role="img"><image href="assets/images/characters/challenge-player.png" width="250" height="250"/></svg>';
         }
         this.hud?.remove();
         this.hud = document.createElement('div');
@@ -172,7 +172,7 @@ window.TimedChallenge = {
         if (this.kind === 'defense') {
             root.classList.add('defense-endless-game');
             this.hud.classList.add('defense-endless-hud');
-            const vitality = this.endless ? `<span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/heart.png" alt="">').join('')}</span><span class="endless-mark" aria-hidden="true">∞</span>` : '<span class="defense-challenge-time"></span>';
+            const vitality = this.endless ? `<span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/ui/heart.png" alt="">').join('')}</span><span class="endless-mark" aria-hidden="true">∞</span>` : '<span class="defense-challenge-time"></span>';
             this.hud.innerHTML = `<div class="endless-score-card"><div class="endless-vitality">${vitality}</div><div class="endless-score-line"><strong class="endless-score-value"></strong><span>分</span></div></div><div class="endless-wave-card"><span class="endless-stage"></span><div class="endless-wave-line"><strong class="endless-wave-value"></strong><span>波</span></div><div class="endless-wave-ticks" aria-hidden="true" ${this.endless?'':'hidden'}>${'<i></i>'.repeat(10)}</div>${this.endless?'<div id="defense-response-meter" class="defense-response-meter" role="progressbar" aria-label="本波作答剩餘時間" hidden><div class="defense-response-fill"></div></div>':''}</div><div class="defense-wave-feedback" role="status" hidden></div>`;
             this.hudParts = {
                 hearts:this.hud.querySelector('.challenge-hearts'),
@@ -191,7 +191,7 @@ window.TimedChallenge = {
         }
         if (this.kind === 'memory') {
             this.hud.classList.add('memory-challenge-hud');
-            const vitality = this.endless ? `<span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/heart.png" alt="">').join('')}</span><span class="memory-mistake-meter" role="img">${'<i></i>'.repeat(this.memoryMistakeLimit())}</span>` : '<strong class="memory-challenge-time"></strong>';
+            const vitality = this.endless ? `<span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/ui/heart.png" alt="">').join('')}</span><span class="memory-mistake-meter" role="img">${'<i></i>'.repeat(this.memoryMistakeLimit())}</span>` : '<strong class="memory-challenge-time"></strong>';
             this.hud.innerHTML = `<span class="memory-challenge-vitality">${vitality}</span><span class="memory-challenge-score"><strong></strong><small>分</small></span><span class="memory-challenge-board"></span>`;
             this.memoryHudParts = {hearts:this.hud.querySelector('.challenge-hearts'),mistakes:this.hud.querySelector('.memory-mistake-meter'),time:this.hud.querySelector('.memory-challenge-time'),score:this.hud.querySelector('.memory-challenge-score strong'),board:this.hud.querySelector('.memory-challenge-board')};
             root.querySelector('.memory-hud').prepend(this.hud);
@@ -271,7 +271,7 @@ window.TimedChallenge = {
         }
         if (this.endless) {
             const stage = this.kind === 'memory' ? this.boards+1 : Math.floor(Math.max(0,(this.game?.waveNumber || 1)-1)/10)+1;
-            this.hud.innerHTML = `<span class="challenge-hearts" role="img" aria-label="剩餘 ${this.lives} 條命">${[0,1,2].map(i=>`<img src="assets/images/heart.png" alt="" class="${i<this.lives?'':'heart-lost'}">`).join('')}</span><span>${this.score} 分 · ${this.kind === 'memory' ? `第 ${stage} 盤` : `階段 ${stage}`}</span>`;
+            this.hud.innerHTML = `<span class="challenge-hearts" role="img" aria-label="剩餘 ${this.lives} 條命">${[0,1,2].map(i=>`<img src="assets/images/ui/heart.png" alt="" class="${i<this.lives?'':'heart-lost'}">`).join('')}</span><span>${this.score} 分 · ${this.kind === 'memory' ? `第 ${stage} 盤` : `階段 ${stage}`}</span>`;
             this.hud.classList.toggle('challenge-time-warning',this.lives===1);
             return;
         }

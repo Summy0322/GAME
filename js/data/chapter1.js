@@ -1,7 +1,7 @@
 // js/data/chapter1.js
 window.Chapter1 = {
     id: 'chapter1',
-    background: 'assets/images/market.jpg',
+    background: 'assets/images/story/intro/market-cover.jpg',
     
     dialogue: [
         // 起始節點

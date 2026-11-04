@@ -3,6 +3,7 @@ function fixture(challenge=true){
  const frames=[],timers=[],created=[];let now=0;
  const element=()=>({style:{},parentNode:{},getBoundingClientRect:()=>({left:40,top:40,width:20,height:20}),remove(){this.parentNode=null;this.removed=true;}});
  const window={},context=vm.createContext({window,document:{createElement(){const e=element();created.push(e);return e;}},console:{log(){},warn(){},error(){}}});
+ vm.runInContext(fs.readFileSync('js/data/minigameAssets.js','utf8'),context);
  vm.runInContext(fs.readFileSync('js/minigames/DefenseLevels.js','utf8'),context);context.DefenseLevels=window.DefenseLevels;
  vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),context);
  const g=window.DefenseGameV2,enemy={dir:'up',element:element()};

@@ -39,11 +39,15 @@ style.css、css/        場景、小遊戲與跨裝置樣式
 js/core/               對話、打字、音效、資源載入與遊戲協調
 js/data/               各模式章節、問答題庫與資源清單
 js/minigames/          各款小遊戲與互動系統
-assets/                圖片、字型、音效與影片
+assets/                分類後的圖片、字型、音效與影片
+scripts/check-assets.cjs 素材完整性、路徑大小寫與預載檢查
 tests/                 回歸測試與本機版面檢查工具
 docs/IMPROVEMENTS.md   改進紀錄與已知限制
 sw.js、manifest.json   PWA 設定
 ```
+
+完整素材路徑、替換方式及新舊對照見 [素材目錄](docs/ASSET-LIBRARY.md)。
+執行 `node scripts/check-assets.cjs` 可檢查缺檔、CSS 相對路徑、跨關共用素材及完全重複的檔案。
 
 ```mermaid
 flowchart TD

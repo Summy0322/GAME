@@ -46,15 +46,15 @@ test('visited images are cached on demand and reused; audio is not cached',async
     assert.equal(w.downloads.length,0);
     await request('image',image);await request('image',image);
     assert.equal(w.downloads.length,1);assert.ok(w.stored.has(image));
-    const audio='https://example.test/GAME/assets/music/ready-for-adventure.mp3';
+    const audio='https://example.test/GAME/assets/audio/music/ready-for-adventure.mp3';
     await request('audio',audio);assert.equal(w.stored.has(audio),false);
 });
 
-test('each defense preload contains only the selected level',()=>{
+test('each defense preload includes selected and shared assets without unrelated backgrounds',()=>{
     const window={};vm.runInNewContext(fs.readFileSync('js/data/minigameAssets.js','utf8'),{window});
     for(const level of [1,2,3]){
         const urls=window.MinigameAssets.getDefensePreloadUrls(level);
-        assert.ok(urls.length>=8);assert.ok(urls.every(url=>url.includes('/level'+level+'/')));
+        assert.ok(urls.length>=8);assert.equal(urls.filter(url=>url.endsWith('/bg.png')).length,1);assert.ok(urls.some(url=>url.endsWith('/level'+level+'/bg.png')));assert.ok(urls.includes('assets/images/minigames/defense/shared/player.png'));assert.ok(urls.includes('assets/images/minigames/defense/shared/stone.png'));
         assert.ok(urls.every(url=>fs.existsSync(url)));
     }
 });
