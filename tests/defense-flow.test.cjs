@@ -106,7 +106,7 @@ test('stone mistakes deduct once, honest misses still deduct, and stale damage c
     f.c.loseLife(first);g.recordMistake(first);assert.equal(f.c.lives,2);
     g.handleSwipe('up',first,g.sessionId);assert.equal(next.correctHit,undefined);
     f.tick(850);assert.equal(f.c.lives,1);
-    f.enter({type:'NORMAL',dir:'left',wait:850});f.tick(851);assert.equal(f.c.lives,0);assert.equal(f.c.finished,1);
+    f.enter({type:'NORMAL',dir:'left',wait:850});f.tick(851);assert.equal(f.c.lives,0);assert.equal(f.c.finished,undefined);f.tick(699);assert.equal(f.c.finished,1);
 });
 
 test('stone hold and final impacts remain paused together at maximum challenge speed',()=>{
@@ -117,6 +117,16 @@ test('stone hold and final impacts remain paused together at maximum challenge s
     g.clock.pause();f.tick(10000);assert.equal(a.finished,undefined);assert.equal(f.c.lives,3);
     g.clock.resume();f.tick(g.levelConfig.flow.avoidHold);assert.equal(a.finished,true);assert.equal(f.c.lives,3);
     assert.equal(f.elements['defense-wait-meter'].hidden,true);
+});
+
+test('endless timeout gives feedback before the next wave, and final life cannot advance into another wave',()=>{
+ const f=challengeFixture(),g=f.game;g.waveNumber=94;f.c.lives=1;
+ const attack=f.enter({type:'MULTI',dirs:['up','left','down'],wait:1370});
+ g.handleSwipe('up');f.tick(1370);assert.equal(f.c.lives,0);assert.equal(attack.closing,true);assert.equal(attack.finished,undefined);
+ assert.match(f.c.lastLossReason,/漏接 2/);g.handleSwipe('left');assert.equal(attack.swipedDirs.length,1);
+ f.tick(349);assert.equal(attack.finished,undefined);f.tick(1);assert.equal(attack.finished,true);
+ f.tick(f.speed.gap+1);assert.equal(g.waveNumber,94);assert.equal(f.c.finished,undefined);
+ f.tick(700-350-f.speed.gap-1);assert.equal(f.c.finished,1);
 });
 
 test('an active correct early shield blocks accelerated heavy attacks exactly once and stale checks are harmless',()=>{

@@ -120,3 +120,11 @@
 }
 .defense-endless-hud .defense-wait-track { height:3px;margin-top:4px;background:#adcddd28; }
 .defense-endless-hud .defense-wait-fill { background:#a7d9e9; }
+.defense-response-meter { height:3px;margin-top:6px;border-radius:2px;background:#e4be8733;overflow:hidden; }
+.defense-response-fill { height:100%;background:#e8c189;transform-origin:left; }
+.defense-response-meter[hidden],.defense-wave-feedback[hidden] { display:none; }
+.defense-wave-feedback { position:absolute;bottom:4%;left:50%;transform:translateX(-50%);max-width:82%;padding:6px 12px;border:1px solid #e4bc7c88;border-radius:10px 4px 10px 4px;background:#203c53ed;color:#ffe3b5;white-space:normal;text-align:center;font-size:clamp(12px,2.8cqh,20px); }
+.memory-challenge-vitality { display:flex;align-items:center;gap:9px; }
+.memory-mistake-meter { display:flex;gap:3px; }
+.memory-mistake-meter i { display:block;width:clamp(5px,1.5cqh,9px);height:clamp(5px,1.5cqh,9px);border:1px solid #e4be8766;border-radius:2px;background:#e4be8722; }
+.memory-mistake-meter i.is-lit { background:#e8c189; }

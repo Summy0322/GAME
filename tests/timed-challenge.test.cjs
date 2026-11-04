@@ -29,7 +29,7 @@ test('endless defense loses at most one life per wave and ends exactly once at z
  c.finish=()=>{ends++;c.active=false;};
  const attack={};c.loseLife(attack);c.loseLife(attack);assert.equal(c.lives,2);assert.equal(c.penalties,1);
  c.loseLife({});assert.equal(c.lives,1);c.loseLife({});c.loseLife({});assert.equal(c.lives,0);assert.equal(ends,0);
- f.tick(1);assert.equal(ends,1);assert.equal(c.penalties,3);
+ f.tick(699);assert.equal(ends,0);f.tick(1);assert.equal(ends,1);assert.equal(c.penalties,3);
 });
 
 test('leaving an endless game invalidates a pending death callback',()=>{
@@ -51,6 +51,65 @@ test('timed and endless best scores are isolated across both games and ages',()=
   c.variant='timed';c.best(kind,mode,100);c.variant='endless';assert.equal(c.best(kind,mode),0);c.best(kind,mode,250);
   c.variant='timed';assert.equal(c.best(kind,mode),100);c.variant='endless';assert.equal(c.best(kind,mode),250);
  }
+});
+
+test('best records preserve legacy scores and bind progress to the same best-scoring run',()=>{
+ const {c,saved}=fixture();c.variant='endless';
+ saved.set(c.storageKey,JSON.stringify({'endless:defense:adult':1200}));
+ assert.equal(c.best('defense','adult'),1200);assert.equal(c.bestRecord('defense','adult').progress,null);
+ assert.match(c.bestLabel('defense','adult'),/舊紀錄未記進度/);
+ c.bestRecord('defense','adult',1000,150);assert.equal(c.bestRecord('defense','adult').progress,null);
+ c.bestRecord('defense','adult',1200,94);assert.equal(c.bestRecord('defense','adult').progress,94);
+ c.bestRecord('defense','adult',1200,90);assert.equal(c.bestRecord('defense','adult').progress,94);
+ c.bestRecord('defense','adult',1200,96);assert.equal(c.bestRecord('defense','adult').progress,96);
+ c.bestRecord('defense','adult',1400,92);assert.equal(c.bestRecord('defense','adult').progress,92);
+ assert.match(c.bestLabel('defense','adult'),/1,400 分 · 第 92 波/);
+ c.bestRecord('memory','child',300,6);assert.match(c.bestLabel('memory','child'),/完成 6 盤/);
+ assert.equal(c.bestRecord('defense','child').score,0);
+ const blocked=fixture(true).c;blocked.variant='endless';assert.equal(blocked.bestRecord('defense','adult',20,2).progress,2);
+});
+
+test('invalid record progress and corrupt payloads cannot invent a historical wave',()=>{
+ const {c,saved}=fixture();c.variant='endless';
+ for(const payload of [null,[],{score:'x',progress:94},{score:10,progress:-1},{score:10,progress:2.5}]){
+  saved.set(c.storageKey,JSON.stringify({'endless:defense:adult':payload}));
+  assert.equal(c.bestRecord('defense','adult').progress,null);
+ }
+ saved.set(c.storageKey,'broken');assert.equal(c.bestRecord('defense','adult',100,94).progress,94);
+});
+
+test('endless memory forgives mistakes, successful pairs recover one mark, and clearing a board resets marks without restoring lives',()=>{
+ for(const mode of ['adult','child']){
+  const f=fixture(),c=f.c;c.variant='endless';c.mode=mode;c.lives=3;c.memoryMistakes=0;c.liveClock=f.clock();
+  const limit=mode==='child'?4:3;
+  for(let i=0;i<limit-1;i++)c.memoryMiss();assert.equal(c.lives,3);assert.equal(c.memoryMistakes,limit-1);
+  c.paired();assert.equal(c.memoryMistakes,limit-2);assert.equal(c.score,10);
+  c.memoryMiss();c.memoryMiss();assert.equal(c.lives,2);assert.equal(c.memoryMistakes,0);
+  c.memoryMiss();c.game={challenge:c};c.liveClock=f.clock();c.liveTimer=c.liveClock.setInterval(()=>{},1000);c.consumeTime=()=>{};c.launchMemory=()=>{};
+  c.boardComplete(c.game);assert.equal(c.memoryMistakes,0);assert.equal(c.lives,2);assert.equal(c.boards,1);
+ }
+});
+
+test('wave 94 retains fast single targets while multi-direction deadlines include gesture count',()=>{
+ for(const mode of ['adult','child']){
+  const {c,context}=fixture();c.variant='endless';c.kind='defense';c.mode=mode;
+  const game={waveNumber:93,levelConfig:{flow:{}}};
+  // 系統性取樣每個素材層與題型，固定亂數以重現第 94 波。
+  for(let level=0;level<3;level++)for(let pick=0;pick<100;pick++){
+   vm.runInContext(`{let calls=0;Math.random=()=>calls++===0?${(level+.1)/3}:${pick/100};}`,context);
+   const a=c.nextAttack(game),targets=(a.correctDirs||a.dirs||[a.dir]).length;
+   const floor=mode==='child'?1250:850;
+   if(a.type==='NORMAL')assert.equal(a.wait,floor);
+   if(['MULTI','MULTI_MIXED'].includes(a.type))assert.ok(a.wait>=floor+(targets-1)*(mode==='child'?300:260));
+   assert.ok(game.levelConfig.flow.successGap<=180);
+  }
+ }
+});
+
+test('endless pause summary uses progress instead of survival time',()=>{
+ const {c}=fixture();c.variant='endless';c.score=1234;c.elapsed=200000;c.kind='defense';c.game={waveNumber:94};
+ assert.match(c.pauseDetail(),/第 94 波/);assert.doesNotMatch(c.pauseDetail(),/秒|存活/);
+ c.kind='memory';c.boards=5;assert.match(c.pauseDetail(),/完成 5 盤/);
 });
 
 test('endless defense introduces mechanics by waves with bounded reaction and preparation times',()=>{
@@ -119,12 +178,12 @@ test('endless memory caps card count and progressively shortens memorization wit
  }
 });
 
-test('actual endless memory mismatch loses one life immediately without red-light or time penalty',()=>{
+test('actual endless memory mismatch fills the forgiving mistake meter without immediate life or time penalty',()=>{
  const f=fixture();vm.runInContext(fs.readFileSync('js/minigames/MemoryGameV2.js','utf8'),f.context);
  const c=f.c,g=f.window.MemoryGameV2;c.variant='endless';c.lives=3;c.liveClock=f.clock();
  const card=symbol=>({dataset:{symbol},classList:{add(){},remove(){}}});let callbacks=[];
  Object.assign(g,{challenge:c,gameActive:true,gameMode:'time',lightMode:'none',wrongStreak:0,matchedPairs:0,totalPairs:2,timeLeft:90,statusText:{style:{}},session:{timeout(fn){callbacks.push(fn);}},updateStats(){},updateStrikes(){}});
- g.flippedCards=[card('a'),card('b')];g.checkMatch();assert.equal(c.lives,2);assert.equal(c.penalties,1);assert.equal(g.wrongStreak,0);assert.equal(g.timeLeft,90);
+ g.flippedCards=[card('a'),card('b')];g.checkMatch();assert.equal(c.lives,3);assert.equal(c.memoryMistakes,1);assert.equal(c.penalties,0);assert.equal(g.wrongStreak,0);assert.equal(g.timeLeft,90);
  callbacks.forEach(fn=>fn());assert.equal(g.flippedCards.length,0);assert.equal(g.canFlip,true);
 });
 

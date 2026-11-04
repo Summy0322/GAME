@@ -959,6 +959,7 @@ const MemoryGameV2 = {
     // 處理卡片點擊
     handleCardClick: function(card) {
         if (window.GamePause?.paused) return;
+        if (this.challenge?.ending) return;
         if (!this.canFlip || this.isMemorizing) return;
         if (card.classList.contains('is-flipped')) return;
         if (card.classList.contains('matched')) return;
@@ -1068,8 +1069,7 @@ const MemoryGameV2 = {
         } else {
             // ✅ 配對失敗
             if (this.challenge?.endless) {
-                this.challenge.loseLife();
-                this.statusText.innerText = `配對錯誤，剩下 ${this.challenge.lives} 條命`;
+                this.statusText.innerText = this.challenge.memoryMiss();
             }
             if (isGreenEnabled) {
                 this.rightStreak = 0;

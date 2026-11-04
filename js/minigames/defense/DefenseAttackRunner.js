@@ -111,6 +111,25 @@ window.DefenseAttackRunnerMixin = {
         }
     },
 
+    showResponseProgress: function(duration) {
+        const meter=document.getElementById('defense-response-meter');
+        if (!meter) return;
+        meter.hidden=!duration;
+        const fill=meter.querySelector('.defense-response-fill');
+        if(fill){fill.style.animation='none';if(duration){void fill.offsetWidth;fill.style.animation=`defense-wait ${duration}ms linear forwards`;}}
+    },
+
+    closeTimedOutAttack: function(attack) {
+        if (!this.gameActive || attack!==this.currentAttack || attack.finished) return;
+        if (!this.challenge?.endless) {this.finishAttack();return;}
+        attack.resolved=true;
+        if(attack.closing)return;
+        attack.closing=true;
+        this.showResponseProgress(0);
+        this.showAvoidanceProgress(0);
+        this.queueWaveCallback(()=>this.finishAttack(),350,attack);
+    },
+
     updateWaveProgress: function() {
         const label = document.getElementById('defense-wave-progress');
         if (label) {
@@ -144,6 +163,7 @@ window.DefenseAttackRunnerMixin = {
             attack.hits++;
             this.addScore(mixed ? this.scoreTable.MIXED_CORRECT : this.scoreTable.MULTI, dir);
         } else {
+            attack.lossReason='碰到石頭';
             this.recordMistake();
             this.updateScoreDisplay();
             this.addScore(this.scoreTable.MIXED_WRONG, dir);
@@ -163,6 +183,7 @@ window.DefenseAttackRunnerMixin = {
         const mixed = attack.type === 'MULTI_MIXED';
         const correctDirs = mixed ? attack.correctDirs : attack.dirs;
         if (!correctDirs.every(dir => attack.swipedDirs.includes(dir))) return;
+        this.showResponseProgress(0);
         // 全部正確方向已在時限內作答，保留飛行／命中動畫，不再判作逾時。
         if (attack.multiTimeout) {
             this.clock.clearTimeout(attack.multiTimeout);
@@ -197,7 +218,9 @@ window.DefenseAttackRunnerMixin = {
         if (avoided.length) this.addScore(avoided.length * this.scoreTable.MIXED_AVOID);
         if (missing.length) {
             this.addScore(-missing.length * Math.abs(this.scoreTable.TIME_OUT_PENALTY));
-            this.missAttack(`還有${this.levelConfig.flow.targetName}尚未處理！`);
+            this.missAttack(this.challenge?.endless ? `漏接 ${missing.length} 個目標` : `還有${this.levelConfig.flow.targetName}尚未處理！`);
+            this.closeTimedOutAttack(attack);
+            return;
         } else {
             this.msg.innerText = attack.successful ? '✅ 成功避開石頭！' : '本波結束，記得避開石頭！';
         }
@@ -206,6 +229,7 @@ window.DefenseAttackRunnerMixin = {
 
     startAttackSequence: function () {
         if (!this.gameActive) return;
+        if (this.challenge?.ending) return;
         this.attackQueue = this.buildAttackQueue();
         this.totalWaves = this.attackQueue.filter(attack => attack.type !== 'END').length;
         this.waveNumber = 0;
@@ -216,6 +240,7 @@ window.DefenseAttackRunnerMixin = {
         console.log('processNextAttack 被呼叫, 當前狀態:', this.state);
 
         if (!this.gameActive) return;
+        if (this.challenge?.ending) return;
         if (this.challenge && this.attackQueue.length === 0) this.attackQueue.push(this.challenge.nextAttack(this));
         if (this.attackQueue.length === 0) {
             if (this.attackQueue.length === 0 && this.state !== this.states.RESULT) {
@@ -266,6 +291,7 @@ window.DefenseAttackRunnerMixin = {
         this.clearEnemies();
         this.clearProjectiles();
         this.showAvoidanceProgress(0);
+        this.showResponseProgress(this.challenge?.endless && ['NORMAL','MULTI','MULTI_MIXED'].includes(attack.type) ? attack.wait : 0);
 
         switch (attack.type) {
             case 'END':
@@ -290,8 +316,8 @@ window.DefenseAttackRunnerMixin = {
                         this.addScore(this.scoreTable.TIME_OUT_PENALTY);
                         console.log(`❌ 未接住敵人，扣 ${Math.abs(this.scoreTable.TIME_OUT_PENALTY)} 分`);
 
-                        this.missAttack('時間到！未接住敵人');
-                        this.finishAttack();
+                        this.missAttack(this.challenge?.endless ? '漏接目標' : '時間到！未接住敵人');
+                        this.closeTimedOutAttack(attack);
                     }
                 }, attack.wait);
                 this.timers.push(normalTimer);
@@ -320,8 +346,8 @@ window.DefenseAttackRunnerMixin = {
                             console.log(`❌ 剩餘 ${remainingCount} 個敵人未處理，扣 ${penalty} 分`);
                         }
 
-                        this.missAttack(`未完成所有方向！遺漏: ${notSwiped.join(', ')}`);
-                        this.finishAttack();
+                        this.missAttack(this.challenge?.endless ? `漏接 ${remainingCount} 個目標` : `未完成所有方向！遺漏: ${notSwiped.join(', ')}`);
+                        this.closeTimedOutAttack(attack);
                     }
                 }, attack.wait);
                 this.timers.push(this.currentAttack.multiTimeout);
@@ -447,6 +473,7 @@ window.DefenseAttackRunnerMixin = {
         const successful = attack.successful || (attack.type === 'NORMAL' && attack.resolved && attack.correctHit);
         attack.finished = true;
         this.showAvoidanceProgress(0);
+        this.showResponseProgress?.(0);
         this.clearAllTimers();
         console.log('✅ 攻擊結束, 當前狀態:', this.state);
 

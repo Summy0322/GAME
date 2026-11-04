@@ -732,6 +732,7 @@ const DefenseGameV2 = {
     handleSwipe: function(dir, inputAttack = this.currentAttack, inputSession = this.sessionId) {
         if (window.GamePause?.paused) return;
         if (!this.gameActive) return;
+        if (this.challenge?.ending) return;
         if (!inputAttack || inputAttack !== this.currentAttack || inputSession !== this.sessionId || inputAttack.finished || inputAttack.resolved) return;
         if (![this.states.NORMAL,this.states.MULTI,this.states.MULTI_MIXED,this.states.DECOY,this.states.HEAVY_CHARGING,this.states.HEAVY_FLYING].includes(this.state)) return;
         
@@ -848,6 +849,7 @@ const DefenseGameV2 = {
                             // 正確方向：標記為等待擊中，不立即結束
                             console.log('✅ 正確方向，等待子彈擊中敵人');
                             this.currentAttack.correctHit = true;
+                            this.showResponseProgress?.(0);
                             if (this.levelConfig.flow && this.currentAttack.timer) {
                                 this.clock.clearTimeout(this.currentAttack.timer);
                                 this.currentAttack.timer = null;
@@ -1109,6 +1111,7 @@ const DefenseGameV2 = {
 
     // ✅ 重擊格擋失敗的統一處理
     heavyBlockFailed: function(reason) {
+        if(this.currentAttack)this.currentAttack.lossReason=`格擋失敗：${reason}`;
         console.log(`💥 重擊格擋失敗！原因: ${reason}`);
         
         // 扣分懲罰
@@ -1146,6 +1149,7 @@ const DefenseGameV2 = {
     },
     
     missAttack: function(reason) {
+        if(this.currentAttack)this.currentAttack.lossReason=reason;
         console.log('missAttack:', reason);
         this.recordMistake();
         this.updateScoreDisplay();
@@ -1923,6 +1927,7 @@ const DefenseGameV2 = {
             if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('💥 AOE 攻擊命中！');
             if (this.state === this.states.AOE_ACTIVE) {
+                if(this.currentAttack)this.currentAttack.lossReason='旋轉防守失敗';
                 this.recordMistake();
                 this.updateScoreDisplay();
                 this.showWarning('AOE 攻擊命中！');
