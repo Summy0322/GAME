@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function fixture({boards=1,mode='adult',reduced=false,variant='endless',random=0}={}){
+function fixture({boards=1,mode='adult',reduced=false,variant='endless',random=0,blinkDelay}={}){
  let now=10000,id=0;const jobs=new Map(),nodes=[];
  const node=()=>({hidden:true,dataset:{},style:{},offsetWidth:10,setAttribute(){},remove(){this.removed=true;}});
  const window={matchMedia:()=>({matches:reduced}),GamePause:{paused:false}},document={hidden:false,createElement(){const n=node();nodes.push(n);return n;},addEventListener(){},getElementById(){return null;}};
@@ -11,7 +11,7 @@ function fixture({boards=1,mode='adult',reduced=false,variant='endless',random=0
  const game={challenge:c,session,gameActive:true,canFlip:true,isMemorizing:false,flippedCards:[],container:{appendChild(){}},statusText:{innerText:'開始配對！'},grid:{appendChild(){},getAnimations:()=>[],querySelectorAll:()=>cards}};
  Object.assign(c,{active:true,kind:'memory',variant,boards,mode,game,lives:3,memoryMistakes:1,score:50});
  const tick=ms=>{const end=now+ms;let count=0;while(true){const next=[...jobs].filter(([,j])=>j.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;if(++count>10000)throw Error('loop');now=next[1].at;jobs.delete(next[0]);next[1].fn();}now=end;};
- c.setupMemoryInterference(game);return {c,game,session,tick,window,document,nodes,cards};
+ if(blinkDelay)c.memoryCloudInterval=()=>blinkDelay; c.setupMemoryInterference(game);return {c,game,session,tick,window,document,nodes,cards};
 }
 test('only endless board two onward; no opening lock, warning or immediate interference',()=>{
  for(const options of [{boards:0},{boards:8,variant:'timed'}])assert.equal(fixture(options).nodes.length,0);
@@ -35,7 +35,7 @@ test('two-card resolution waits safely, then single-card interruption does not c
 });
 test('swap scheduling is random, early boards cap at one, late boards choose one or two',()=>{
  const first=fixture(),late=fixture({boards:6,random:.99}),one=fixture({boards:6,random:0});assert.equal(first.c.memoryInterference.swapLimit,1);assert.equal(late.c.memoryInterference.swapLimit,2);assert.equal(one.c.memoryInterference.swapLimit,1);
- first.tick(6000);assert.equal(first.c.memoryInterference.swapCount,1);late.tick(6000);assert.equal(late.c.memoryInterference.swapCount,0);late.tick(60000);assert.equal(late.c.memoryInterference.swapCount,2);first.tick(60000);assert.equal(first.c.memoryInterference.swapCount,1);assert.ok(first.c.memoryInterference.blinkCount>3);
+ first.tick(6000);assert.equal(first.c.memoryInterference.swapCount,1);late.tick(1799);assert.equal(late.c.memoryInterference.swapCount,0);late.tick(1200);assert.equal(late.c.memoryInterference.swapCount,1);late.tick(60000);assert.equal(late.c.memoryInterference.swapCount,2);first.tick(60000);assert.equal(first.c.memoryInterference.swapCount,1);assert.ok(first.c.memoryInterference.blinkCount>3);
 });
 test('pause preserves warning, fold and movement; cleanup cancels animation, notice and later work',()=>{
  const f=fixture();f.tick(6000);f.session.clock.pause();f.tick(10000);assert.equal(f.c.memoryInterference.notice.hidden,false);assert.equal(f.c.memoryInterference.swapCards,undefined);f.session.clock.resume();f.tick(1100);assert.equal(f.c.memoryInterference.swapCards.length,2);
@@ -49,4 +49,16 @@ test('reduced motion skips both effects; child warning and movement allow more t
 test('last remaining pair is never swapped; hidden or memorizing board waits',()=>{
  const f=fixture();f.cards.slice(0,4).forEach(c=>c.classList.add('matched'));f.tick(60000);assert.equal(f.c.memoryInterference.swapCount,0);assert.equal(f.game.canFlip,true);
  for(const prop of ['hidden','memorizing']){const x=fixture();if(prop==='hidden')x.document.hidden=true;else x.game.isMemorizing=true;x.tick(10000);assert.equal(x.c.memoryInterference.swapCount,0);assert.equal(x.c.memoryInterference.blinkCount,0);x.document.hidden=false;x.game.isMemorizing=false;x.tick(250);assert.equal(x.c.memoryInterference.swapCount,1);}
+});
+test('later boards swap early with age-aware jitter; second swap also stays near the opening',()=>{
+ for(const [mode,random,delay] of [['adult',0,1800],['adult',.99,2988],['child',0,2400],['child',.99,3984]]) {
+  const f=fixture({boards:6,mode,random});f.tick(delay-1);assert.equal(f.c.memoryInterference.swapCount,0);f.tick(1);assert.equal(f.c.memoryInterference.swapCount,1);assert.equal(f.c.memoryInterference.notice.style.animationDuration,mode==='child'?'1500ms':'1100ms');assert.equal(f.c.memoryInterference.notice.innerHTML,'<strong>背牌即將換位</strong>');
+  if(random===.99){f.tick(12000-delay);assert.equal(f.c.memoryInterference.swapCount,2);}
+ }
+ const middle=fixture({boards:3});middle.tick(3499);assert.equal(middle.c.memoryInterference.swapCount,0);middle.tick(1);assert.equal(middle.c.memoryInterference.swapCount,1);
+});
+test('swap cancels an active blink and its stale callbacks, with a clear grace period after movement',()=>{
+ const f=fixture({blinkDelay:5900});f.tick(5900);assert.equal(f.nodes[0].hidden,false);assert.equal(f.nodes[0].dataset.phase,'closing');f.tick(100);assert.equal(f.c.memoryInterference.notice.hidden,false);assert.equal(f.nodes[0].hidden,true);assert.equal(f.nodes[0].dataset.phase,'idle');
+ f.tick(940);assert.equal(f.nodes[0].hidden,true);assert.equal(f.nodes[0].dataset.phase,'idle');f.tick(1160);assert.equal(f.game.canFlip,true);assert.equal(f.nodes[0].hidden,true);assert.equal(f.c.memoryInterference.blinkBlockedUntil,f.session.clock.now()+1200);
+ const late=fixture({boards:6,random:.99,blinkDelay:700});late.tick(2988);const count=late.c.memoryInterference.blinkCount;late.tick(2100);assert.equal(late.game.canFlip,true);assert.equal(late.c.memoryInterference.blinkCount,count);late.tick(1199);assert.equal(late.c.memoryInterference.blinkCount,count);
 });

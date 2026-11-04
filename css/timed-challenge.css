@@ -159,7 +159,9 @@
 }
 @media (prefers-reduced-motion:reduce) { .defense-night-wind { display:none; } }
 
-.memory-swap-notice { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;box-sizing:border-box;width:max-content;max-width:86%;padding:clamp(14px,4cqh,30px) clamp(20px,5cqh,42px);text-align:center;pointer-events:none;border:1px solid #f1d7a6aa;border-radius:18px 5px;background:linear-gradient(135deg,#172b47f5,#304362f5);box-shadow:0 10px 35px #08132588,inset 0 1px #fff2; }
+/* 中央單行提示帶：全寬、半透明，兩側漸隱；只在預告期間淡入淡出。 */
+.memory-swap-notice { position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:30;box-sizing:border-box;width:100%;padding:clamp(14px,4cqh,30px) 12px;text-align:center;pointer-events:none;background:linear-gradient(90deg,#172b4700,#172b47b8 18%,#243b59cc 50%,#172b47b8 82%,#172b4700);animation:memory-swap-banner 1100ms ease-in-out both; }
 .memory-swap-notice[hidden] { display:none; }
-.memory-swap-notice strong { display:block;color:#ffe3ac;font-size:clamp(24px,6.5cqh,46px);line-height:1.3;letter-spacing:.08em; }
-.memory-swap-notice span { display:block;margin-top:8px;color:#e1e9f4;font-size:clamp(11px,2.8cqh,19px);line-height:1.5; }
+.memory-swap-notice strong { display:block;color:#ffe3ac;font-size:clamp(24px,6.5cqh,46px);line-height:1.3;letter-spacing:.12em;white-space:nowrap;text-shadow:0 2px 8px #071427aa; }
+@keyframes memory-swap-banner { 0%,100% { opacity:0; } 18%,76% { opacity:1; } }
+@media (prefers-reduced-motion:reduce) { .memory-swap-notice { animation:none; } }

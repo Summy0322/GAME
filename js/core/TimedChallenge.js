@@ -396,11 +396,12 @@ window.TimedChallenge = {
         session.ownNode(node);game.grid.appendChild(node);
         const notice=document.createElement('div');notice.className='memory-swap-notice';notice.hidden=true;
         notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
-        notice.innerHTML='<strong>背牌即將換位</strong><span>翻開的單張牌將蓋回，請追蹤亮框</span>';
+        notice.innerHTML='<strong>背牌即將換位</strong>';
+        notice.style.animationDuration=this.mode==='child'?'1500ms':'1100ms';
         session.ownNode(notice);game.container.appendChild(notice);
         const cards=()=>Array.from(game.grid.querySelectorAll('.memory-card'));
         cards().forEach((card,index)=>card.style.order=String(index));
-        const effect=this.memoryInterference={game,session,node,notice,timers:new Set(),animations:[],blinkCount:0,swapCount:0,swapLimit:this.boards>=6?1+Math.floor(Math.random()*2):1,locked:false};
+        const effect=this.memoryInterference={game,session,node,notice,timers:new Set(),animations:[],blinkCount:0,blinkToken:0,blinkBlockedUntil:0,swapCount:0,swapLimit:this.boards>=6?1+Math.floor(Math.random()*2):1,locked:false};
         const current=()=>this.active && this.endless && this.kind==='memory' && game.challenge===this && !this.ending && run===this.generation && this.memoryInterference===effect && game.session===session && !session.disposed && game.gameActive;
         const later=(fn,ms)=>{let id=session.timeout(()=>{effect.timers.delete(id);if(current())fn();},ms);effect.timers.add(id);};
         const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -411,14 +412,21 @@ window.TimedChallenge = {
             effect.swapCards?.forEach(card=>card.classList.remove('memory-wind-selected'));effect.swapCards=null;
             notice.hidden=true;
             if(effect.locked){game.interferenceLocked=false;game.canFlip=true;effect.locked=false;}
+            effect.blinkBlockedUntil=session.clock.now()+1200;
             if(effect.swapCount<effect.swapLimit)later(warnSwap,swapDelay());
         };
-        const swapDelay=()=> (this.mode==='child'?8000:6000)+Math.floor(Math.random()*(this.mode==='child'?6000:5000));
+        const swapDelay=()=> {
+            const child=this.mode==='child';
+            if(this.boards>=6)return (effect.swapCount===0?(child?2400:1800):(child?3200:2200))+Math.floor(Math.random()*(child?1600:1200));
+            if(this.boards>=3)return (child?4500:3500)+Math.floor(Math.random()*2000);
+            return (child?8000:6000)+Math.floor(Math.random()*(child?6000:5000));
+        };
         const blink=()=>{
             // 眨眼完全不改操作旗標，也不等待翻牌或配對判定。
-            if(visible() && !effect.locked && !reduced()) {
+            if(visible() && !effect.locked && session.clock.now()>=effect.blinkBlockedUntil && !reduced()) {
+                const token=++effect.blinkToken;
                 effect.blinkCount++;node.hidden=false;node.dataset.phase='idle';void node.offsetWidth;node.dataset.phase='closing';
-                later(()=>{node.dataset.phase='opening';later(()=>{node.hidden=true;},380);},560);
+                later(()=>{if(token!==effect.blinkToken)return;node.dataset.phase='opening';later(()=>{if(token===effect.blinkToken)node.hidden=true;},380);},560);
             }
             later(blink,this.memoryCloudInterval());
         };
@@ -452,6 +460,7 @@ window.TimedChallenge = {
             if(!visible() || !game.canFlip || game.flippedCards.length>1){later(warnSwap,250);return;}
             if(available().length<3)return;
             effect.swapCount++;effect.locked=true;game.interferenceLocked=true;game.canFlip=false;
+            effect.blinkToken++;node.dataset.phase='idle';
             game.clearKnownHint?.();node.hidden=true;notice.hidden=false;
             later(fold,this.mode==='child'?1500:1100);
         };
