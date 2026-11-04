@@ -51,6 +51,7 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-best').textContent = this.bestLabel(kind,this.mode);
     },
     stop() {
+        this.clearDefenseWind();
         this.clearMemoryInterference();
         this.generation++;
         this.active = false;
@@ -101,6 +102,7 @@ window.TimedChallenge = {
         this.memoryMistakes = this.memoryErrors = 0;
         this.lastLossReason = '';
         this.feedbackId = 0;
+        this.nextWindWave = 41;
         this.score = this.pairs = this.boards = this.penalties = this.successes = 0;
         this.aoeMilestone = 0;
         this.session = new window.MinigameSession();
@@ -341,6 +343,30 @@ window.TimedChallenge = {
     defenseMusicRate(wave) {
         return 1 + Math.min(8,Math.floor(Math.max(0,wave-1)/10))*.02;
     },
+    clearDefenseWind(owner) {
+        const wind=this.defenseWind;
+        if (!wind || (owner && wind.game!==owner)) return;
+        this.defenseWind=null;
+        wind.clock.clearTimeout(wind.timer);
+        wind.node.remove();
+    },
+    onDefenseWaveStarted(game, attack) {
+        if (!this.active || !this.endless || this.kind!=='defense' || this.game!==game || game.challenge!==this || this.ending) return;
+        if (attack!==game.currentAttack || attack.finished) return;
+        // 重擊與旋轉需要完整視線；既有落葉也在這些題型開始前收起。
+        if (!['NORMAL','MULTI','MULTI_MIXED'].includes(attack.type) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+            this.clearDefenseWind();return;
+        }
+        if (window.GamePause?.paused || document.hidden || this.defenseWind || game.waveNumber<(this.nextWindWave??41) || !game.container?.appendChild) return;
+        const node=document.createElement('div');
+        node.className='defense-night-wind';node.setAttribute('aria-hidden','true');
+        node.innerHTML='<div class="defense-wind-lane wind-upper-left"><i class="defense-wind-leaf"></i></div><div class="defense-wind-lane wind-lower-right"><i class="defense-wind-leaf"></i></div>';
+        game.container.appendChild(node);
+        const wind={game,node,clock:game.clock,timer:null};
+        this.defenseWind=wind;
+        this.nextWindWave=game.waveNumber+20;
+        wind.timer=wind.clock.setTimeout(()=>{if(this.defenseWind===wind)this.clearDefenseWind();},2200);
+    },
     memoryCloudInterval() {
         return Math.max(this.mode==='child'?16000:12000,(this.mode==='child'?22000:18000)-Math.floor(Math.max(0,this.boards-3)/2)*1000);
     },
@@ -431,6 +457,7 @@ window.TimedChallenge = {
         this.lives = Math.max(0,this.lives-1);
         this.penalties++;
         if (this.kind==='defense') {
+            this.clearDefenseWind();
             this.lastLossReason=attack.lossReason || '本波漏接';
             const feedback=this.hudParts?.feedback;
             if (feedback) {

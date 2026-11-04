@@ -441,6 +441,7 @@ window.DefenseAttackRunnerMixin = {
                 console.error('未知攻擊類型:', attack.type);
                 this.finishAttack();
         }
+        this.challenge?.onDefenseWaveStarted?.(this,attack);
     },
 
     setAttackTimer: function (wait, attack) {

@@ -332,6 +332,7 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function (options = {}) {
+        this.challenge?.clearDefenseWind?.(this);
         this.touchGesture = null;
         this.hideShields();
         window.GamePause?.end(this);

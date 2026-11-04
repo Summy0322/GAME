@@ -139,3 +139,23 @@
 .memory-blink-cover[data-effect="quiet"] { box-shadow:inset 0 0 0 2px #aabddd66; }
 .memory-blink-cover[data-effect="quiet"] .memory-blink-shutter { display:none; }
 @media (prefers-reduced-motion:reduce) { .memory-blink-shutter { transition:none; } }
+/* 夜風走兩條對角邊帶，裁切範圍不進入中央與四向目標軸線。 */
+.defense-night-wind { position:absolute;inset:0;z-index:60;pointer-events:none;overflow:hidden; }
+.defense-wind-lane { position:absolute;width:25%;height:12%;overflow:hidden;pointer-events:none; }
+.wind-upper-left { left:2%;top:23%; }
+.wind-lower-right { right:2%;bottom:23%;transform:scaleX(-1); }
+.defense-wind-leaf {
+    position:absolute;left:-24px;top:50%;width:clamp(14px,5.2cqh,26px);height:clamp(8px,2.8cqh,14px);
+    border-radius:85% 0 85% 0;background:linear-gradient(135deg,#b6a47b,#80745e);border:1px solid #c6bb9633;
+    opacity:0;will-change:transform;animation:defense-night-leaf 1800ms cubic-bezier(.25,.45,.55,.8) both;
+}
+.defense-wind-leaf::after { content:"";position:absolute;left:15%;right:12%;top:48%;height:1px;background:#f2dfaf55;transform:rotate(-28deg); }
+.wind-lower-right .defense-wind-leaf { animation-delay:180ms;background:linear-gradient(135deg,#a1ad8c,#68786e); }
+@keyframes defense-night-leaf {
+    0% { transform:translate3d(0,1cqh,0) rotate(-35deg);opacity:0; }
+    15% { opacity:.58; }
+    50% { transform:translate3d(13cqw,-1cqh,0) rotate(30deg);opacity:.58; }
+    85% { opacity:.45; }
+    100% { transform:translate3d(28cqw,-4cqh,0) rotate(105deg);opacity:0; }
+}
+@media (prefers-reduced-motion:reduce) { .defense-night-wind { display:none; } }
