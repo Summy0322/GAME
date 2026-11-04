@@ -30,10 +30,10 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-copy').textContent = this.endless
             ? (memory
                 ? '三條命，不限時間、不補命。配對錯誤扣一條命，不再計紅燈；每對 +10 分，完成一盤再 +20 分。卡片逐盤增加至上限，開場記憶時間逐漸縮短。生命歸零時結算。'
-                : '三條命，不限時間、不補命。漏接、方向錯誤、打到石頭或格擋失敗扣一條命，同一波最多扣一條。每 10 波提升一階，逐步加入石頭、重擊與旋轉，反應時限逐漸縮短至下限。生命歸零時結算。')
+                : '三條命，不限時間、不補命。漏接、方向錯誤、打到石頭或格擋失敗扣一條命，同一波最多扣一條。每 10 波加速，逐步加入石頭、重擊與旋轉；反應時限、重擊點燃與波次間隔都逐階縮短至下限。生命歸零時結算。')
             : memory
             ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
-            : '90 秒連續防守，滑動處理目標、避開石頭；重擊依提示滑動格擋，旋轉時沿畫面畫圈。約第 25、60 秒後各有一次旋轉，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
+            : '90 秒連續防守，滑動處理目標、避開石頭；重擊逐格點燃速度會隨時間加快，依提示滑動格擋。約第 25、60 秒後各有一次旋轉，沿畫面畫圈，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
         document.getElementById('challenge-lobby-best').textContent = `個人最佳：${this.best(kind, this.mode)} 分`;
     },
     stop() {
@@ -188,6 +188,7 @@ window.TimedChallenge = {
         const elapsed = 90000-this.remaining;
         const wave = (game.waveNumber || 0)+1;
         const stage = Math.floor((wave-1)/10);
+        const speed = this.defenseSpeed(stage,elapsed);
         const dueAOE = this.endless ? wave >= 30 && wave%10===0 : elapsed >= [25000,60000][this.aoeMilestone || 0];
         const level = dueAOE ? 3 : 1+Math.floor(Math.random()*3);
         const source = window.DefenseLevels[level][this.mode];
@@ -201,9 +202,9 @@ window.TimedChallenge = {
         else if (!this.endless && attack.wait) attack.wait = Math.max(minimum,attack.wait*(elapsed>60000?.78:elapsed>20000?.9:1));
         if (this.endless) {
             // 僅在新波次調整，旋轉與重擊保留較長的操作時間。
-            const floor = attack.type==='AOE' ? (this.mode==='child'?5000:4000) : attack.type==='HEAVY' ? (this.mode==='child'?3200:2600) : minimum;
-            attack.wait = Math.max(floor,attack.wait * Math.max(.55,1-stage*.06));
-            game.levelConfig = {...game.levelConfig,flow:{...game.levelConfig.flow,prepareTime:Math.max(180,(this.mode==='child'?400:300)-stage*15),successGap:Math.max(180,(this.mode==='child'?500:380)-stage*20)}};
+            const floor = attack.type==='AOE' ? (this.mode==='child'?3400:2600) : speed.minimumWait;
+            attack.wait = Math.max(floor,Math.round(attack.wait * speed.factor));
+            game.levelConfig = {...game.levelConfig,flow:{...game.levelConfig.flow,prepareTime:speed.prepareTime,successGap:speed.gap}};
         }
         // 每波建立獨立材質設定，舊投射物／命中特效不會讀到下一波的圖片。
         const assets = {};
@@ -214,7 +215,24 @@ window.TimedChallenge = {
             const aoe=document.getElementById(`aoe-${dir}`);
             if(aoe)aoe.style.backgroundImage=`url('${source.aoeLineImage}')`;
         }
-        return {...attack,resolved:false,materials:Object.freeze({...assets})};
+        return {...attack,resolved:false,heavyIgnitionInterval:speed.ignition,
+            ...(this.endless ? {challengeGap:speed.gap} : {}),materials:Object.freeze({...assets})};
+    },
+    defenseSpeed(stage, elapsed) {
+        const child = this.mode === 'child';
+        if (!this.endless) {
+            const progress = Math.min(1,Math.max(0,elapsed)/90000);
+            return {ignition:Math.round(400-(child?180:220)*progress)};
+        }
+        // 每十波乘上倍率，直到各項速度下限；成功與失誤後都使用本波節奏。
+        const factor = Math.pow(child ? .85 : .8,Math.max(0,stage));
+        return {
+            factor,
+            ignition:Math.max(child?140:100,Math.round(400*factor)),
+            minimumWait:child?1250:850,
+            prepareTime:Math.max(child?140:100,Math.round((child?400:300)*factor)),
+            gap:Math.max(child?180:120,Math.round((child?500:380)*factor))
+        };
     },
     paired() { if(this.active){this.pairs++;this.score+=10;this.updateHUD();} },
     penalty() { if(this.active){this.penalties++;this.score=Math.max(0,this.score-10);this.updateHUD();} },

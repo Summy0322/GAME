@@ -62,10 +62,46 @@ test('endless defense introduces mechanics by waves with bounded reaction and pr
    if(wave<=10)assert.equal(attack.type,'NORMAL');
    if(wave<=20)assert.ok(!['HEAVY','AOE'].includes(attack.type));
    if(wave>=30&&wave%10===0)assert.equal(attack.type,'AOE');
-   assert.ok(attack.wait>=(attack.type==='AOE'?(mode==='child'?5000:4000):attack.type==='HEAVY'?(mode==='child'?3200:2600):(mode==='child'?2400:1700)));
-   assert.ok(game.levelConfig.flow.prepareTime>=180);assert.ok(game.levelConfig.flow.successGap>=180);
+   assert.ok(attack.wait>=(attack.type==='AOE'?(mode==='child'?3400:2600):(mode==='child'?1250:850)));
+   assert.ok(game.levelConfig.flow.prepareTime>=(mode==='child'?140:100));assert.ok(game.levelConfig.flow.successGap>=(mode==='child'?180:120));
    assert.equal(game.levelConfig.bgImage,'fixed');
   }
+ }
+});
+
+test('challenge ignition and endless pacing speed up at later stages and stop at playable floors',()=>{
+ for(const mode of ['child','adult']){
+  const {c}=fixture();c.mode=mode;c.variant='endless';let previous;
+  for(let stage=0;stage<=12;stage++){
+   const speed=c.defenseSpeed(stage,0);
+   if(previous){assert.ok(speed.ignition<=previous.ignition);assert.ok(speed.gap<=previous.gap);assert.ok(speed.prepareTime<=previous.prepareTime);}
+   previous=speed;
+  }
+  assert.equal(previous.ignition,mode==='child'?140:100);assert.equal(previous.gap,mode==='child'?180:120);
+  assert.ok(c.defenseSpeed(4,0).ignition<250);
+  c.variant='timed';let last=Infinity;
+  for(const elapsed of [0,20000,40000,60000,90000]){const p=c.defenseSpeed(0,elapsed);assert.ok(p.ignition<last);last=p.ignition;}
+  assert.equal(last,mode==='child'?220:180);
+ }
+});
+
+test('actual heavy sequence uses captured challenge ignition interval; story stays at 400ms',()=>{
+ for(const scenario of [{variant:'endless',mode:'adult',stage:8,interval:100},{variant:'endless',mode:'child',stage:8,interval:140},{variant:'timed',mode:'adult',elapsed:90000,interval:180},{variant:'timed',mode:'child',elapsed:90000,interval:220},{story:true,interval:400}]){
+  const f=fixture(),c=f.c;c.variant=scenario.variant;c.mode=scenario.mode;
+  f.context.DefenseLevels=f.window.DefenseLevels;vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),f.context);
+  const g=f.window.DefenseGameV2,clock=f.clock(),lit=[];let launched=0;
+  f.context.document.createElement=()=>({style:{},dataset:{}});
+  Object.assign(g,{challenge:scenario.story?null:c,pauseClock:clock,gameActive:true,state:g.states.HEAVY_CHARGING,
+   currentAttack:{heavyIgnitionInterval:scenario.story?100:c.defenseSpeed(scenario.stage||0,scenario.elapsed||0).ignition},
+   scaledSizes:{heavySequence:40},scaledPositions:{up:{x:0,y:-200}},stage:{appendChild(){},getBoundingClientRect(){return {width:844,height:390};}},
+   levelConfig:{},heavySequence:[],lightIntervals:{},hideShields(){},startHeavyBlockBounce(){lit.push(clock.now());},stopAllHeavyBlocksBounce(){},setState(state){this.state=state;},launchHeavyProjectile(){launched++;}});
+  g.spawnHeavySequence('up');f.tick(scenario.interval-1);assert.equal(lit.length,0);f.tick(1);assert.equal(lit.length,1);
+  // 中途修改下一波參數，正在點燃的序列仍維持本波速度。
+  g.currentAttack.heavyIgnitionInterval=999;
+  clock.pause();f.tick(5000);assert.equal(lit.length,1);clock.resume();f.tick(scenario.interval*4);
+  assert.equal(lit.length,5);assert.equal(launched,1);assert.equal(lit[4]-lit[0],scenario.interval*4);
+  g.currentAttack.challengeGap=120;
+  if(scenario.story)assert.notEqual(g.getCurrentGap(),120);else assert.equal(g.getCurrentGap(),120);
  }
 });
 

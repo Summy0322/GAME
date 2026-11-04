@@ -194,6 +194,7 @@ const DefenseGameV2 = {
 
     // 計算當前攻擊間隔（根據分數動態調整）
     getCurrentGap: function() {
+        if (this.challenge && Number.isFinite(this.currentAttack?.challengeGap)) return this.currentAttack.challengeGap;
         let gap = this.pace.BASE_GAP;
 
         const speedLevel = Math.floor(this.score / this.pace.SPEED_CHECK_SCORE);
@@ -1689,6 +1690,8 @@ const DefenseGameV2 = {
         
         // 依序點亮
         let idx = 0;
+        const ignitionInterval = this.challenge && Number.isFinite(this.currentAttack?.heavyIgnitionInterval)
+            ? this.currentAttack.heavyIgnitionInterval : 400;
         console.log(`開始點亮 ${dir} 方向的重擊，共 ${this.heavySequence.length} 個方塊`);
         
         this.lightIntervals[dir] = this.clock.setInterval(() => {
@@ -1728,7 +1731,7 @@ const DefenseGameV2 = {
                     }
                 }
             }
-        }, 400);
+        }, ignitionInterval);
     },
     
     launchHeavyProjectile: function(dir) {
