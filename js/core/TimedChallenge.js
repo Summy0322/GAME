@@ -43,6 +43,7 @@ window.TimedChallenge = {
         this.session = null;
         this.hud?.remove(); this.hud = null;
         this.hudParts = null;
+        this.memoryHudParts = null;
         document.getElementById('game-container')?.classList.remove('timed-challenge');
         document.getElementById('game-wrapper')?.classList.remove('challenge-active');
     },
@@ -130,10 +131,6 @@ window.TimedChallenge = {
     decorate(game) {
         if (!this.active) return;
         const root = game.container;
-        if (this.kind === 'memory') {
-            const card = game.grid.querySelector('.memory-card');
-            if (card) game.challengeCardBasis = {width:parseFloat(card.style.width),height:parseFloat(card.style.height),stageHeight:document.getElementById('game-wrapper').clientHeight};
-        }
         root.classList.add('night-challenge-game');
         if (this.kind === 'memory') { game.timeLeft=Math.ceil(this.remaining/1000);game.updateStats(); }
         const stage = this.kind === 'defense' ? game.stage : root.querySelector('.memory-stage');
@@ -151,12 +148,15 @@ window.TimedChallenge = {
         this.hud = document.createElement('div');
         this.hud.className = 'challenge-live-hud';
         this.hudParts = null;
-        if (this.kind === 'defense' && this.endless) {
+        this.memoryHudParts = null;
+        if (this.kind === 'defense') {
             root.classList.add('defense-endless-game');
             this.hud.classList.add('defense-endless-hud');
-            this.hud.innerHTML = `<div class="endless-score-card"><div class="endless-vitality"><span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/heart.png" alt="">').join('')}</span><span class="endless-mark" aria-hidden="true">∞</span></div><div class="endless-score-line"><strong class="endless-score-value"></strong><span>分</span></div></div><div class="endless-wave-card"><span class="endless-stage"></span><div class="endless-wave-line"><strong class="endless-wave-value"></strong><span>波</span></div><div class="endless-wave-ticks" aria-hidden="true">${'<i></i>'.repeat(10)}</div></div>`;
+            const vitality = this.endless ? `<span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/heart.png" alt="">').join('')}</span><span class="endless-mark" aria-hidden="true">∞</span>` : '<span class="defense-challenge-time"></span>';
+            this.hud.innerHTML = `<div class="endless-score-card"><div class="endless-vitality">${vitality}</div><div class="endless-score-line"><strong class="endless-score-value"></strong><span>分</span></div></div><div class="endless-wave-card"><span class="endless-stage"></span><div class="endless-wave-line"><strong class="endless-wave-value"></strong><span>波</span></div><div class="endless-wave-ticks" aria-hidden="true" ${this.endless?'':'hidden'}>${'<i></i>'.repeat(10)}</div></div>`;
             this.hudParts = {
                 hearts:this.hud.querySelector('.challenge-hearts'),
+                time:this.hud.querySelector('.defense-challenge-time'),
                 score:this.hud.querySelector('.endless-score-value'),
                 stage:this.hud.querySelector('.endless-stage'),
                 wave:this.hud.querySelector('.endless-wave-value'),
@@ -168,7 +168,18 @@ window.TimedChallenge = {
                 this.hud.querySelector('.endless-wave-card').appendChild(meter);
             }
         }
-        root.appendChild(this.hud);
+        if (this.kind === 'memory') {
+            this.hud.classList.add('memory-challenge-hud');
+            const vitality = this.endless ? `<span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/heart.png" alt="">').join('')}</span>` : '<strong class="memory-challenge-time"></strong>';
+            this.hud.innerHTML = `<span class="memory-challenge-vitality">${vitality}</span><span class="memory-challenge-score"><strong></strong><small>分</small></span><span class="memory-challenge-board"></span>`;
+            this.memoryHudParts = {hearts:this.hud.querySelector('.challenge-hearts'),time:this.hud.querySelector('.memory-challenge-time'),score:this.hud.querySelector('.memory-challenge-score strong'),board:this.hud.querySelector('.memory-challenge-board')};
+            root.querySelector('.memory-hud').prepend(this.hud);
+            // 先按完整資訊欄計算卡片，再記下基準；不在翻牌期間重新量測版面。
+            game.challengeCardBasis = null;
+            game.adjustCardSize();
+            const card = game.grid.querySelector('.memory-card');
+            if (card) game.challengeCardBasis = {width:parseFloat(card.style.width),height:parseFloat(card.style.height),stageHeight:document.getElementById('game-wrapper').clientHeight};
+        } else root.appendChild(this.hud);
         this.updateHUD();
     },
     ready(game) {
@@ -176,7 +187,6 @@ window.TimedChallenge = {
         this.game = game;
         if (this.kind === 'defense') this.decorate(game);
         const clock = this.kind === 'defense' ? game.clock : game.session.clock;
-        this.game = game;
         this.lastTick = clock.now();
         this.liveClock = clock;
         this.liveTimer = clock.setInterval(() => this.consumeTime(),100);
@@ -195,20 +205,42 @@ window.TimedChallenge = {
     },
     updateHUD() {
         if (!this.hud) return;
-        if (this.endless && this.kind === 'defense' && this.hudParts) {
+        if (this.kind === 'memory' && this.memoryHudParts) {
+            const parts = this.memoryHudParts;
+            if (parts.hearts) {
+                parts.hearts.setAttribute('aria-label',`剩餘 ${this.lives} 條命`);
+                [...parts.hearts.children].forEach((heart,index)=>heart.classList.toggle('heart-lost',index>=this.lives));
+            }
+            for (const [node,value] of [[parts.time,`${Math.ceil(this.remaining/1000)} 秒`],[parts.score,this.displayScore(this.score)],[parts.board,`第 ${this.boards+1} 盤`]]) {
+                if (node && node.textContent !== value) node.textContent = value;
+            }
+            parts.score.title = `${this.score.toLocaleString('zh-TW')} 分`;
+            this.hud.classList.toggle('challenge-time-warning',this.endless ? this.lives===1 : this.remaining<=10000);
+            return;
+        }
+        if (this.kind === 'defense' && this.hudParts) {
             const wave = Math.max(1,this.game?.waveNumber || 1);
             const stage = Math.floor((wave-1)/10)+1;
             const parts = this.hudParts;
-            parts.hearts.setAttribute('aria-label',`剩餘 ${this.lives} 條命`);
-            [...parts.hearts.children].forEach((heart,index)=>heart.classList.toggle('heart-lost',index>=this.lives));
+            if (parts.hearts) {
+                parts.hearts.setAttribute('aria-label',`剩餘 ${this.lives} 條命`);
+                [...parts.hearts.children].forEach((heart,index)=>heart.classList.toggle('heart-lost',index>=this.lives));
+            }
+            if (parts.time) {
+                const text = `${Math.ceil(this.remaining/1000)} 秒`;
+                if (parts.time.textContent !== text) parts.time.textContent = text;
+            }
             const score = Math.max(0,this.score);
-            parts.score.textContent = score>=1e8 ? `${(score/1e8).toFixed(1)}億` : score>=1e5 ? `${(score/1e4).toFixed(1)}萬` : score.toLocaleString('zh-TW');
+            const scoreLabel = this.displayScore(score);
+            if (parts.score.textContent !== scoreLabel) parts.score.textContent = scoreLabel;
             parts.score.setAttribute('aria-label',`得分 ${score} 分`);
             parts.score.title = `${score.toLocaleString('zh-TW')} 分`;
-            parts.stage.textContent = `階段 ${String(stage).padStart(2,'0')}`;
-            parts.wave.textContent = wave.toLocaleString('zh-TW');
+            const stageLabel = this.endless ? `階段 ${String(stage).padStart(2,'0')}` : '連續防守';
+            if (parts.stage.textContent !== stageLabel) parts.stage.textContent = stageLabel;
+            const waveLabel = wave.toLocaleString('zh-TW');
+            if (parts.wave.textContent !== waveLabel) parts.wave.textContent = waveLabel;
             parts.ticks.forEach((tick,index)=>tick.classList.toggle('is-lit',index<=(wave-1)%10));
-            this.hud.classList.toggle('challenge-time-warning',this.lives===1);
+            this.hud.classList.toggle('challenge-time-warning',this.endless ? this.lives===1 : this.remaining<=10000);
             return;
         }
         if (this.endless) {
@@ -219,6 +251,9 @@ window.TimedChallenge = {
         }
         this.hud.textContent = `${Math.ceil(this.remaining/1000)} 秒　｜　${this.score} 分${this.kind === 'memory' ? `　｜　第 ${this.boards+1} 盤` : ''}`;
         this.hud.classList.toggle('challenge-time-warning',this.remaining<=10000);
+    },
+    displayScore(score) {
+        return score>=1e8 ? `${(score/1e8).toFixed(1)}億` : score>=1e5 ? `${(score/1e4).toFixed(1)}萬` : score.toLocaleString('zh-TW');
     },
     pauseDetail() {
         if (!this.active || !this.endless || this.kind !== 'defense') return '';

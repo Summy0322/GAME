@@ -434,7 +434,7 @@ const MemoryGameV2 = {
                 const imageUrl = imageMap[symbol];
                 if (imageUrl) {
                     // 有圖片 → 顯示圖片
-                    frontDiv.innerHTML = `<img src="${imageUrl}" alt="card" style="max-width:70%; max-height:70%; object-fit:contain;">`;
+                    frontDiv.innerHTML = `<img src="${imageUrl}" alt="card" decoding="async" draggable="false" style="max-width:70%; max-height:70%; object-fit:contain;">`;
                 } else {
                     // 沒圖片 → 顯示 emoji
                     frontDiv.innerHTML = symbol;
@@ -752,9 +752,9 @@ const MemoryGameV2 = {
     
     // 更新統計
     updateStats: function() {
-        if (this.matchedText) this.matchedText.innerText = this.matchedPairs;
-        if (this.timerText) this.timerText.innerText = this.timeLeft;
-        if (this.attemptsText) this.attemptsText.innerText = this.attemptsLeft;
+        for (const [node,value] of [[this.matchedText,this.matchedPairs],[this.timerText,this.timeLeft],[this.attemptsText,this.attemptsLeft]]) {
+            if (node && node.textContent !== String(value)) node.textContent = String(value);
+        }
     },
     
     // 調整卡片大小（以高度為基準，確保所有卡片在畫面內）

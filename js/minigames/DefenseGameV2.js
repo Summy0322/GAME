@@ -475,6 +475,7 @@ const DefenseGameV2 = {
         const resultBtnFontSize = Math.max(14, Math.min(24, 24 * this.scale));
         
         this.container = document.createElement('div');
+        this.container.className = 'defense-game-container';
         this.container.style.cssText = `
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1000; background: #000; overflow: hidden;

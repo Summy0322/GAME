@@ -1,0 +1,102 @@
+/* 遊玩介面共用視覺：暖色故事與藍色挑戰共用細框、削角及資訊層級。 */
+.defense-game-container,.memory-game-container,.interact-container,.payment-container {
+    --play-surface:#f8f0e2f5;--play-deep:#e9dcc5;--play-ink:#4d4c3e;
+    --play-muted:#79715c;--play-border:#b4a180;--play-accent:#8d6940;
+    --play-radius:14px 5px 14px 5px;
+    font-variant-numeric:tabular-nums;
+}
+.night-challenge-game {
+    --play-surface:var(--challenge-dark);--play-deep:var(--challenge-light);--play-ink:var(--challenge-ink);
+    --play-muted:var(--challenge-soft);--play-border:var(--challenge-border);--play-accent:var(--challenge-accent);
+}
+/* 浮在場景上的資訊採深色底，面積由文字自然決定。 */
+.defense-game-container #defense-msg,.defense-game-container #defense-combo,.defense-game-container #defense-wave-progress {
+    background:#203c53e8!important;color:#e5f4fc!important;border:1px solid #96c6d766;
+    border-radius:12px 4px 12px 4px!important;box-shadow:inset 0 1px #d5f3ff18,0 3px 10px #06182633;
+    font-size:clamp(11px,2.8cqh,18px)!important;font-weight:500!important;
+    line-height:1.35;text-shadow:none!important;padding:5px 9px!important;
+}
+.defense-game-container #defense-msg { max-width:32cqw; }
+.defense-game-container .defense-status-panel { max-width:32%; }
+.defense-game-container .defense-controls-hint { left:50%!important;width:auto!important;max-width:70%;transform:translateX(-50%);border:1px solid #96c6d744;border-radius:8px 3px 8px 3px;background:#203c53d9!important;color:#d0e5ef!important;padding:4px 8px!important;font-size:clamp(9px,2.3cqh,15px)!important; }
+.defense-game-container #defense-wait-meter {
+    border:1px solid #96c6d755;border-radius:10px 4px 10px 4px;background:#203c53e8;color:#d3eaf4;
+}
+.defense-endless-hud #defense-wait-meter { border:0;border-top:1px solid #a7d9e944;border-radius:0;background:none; }
+/* 配對資訊留在面板內，不蓋在卡片上。取消多層背景模糊，降低翻牌合成負擔。 */
+.memory-game-container .memory-panel {
+    box-sizing:border-box;border:1px solid var(--play-border);border-radius:var(--play-radius);
+    background-image:linear-gradient(145deg,var(--play-surface),var(--play-deep));
+    box-shadow:inset 0 1px #ffffff55,0 6px 18px #15202a33;
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.memory-game-container .memory-top-bar {
+    background-image:none;background:var(--play-surface);border:1px solid var(--play-border);
+    border-radius:10px 4px 10px 4px;padding:5px 10px;gap:8px;
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.memory-game-container .memory-info-item { font-size:clamp(11px,2.5cqh,17px);color:var(--play-ink); }
+.memory-game-container .memory-timer-large,.memory-game-container .memory-attempts-large {
+    border-radius:8px 3px 8px 3px;padding:3px 8px;background:var(--play-deep);border-color:var(--play-border);gap:4px;
+}
+.memory-game-container #memory-timer,.memory-game-container #memory-attempts {
+    font-size:clamp(21px,5cqh,33px);letter-spacing:0;text-shadow:none;color:var(--play-ink);font-family:inherit;
+}
+.memory-game-container .memory-timer-label,.memory-game-container .memory-attempts-label { font-size:clamp(11px,2.5cqh,16px);color:var(--play-muted); }
+.memory-game-container .memory-status { background:var(--play-deep);border:1px solid var(--play-border);border-radius:8px 3px 8px 3px;color:var(--play-ink); }
+.memory-game-container .memory-card { touch-action:manipulation; }
+.memory-game-container .memory-card-inner {
+    transition:transform .3s cubic-bezier(.2,.65,.3,1);will-change:transform;
+    box-shadow:0 2px 5px #16263629;
+}
+.memory-game-container .memory-card-face { -webkit-backface-visibility:hidden;backface-visibility:hidden;border-width:1px;border-color:var(--play-border);border-radius:10px; }
+.memory-game-container .memory-card-front img { user-select:none;-webkit-user-drag:none; }
+#game-wrapper.challenge-active .memory-game-container .challenge-live-hud.memory-challenge-hud {
+    position:static;inset:auto;transform:none;box-sizing:border-box;width:100%;padding:0 4px 6px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:none;border:0;border-radius:0;white-space:nowrap;font-size:clamp(12px,2.8cqh,20px);
+}
+.memory-challenge-hud .challenge-hearts { margin:0;gap:4px; }
+.memory-challenge-hud .challenge-hearts img { width:clamp(13px,3.5cqh,22px);height:clamp(13px,3.5cqh,22px); }
+.memory-challenge-score { display:flex;align-items:baseline;gap:5px; }
+.memory-challenge-score strong { font-size:clamp(19px,4.8cqh,30px);font-weight:600; }
+.memory-challenge-score small,.memory-challenge-board { color:var(--play-muted);font-size:clamp(10px,2.5cqh,17px); }
+.defense-challenge-time { font-size:clamp(11px,2.7cqh,16px);color:#bddbe9; }
+.endless-wave-ticks[hidden] { display:none; }
+/* 第三章保留拖曳區的位置及大小，只統一框線與材質。 */
+.interact-panel { background:linear-gradient(145deg,var(--play-surface),var(--play-deep)); }
+.interact-title {
+    color:var(--play-ink);font-weight:500;text-shadow:none;
+    border-bottom:1px solid var(--play-border);padding-bottom:8px;
+}
+.interact-game-area,.interact-drop-zone { border-radius:var(--play-radius);border-color:var(--play-border);background:#efe4d03d; }
+.interact-drop-zone { backdrop-filter:none;transition:background-color .15s,border-color .15s,box-shadow .15s; }
+.interact-drag-item { border:1px solid var(--play-border);border-radius:12px 4px 12px 4px;box-shadow:0 3px 8px #16263622; }
+.interact-progress-bar { height:6px;background:#b4a18040; }
+.interact-progress-fill { background:linear-gradient(90deg,#b99b6c,#8d6940); }
+.interact-message { color:var(--play-accent);font-weight:500;font-size:22px;line-height:1.3; }
+.interact-close-btn,.payment-close-btn { border-radius:10px 4px 10px 4px!important;background:#786d59!important;border:1px solid #aa9d83!important;box-shadow:inset 0 1px #ffffff22; }
+.knowledge-card,.payment-panel { border:1px solid #b4a180!important;border-radius:14px 5px 14px 5px!important;background:linear-gradient(145deg,#f8f0e2,#e9dcc5)!important;box-shadow:0 10px 30px #16263644!important; }
+.payment-title { color:var(--play-ink)!important;font-weight:500; }
+.payment-amount { background:var(--play-deep)!important;color:var(--play-ink)!important;border:1px solid var(--play-border);border-radius:10px 4px 10px 4px!important; }
+.payment-coins-area,.payment-payment-area { border:1px solid var(--play-border)!important;border-radius:var(--play-radius)!important;background:#efe4d080!important; }
+.payment-header { border-bottom:1px solid var(--play-border);padding-bottom:8px; }
+.payment-panel { width:1000px!important;max-width:none!important;max-height:none!important;box-sizing:border-box;flex-shrink:0; }
+.payment-zone-label,.payment-boss-text,.payment-hint,.payment-message { font-size:24px!important;line-height:1.35; }
+.payment-message { min-height:32px!important;margin-top:8px!important; }
+.payment-close-btn,.interact-close-btn { font-size:24px!important; }
+.collection-money-display { background:#203c53e8!important;color:#e5f4fc!important;border:1px solid #96c6d766;border-radius:12px 4px 12px 4px!important;box-shadow:inset 0 1px #d5f3ff18; }
+.collection-items-bar { background:#f8f0e2f2!important;border-bottom:1px solid #b4a180; }
+.collection-item-slot { border:1px solid #b4a180!important;border-radius:10px 4px 10px 4px!important; }
+.collection-complete-btn { border:1px solid #b4a180!important;border-radius:12px 4px 12px 4px!important;box-shadow:inset 0 1px #ffffff33; }
+/* 問答沿用原本四選一幾何與命中區。 */
+#options-container.quiz-options button { border:1px solid #b4a180;border-radius:12px 4px 12px 4px;background:linear-gradient(145deg,#f8f0e2,#e9dcc5);color:#4d4c3e;box-shadow:inset 0 1px #fff8,0 3px 8px #16263622; }
+#options-container.quiz-options button:hover { background:#e2d0af; }
+.defense-game-container #result-btn,.memory-game-container #memory-result-btn {
+    border:1px solid #acbfae!important;border-radius:12px 4px 12px 4px!important;background:linear-gradient(145deg,#536e70,#334b55)!important;
+    box-shadow:inset 0 1px #ffffff33;color:#f1f8fa!important;font-weight:500!important;
+}
+@media (prefers-reduced-motion:reduce) {
+    .memory-game-container .memory-card-inner { transition-duration:.01ms; }
+    .memory-game-container .memory-card { transition-duration:.01ms; }
+}
