@@ -42,6 +42,7 @@ window.TimedChallenge = {
         this.session?.dispose();
         this.session = null;
         this.hud?.remove(); this.hud = null;
+        this.hudParts = null;
         document.getElementById('game-container')?.classList.remove('timed-challenge');
         document.getElementById('game-wrapper')?.classList.remove('challenge-active');
     },
@@ -149,11 +150,25 @@ window.TimedChallenge = {
         this.hud?.remove();
         this.hud = document.createElement('div');
         this.hud.className = 'challenge-live-hud';
+        this.hudParts = null;
+        if (this.kind === 'defense' && this.endless) {
+            root.classList.add('defense-endless-game');
+            this.hud.classList.add('defense-endless-hud');
+            this.hud.innerHTML = `<div class="endless-score-card"><div class="endless-vitality"><span class="challenge-hearts" role="img">${[0,1,2].map(()=>'<img src="assets/images/heart.png" alt="">').join('')}</span><span class="endless-mark" aria-hidden="true">∞</span></div><div class="endless-score-line"><strong class="endless-score-value"></strong><span>分</span></div></div><div class="endless-wave-card"><span class="endless-stage"></span><div class="endless-wave-line"><strong class="endless-wave-value"></strong><span>波</span></div><div class="endless-wave-ticks" aria-hidden="true">${'<i></i>'.repeat(10)}</div></div>`;
+            this.hudParts = {
+                hearts:this.hud.querySelector('.challenge-hearts'),
+                score:this.hud.querySelector('.endless-score-value'),
+                stage:this.hud.querySelector('.endless-stage'),
+                wave:this.hud.querySelector('.endless-wave-value'),
+                ticks:[...this.hud.querySelectorAll('.endless-wave-ticks i')]
+            };
+        }
         root.appendChild(this.hud);
         this.updateHUD();
     },
     ready(game) {
         if (!this.active || game.challenge !== this) return;
+        this.game = game;
         if (this.kind === 'defense') this.decorate(game);
         const clock = this.kind === 'defense' ? game.clock : game.session.clock;
         this.game = game;
@@ -175,6 +190,22 @@ window.TimedChallenge = {
     },
     updateHUD() {
         if (!this.hud) return;
+        if (this.endless && this.kind === 'defense' && this.hudParts) {
+            const wave = Math.max(1,this.game?.waveNumber || 1);
+            const stage = Math.floor((wave-1)/10)+1;
+            const parts = this.hudParts;
+            parts.hearts.setAttribute('aria-label',`剩餘 ${this.lives} 條命`);
+            [...parts.hearts.children].forEach((heart,index)=>heart.classList.toggle('heart-lost',index>=this.lives));
+            const score = Math.max(0,this.score);
+            parts.score.textContent = score>=1e8 ? `${(score/1e8).toFixed(1)}億` : score>=1e5 ? `${(score/1e4).toFixed(1)}萬` : score.toLocaleString('zh-TW');
+            parts.score.setAttribute('aria-label',`得分 ${score} 分`);
+            parts.score.title = `${score.toLocaleString('zh-TW')} 分`;
+            parts.stage.textContent = `階段 ${String(stage).padStart(2,'0')}`;
+            parts.wave.textContent = wave.toLocaleString('zh-TW');
+            parts.ticks.forEach((tick,index)=>tick.classList.toggle('is-lit',index<=(wave-1)%10));
+            this.hud.classList.toggle('challenge-time-warning',this.lives===1);
+            return;
+        }
         if (this.endless) {
             const stage = this.kind === 'memory' ? this.boards+1 : Math.floor(Math.max(0,(this.game?.waveNumber || 1)-1)/10)+1;
             this.hud.innerHTML = `<span class="challenge-hearts" role="img" aria-label="剩餘 ${this.lives} 條命">${[0,1,2].map(i=>`<img src="assets/images/heart.png" alt="" class="${i<this.lives?'':'heart-lost'}">`).join('')}</span><span>${this.score} 分 · ${Math.floor((this.elapsed || 0)/1000)} 秒 · ${this.kind === 'memory' ? `第 ${stage} 盤` : `階段 ${stage}`}</span>`;
@@ -183,6 +214,11 @@ window.TimedChallenge = {
         }
         this.hud.textContent = `${Math.ceil(this.remaining/1000)} 秒　｜　${this.score} 分${this.kind === 'memory' ? `　｜　第 ${this.boards+1} 盤` : ''}`;
         this.hud.classList.toggle('challenge-time-warning',this.remaining<=10000);
+    },
+    pauseDetail() {
+        if (!this.active || !this.endless || this.kind !== 'defense') return '';
+        const seconds = Math.floor((this.elapsed || 0)/1000);
+        return `存活 ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}　·　得分 ${this.score.toLocaleString('zh-TW')} 分`;
     },
     nextAttack(game) {
         const elapsed = 90000-this.remaining;

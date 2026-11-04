@@ -80,3 +80,36 @@
 #challenge-lobby-title { font-size:clamp(22px,5cqh,38px); }
 #challenge-lobby-copy { font-size:clamp(12px,2.8cqh,20px); }
 @media (max-height:400px) { #challenge-lobby .challenge-blue-window { padding:2cqh 3cqw;width:80%; } #challenge-lobby p { margin:1cqh 0; } #challenge-lobby .challenge-window-actions { margin-top:1.5cqh; } }
+
+/* 無限防守：資訊分居兩角，中央與四方向目標保留完整視線。 */
+#game-wrapper.challenge-active .challenge-live-hud.defense-endless-hud {
+    inset:0;left:0;top:0;width:100%;height:100%;box-sizing:border-box;
+    transform:none;padding:0;border:0;border-radius:0;background:none;pointer-events:none;
+    font-variant-numeric:tabular-nums;
+}
+.defense-endless-game #defense-wave-progress { display:none; }
+.endless-score-card,.endless-wave-card {
+    position:absolute;top:2%;width:clamp(84px,11cqw,118px);box-sizing:border-box;
+    padding:7px 9px;border:1px solid #9dcddd66;border-radius:12px 4px 12px 4px;
+    background:linear-gradient(145deg,#31566bd9,#122d42d9);
+    box-shadow:inset 0 1px #d5f3ff18,0 3px 10px #06182633;
+    color:#e5f4fc;text-align:left;
+}
+.endless-score-card { left:2%; }
+.endless-wave-card { right:2%; }
+.endless-vitality { display:flex;align-items:center;justify-content:space-between;gap:4px; }
+.defense-endless-hud .challenge-hearts { gap:3px;margin:0; }
+.defense-endless-hud .challenge-hearts img { width:clamp(12px,3cqh,17px);height:clamp(12px,3cqh,17px); }
+.endless-mark { font-size:14px;line-height:1;color:#9dcddd99; }
+.endless-score-line,.endless-wave-line { display:flex;align-items:baseline;gap:4px;margin-top:4px; }
+.endless-score-value,.endless-wave-value { font-size:clamp(18px,4.5cqh,26px);line-height:1.1;font-weight:600;letter-spacing:-.025em; }
+.endless-score-line>span,.endless-wave-line>span { font-size:clamp(9px,2cqh,12px);color:#a5c9da; }
+.endless-stage { display:block;font-size:clamp(9px,2cqh,12px);line-height:1;letter-spacing:.08em;color:#b8d8e6; }
+.endless-wave-line { margin-top:3px; }
+.endless-wave-ticks { display:flex;gap:2px;margin-top:5px; }
+.endless-wave-ticks i { height:3px;flex:1;min-width:0;border-radius:1px;background:#adcddd28; }
+.endless-wave-ticks i.is-lit { background:#a7d9e9; }
+.defense-endless-hud.challenge-time-warning .endless-score-card { border-color:#f4bb8caa; }
+.defense-endless-hud.challenge-time-warning .endless-mark { color:#f4bb8c; }
+#game-pause-detail { margin:0;max-width:90%;font-size:clamp(13px,3cqh,21px);line-height:1.6;color:#bdd9e8;font-variant-numeric:tabular-nums;text-align:center; }
+#game-pause-detail[hidden] { display:none; }
