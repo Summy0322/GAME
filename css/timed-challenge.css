@@ -113,3 +113,10 @@
 .defense-endless-hud.challenge-time-warning .endless-mark { color:#f4bb8c; }
 #game-pause-detail { margin:0;max-width:90%;font-size:clamp(13px,3cqh,21px);line-height:1.6;color:#bdd9e8;font-variant-numeric:tabular-nums;text-align:center; }
 #game-pause-detail[hidden] { display:none; }
+.defense-endless-hud #defense-wait-meter {
+    position:static;width:100%;margin:6px 0 0;padding:5px 0 0;
+    border-top:1px solid #a7d9e944;border-radius:0;background:none;
+    font-size:clamp(9px,2cqh,12px);line-height:1.2;color:#c2e4ef;white-space:normal;
+}
+.defense-endless-hud .defense-wait-track { height:3px;margin-top:4px;background:#adcddd28; }
+.defense-endless-hud .defense-wait-fill { background:#a7d9e9; }

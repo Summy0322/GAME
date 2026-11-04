@@ -423,8 +423,10 @@ window.DefenseAttackRunnerMixin = {
             return;
         }
 
+        const session = this.sessionId;
         console.log(`設定攻擊計時器，等待 ${wait}ms`);
         const timer = this.clock.setTimeout(() => {
+            if (!this.gameActive || session !== this.sessionId || attack !== this.currentAttack || attack.finished) return;
             if (
                 (this.state === this.states.NORMAL || this.state === this.states.MULTI) &&
                 this.currentAttack &&
@@ -470,8 +472,8 @@ window.DefenseAttackRunnerMixin = {
 
         if (this.aoeTimers) {
             this.aoeTimers.forEach((t) => {
-                if (t) this.clock.clearTimeout(t);
-                if (t) this.clock.clearInterval(t);
+                if (t) this.clock.clearTimeout(t.id ?? t);
+                if (t) this.clock.clearInterval(t.id ?? t);
             });
             this.aoeTimers = [];
         }
@@ -509,7 +511,7 @@ window.DefenseAttackRunnerMixin = {
 
         const session = this.sessionId;
         this.clock.setTimeout(() => {
-            if (session !== this.sessionId) return;
+            if (!this.gameActive || session !== this.sessionId || this.currentAttack !== attack) return;
             this.processNextAttack();
         }, gap);
     }

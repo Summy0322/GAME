@@ -40,7 +40,7 @@ test('leaving an endless game invalidates a pending death callback',()=>{
 test('real defense mistake reporting deducts only one life for multiple errors in the same attack',()=>{
  const f=fixture();f.context.DefenseLevels=f.window.DefenseLevels;vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),f.context);
  const c=f.c,g=f.window.DefenseGameV2;c.variant='endless';c.lives=3;c.liveClock=f.clock();
- Object.assign(g,{challenge:c,mistakes:0,currentAttack:{}});
+ Object.assign(g,{challenge:c,gameActive:true,mistakes:0,currentAttack:{}});c.kind='defense';c.game=g;
  g.recordMistake();g.recordMistake();assert.equal(g.mistakes,2);assert.equal(c.lives,2);
  g.currentAttack={};g.recordMistake();assert.equal(c.lives,1);
 });
@@ -95,13 +95,15 @@ test('actual heavy sequence uses captured challenge ignition interval; story sta
    currentAttack:{heavyIgnitionInterval:scenario.story?100:c.defenseSpeed(scenario.stage||0,scenario.elapsed||0).ignition},
    scaledSizes:{heavySequence:40},scaledPositions:{up:{x:0,y:-200}},stage:{appendChild(){},getBoundingClientRect(){return {width:844,height:390};}},
    levelConfig:{},heavySequence:[],lightIntervals:{},hideShields(){},startHeavyBlockBounce(){lit.push(clock.now());},stopAllHeavyBlocksBounce(){},setState(state){this.state=state;},launchHeavyProjectile(){launched++;}});
-  g.spawnHeavySequence('up');f.tick(scenario.interval-1);assert.equal(lit.length,0);f.tick(1);assert.equal(lit.length,1);
+  g.spawnHeavySequence('up');const oldIgnition=g.lightIntervals.up;f.tick(scenario.interval-1);assert.equal(lit.length,0);f.tick(1);assert.equal(lit.length,1);
   // 中途修改下一波參數，正在點燃的序列仍維持本波速度。
   g.currentAttack.heavyIgnitionInterval=999;
   clock.pause();f.tick(5000);assert.equal(lit.length,1);clock.resume();f.tick(scenario.interval*4);
   assert.equal(lit.length,5);assert.equal(launched,1);assert.equal(lit[4]-lit[0],scenario.interval*4);
   g.currentAttack.challengeGap=120;
   if(scenario.story)assert.notEqual(g.getCurrentGap(),120);else assert.equal(g.getCurrentGap(),120);
+  g.currentAttack={heavyIgnitionInterval:scenario.interval};g.state=g.states.HEAVY_CHARGING;g.spawnHeavySequence('up');
+  const nextIgnition=g.lightIntervals.up;oldIgnition.callback();assert.equal(g.lightIntervals.up,nextIgnition);assert.equal(clock.jobs.has(nextIgnition),true);
  }
 });
 

@@ -162,6 +162,11 @@ window.TimedChallenge = {
                 wave:this.hud.querySelector('.endless-wave-value'),
                 ticks:[...this.hud.querySelectorAll('.endless-wave-ticks i')]
             };
+            const meter = root.querySelector('#defense-wait-meter');
+            if (meter) {
+                meter.querySelector('span').textContent = '避開石頭';
+                this.hud.querySelector('.endless-wave-card').appendChild(meter);
+            }
         }
         root.appendChild(this.hud);
         this.updateHUD();
@@ -274,6 +279,7 @@ window.TimedChallenge = {
     penalty() { if(this.active){this.penalties++;this.score=Math.max(0,this.score-10);this.updateHUD();} },
     loseLife(attack) {
         if (!this.active || !this.endless || this.ending) return;
+        if (this.kind === 'defense' && (!attack || attack !== this.game?.currentAttack || attack.finished)) return;
         if (attack && this.damagedAttack === attack) return;
         this.damagedAttack = attack || null;
         this.lives = Math.max(0,this.lives-1);

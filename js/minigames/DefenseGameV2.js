@@ -208,6 +208,7 @@ const DefenseGameV2 = {
     
     // ========== 初始化 ==========
     start: function(options) {
+        this.touchGesture = null;
         this.pauseClock?.dispose();
         // ✅ 加入這兩行
         this.sessionId = (this.sessionId || 0) + 1;
@@ -331,6 +332,7 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function (options = {}) {
+        this.touchGesture = null;
         this.hideShields();
         window.GamePause?.end(this);
         this.pauseClock?.dispose();
@@ -726,16 +728,19 @@ const DefenseGameV2 = {
         });
     },
     
-    handleSwipe: function(dir) {
+    handleSwipe: function(dir, inputAttack = this.currentAttack, inputSession = this.sessionId) {
         if (window.GamePause?.paused) return;
         if (!this.gameActive) return;
+        if (!inputAttack || inputAttack !== this.currentAttack || inputSession !== this.sessionId || inputAttack.finished || inputAttack.resolved) return;
+        if (![this.states.NORMAL,this.states.MULTI,this.states.MULTI_MIXED,this.states.DECOY,this.states.HEAVY_CHARGING,this.states.HEAVY_FLYING].includes(this.state)) return;
         
         if (this.state === this.states.AOE_ACTIVE) {
             console.log('AOE 模式，忽略滑動');
             return;
         }
         
-        if (this.clock.now() - this.lastSwipeTime < 200) return;
+        // 挑戰模式的獨立手勢不可被固定冷卻吞掉；每題自己排除重複方向。
+        if (!this.challenge && this.clock.now() - this.lastSwipeTime < 200) return;
         this.lastSwipeTime = this.clock.now();
         if (this.levelConfig.flow && (this.state === this.states.MULTI || this.state === this.states.MULTI_MIXED)) {
             this.handleFlowSwipe(dir);
@@ -775,6 +780,8 @@ const DefenseGameV2 = {
             
             // ✅ 設定盾牌為啟用狀態
             this.isShieldActive = true;
+            this.shieldDirection = dir;
+            this.shieldActiveUntil = now + 500;
             
             // 盾牌持續 0.5 秒後消失
             this.clock.setTimeout(() => {
@@ -789,52 +796,7 @@ const DefenseGameV2 = {
             
             // ✅ 判斷格擋是否成功
             if (this.state === this.states.HEAVY_FLYING && this.heavyBlockReady) {
-                if (this.currentAttack.dir === dir) {
-                    // ✅ 格擋成功
-                    console.log(`✨ 重擊格擋成功！方向: ${dir}`);
-                    this.addScore(this.currentAttack.points || this.scoreTable.HEAVY);
-                    
-                    // ✅ 顯示格擋成功文字（使用現有動畫）
-                    const successText = document.createElement('div');
-                    successText.textContent = '✨ 完美格擋！ ✨';
-                    successText.style.cssText = `
-                        position: absolute;
-                        top: 35%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        color: #00ff88;
-                        font-size: 32px;
-                        font-weight: bold;
-                        text-shadow: 0 0 15px #00ff88;
-                        z-index: 150;
-                        white-space: nowrap;
-                        animation: defenseSuccessFloat 0.6s ease-out forwards;
-                        pointer-events: none;
-                    `;
-                    this.stage.appendChild(successText);
-                    this.clock.setTimeout(() => successText.remove(), 600);
-                    
-                    // 清除飛行中的方塊
-                    this.heavyProjectiles.forEach(p => p?.remove());
-                    this.heavyProjectiles = [];
-                    
-                    // 清除點亮間隔
-                    if (this.lightIntervals && this.lightIntervals[dir]) {
-                        this.clock.clearInterval(this.lightIntervals[dir]);
-                        this.lightIntervals[dir] = null;
-                    }
-                    
-                    // 清除重擊序列
-                    this.clearHeavySequence();
-                    
-                    // 結束攻擊
-                    this.finishAttack();
-                } else {
-                    // ❌ 方向錯誤，格擋失敗
-                    console.log(`❌ 重擊格擋失敗！方向錯誤: ${dir}，正確方向: ${this.currentAttack.dir}`);
-                    this.heavyBlockFailed('方向錯誤');
-                    this.finishAttack();
-                }
+                this.resolveHeavyBlock(dir,shieldAttack,shieldSession);
             } else {
                 // 在 CHARGING 狀態提前開盾
                 console.log(`🛡️ 提前開啟 ${dir} 方向防護罩（等待方塊飛行）`);
@@ -842,6 +804,7 @@ const DefenseGameV2 = {
                 
                 // ✅ 設定一個計時器，檢查方塊飛行時盾牌是否還在
                 const checkTimer = this.clock.setTimeout(() => {
+                    if (!this.gameActive || this.sessionId !== shieldSession || this.currentAttack !== shieldAttack || shieldAttack.finished || shieldAttack.resolved) return;
                     if (this.state === this.states.HEAVY_FLYING && this.heavyBlockReady && !this.isShieldActive) {
                         // 方塊開始飛了，但盾牌已經消失 → 格擋失敗
                         console.log(`💥 盾牌太早開啟，已消失，格擋失敗！`);
@@ -859,6 +822,7 @@ const DefenseGameV2 = {
         
         switch (this.state) {
             case this.states.NORMAL:
+                if (this.currentAttack?.correctHit) return;
                 if (!this.currentAttack) {
                     console.log('⚠️ currentAttack 為 null');
                     break;
@@ -1103,9 +1067,30 @@ const DefenseGameV2 = {
         }
     },
     
-    recordMistake: function() {
+    recordMistake: function(attack = this.currentAttack, session = this.sessionId) {
+        if (!this.gameActive || !attack || attack !== this.currentAttack || session !== this.sessionId || attack.finished) return;
         this.mistakes++;
-        this.challenge?.loseLife?.(this.currentAttack);
+        this.challenge?.loseLife?.(attack);
+    },
+
+    resolveHeavyBlock: function(dir, attack = this.currentAttack, session = this.sessionId) {
+        if (!this.gameActive || attack !== this.currentAttack || session !== this.sessionId || !attack || attack.finished || attack.resolved) return;
+        if (dir !== attack.dir) {
+            this.heavyBlockFailed('方向錯誤');
+            this.finishAttack();
+            return;
+        }
+        attack.resolved = true;
+        attack.successful = true;
+        this.addScore(attack.points || this.scoreTable.HEAVY);
+        const text = document.createElement('div');
+        text.textContent = '✨ 完美格擋！ ✨';
+        text.style.cssText = 'position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);color:#00ff88;font-size:32px;z-index:150;white-space:nowrap;pointer-events:none;animation:defenseSuccessFloat .6s ease-out forwards';
+        this.stage.appendChild(text);
+        this.clock.setTimeout(()=>text.remove(),600);
+        this.clearHeavySequence();
+        this.clearHeavyProjectiles();
+        this.finishAttack();
     },
 
     wrongDirection: function() {
@@ -1564,6 +1549,8 @@ const DefenseGameV2 = {
     
     // ========== 重擊 ==========
     spawnHeavySequence: function(dir) {
+        const attack = this.currentAttack;
+        const session = this.sessionId;
         this.hideShields();
         // ✅ 重置格擋準備狀態
         this.heavyBlockReady = false;
@@ -1694,12 +1681,10 @@ const DefenseGameV2 = {
             ? this.currentAttack.heavyIgnitionInterval : 400;
         console.log(`開始點亮 ${dir} 方向的重擊，共 ${this.heavySequence.length} 個方塊`);
         
-        this.lightIntervals[dir] = this.clock.setInterval(() => {
-            if (!this.gameActive || this.state !== this.states.HEAVY_CHARGING) {
-                if (this.lightIntervals[dir]) {
-                    this.clock.clearInterval(this.lightIntervals[dir]);
-                    this.lightIntervals[dir] = null;
-                }
+        const lightTimer = this.clock.setInterval(() => {
+            if (!this.gameActive || this.currentAttack !== attack || this.sessionId !== session || attack.finished || this.state !== this.states.HEAVY_CHARGING) {
+                this.clock.clearInterval(lightTimer);
+                if (this.lightIntervals[dir] === lightTimer) this.lightIntervals[dir] = null;
                 return;
             }
             if (idx < this.heavySequence.length) {
@@ -1732,6 +1717,7 @@ const DefenseGameV2 = {
                 }
             }
         }, ignitionInterval);
+        this.lightIntervals[dir] = lightTimer;
     },
     
     launchHeavyProjectile: function(dir) {
@@ -1740,6 +1726,11 @@ const DefenseGameV2 = {
         // ✅ 加入這行！定義 currentSession
         const currentSession = this.sessionId;
         const currentAttackRef = this.currentAttack;
+        // 即將發射時，仍在有效時間內且方向正確的盾牌已構成格擋。
+        if (this.isShieldActive && this.shieldActiveUntil > this.clock.now()) {
+            this.resolveHeavyBlock(this.shieldDirection,currentAttackRef,currentSession);
+            return;
+        }
 
         // ✅ 設定格擋準備狀態
         this.heavyBlockReady = true;
@@ -1830,6 +1821,8 @@ const DefenseGameV2 = {
     
     // ========== AOE ==========
     startAOE: function(wait) {
+        const attack = this.currentAttack;
+        const session = this.sessionId;
         console.log('startAOE 開始，等待時間:', wait);
         
         if (!wait || wait <= 0) {
@@ -1854,12 +1847,15 @@ const DefenseGameV2 = {
         
         // ✅ 延遲一點點再開始，讓 DOM 更新
         this.clock.setTimeout(() => {
-            this._startAOEMovement(wait);
+            if (!this.gameActive || this.currentAttack !== attack || this.sessionId !== session || attack.finished) return;
+            this._startAOEMovement(wait,attack,session);
         }, 50);
     },
 
     // ✅ 新增：真正開始 AOE 動畫的方法
-    _startAOEMovement: function(wait) {
+    _startAOEMovement: function(wait, attack = this.currentAttack, session = this.sessionId) {
+        const isCurrent = () => this.gameActive && this.sessionId === session && this.currentAttack === attack && !attack.finished;
+        if (!isCurrent() || this.state !== this.states.AOE_ACTIVE) return;
         const aoeUp = document.getElementById('aoe-up');
         const aoeDown = document.getElementById('aoe-down');
         const aoeLeft = document.getElementById('aoe-left');
@@ -1902,6 +1898,7 @@ const DefenseGameV2 = {
         this.aoeStartTime = this.clock.now();
         this.aoeDuration = wait;
         this.aoePushProgress = 0;
+        this.lastRotateTime = null;
         
         let finished = false;
         let animationId = null;
@@ -1909,7 +1906,7 @@ const DefenseGameV2 = {
         const duration = wait;
         
         const success = () => {
-            if (finished) return;
+            if (finished || !isCurrent()) return;
             finished = true;
             if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('✨ AOE 防禦成功！');
@@ -1920,7 +1917,7 @@ const DefenseGameV2 = {
         };
         
         const fail = () => {
-            if (finished) return;
+            if (finished || !isCurrent()) return;
             finished = true;
             if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('💥 AOE 攻擊命中！');
@@ -1935,7 +1932,7 @@ const DefenseGameV2 = {
         let smoothProgress = 0;
         
         const animate = () => {
-            if (finished || this.state !== this.states.AOE_ACTIVE) {
+            if (finished || !isCurrent() || this.state !== this.states.AOE_ACTIVE) {
                 return;
             }
             
@@ -1982,7 +1979,7 @@ const DefenseGameV2 = {
         
         // ✅ 延遲 100ms 再開始碰撞檢測，避免在動畫開始前就碰撞
         const collisionCheck = this.clock.setInterval(() => {
-            if (finished || this.state !== this.states.AOE_ACTIVE) {
+            if (finished || !isCurrent() || this.state !== this.states.AOE_ACTIVE) {
                 this.clock.clearInterval(collisionCheck);
                 return;
             }
@@ -2032,7 +2029,7 @@ const DefenseGameV2 = {
         }, 100);  // ✅ 延遲 100ms
         
         const successTimer = this.clock.setTimeout(() => {
-            if (!finished && this.state === this.states.AOE_ACTIVE) {
+            if (!finished && isCurrent() && this.state === this.states.AOE_ACTIVE) {
                 this.clock.clearInterval(collisionCheck);
                 success();
             }
@@ -2045,6 +2042,7 @@ const DefenseGameV2 = {
 
     handleRotate: function(e) {
         if (window.GamePause?.paused) return;
+        if (!this.gameActive || !this.currentAttack || this.currentAttack.finished) return;
         if (this.state !== this.states.AOE_ACTIVE) return;
         
         // ✅ 記錄最後旋轉時間

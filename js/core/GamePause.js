@@ -26,6 +26,7 @@ window.GamePause = {
             this.clock?.pause();
             this.owner.cancelDrag?.();
             if (this.kind === 'defense') {
+                this.owner.touchGesture = null;
                 this.owner.lastTrailX = this.owner.lastTrailY = null;
                 this.owner.touchStart = {x:0,y:0};
             }
