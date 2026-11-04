@@ -1198,6 +1198,7 @@ const MemoryGameV2 = {
      * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
      */
     stop: function (options = {}) {
+        this.challenge?.clearMemoryInterference?.(this);
         window.GamePause?.end(this);
         this.stopKnownHints();
         this.seenCards = new Set();
