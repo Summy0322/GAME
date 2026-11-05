@@ -19,7 +19,7 @@ window.DefenseAttackRunnerMixin = {
             if(enemy?.element){const badge=document.createElement('span');badge.className='defense-order-badge'+(dir==='up'?' is-top-target':'');badge.textContent=String(index+1);enemy.element.appendChild(badge);attack.orderBadges.push(badge);}
         });
         (attack.stoneDirs||[]).forEach(dir=>this.spawnEnemy(dir,false,true));
-        const node=document.createElement('div');node.className='defense-special-cue';node.setAttribute('role','status');this.container.appendChild(node);this.specialCue=node;
+        const node=document.createElement('div');node.className='defense-special-cue';node.setAttribute('role','status');node.hidden=true;this.container.appendChild(node);this.specialCue=node;
         const begin=()=>{
             attack.orderPhase='playing';
             if(attack.orderPreview)attack.orderBadges.forEach(badge=>badge.hidden=true);
@@ -51,7 +51,7 @@ window.DefenseAttackRunnerMixin = {
         if(attack.stoneDirs?.includes(dir)){
             this.addScore(this.scoreTable.MIXED_WRONG);this.missAttack('碰到石頭');this.closeTimedOutAttack(attack);return;
         }
-        if(dir!==attack.dirs[step]){this.showWarning(`先接第 ${step+1} 個目標！`);return;}
+        if(dir!==attack.dirs[step]){this.missAttack('順序錯誤');this.closeTimedOutAttack(attack);return;}
         this.clock.clearTimeout(attack.stepTimer);
         attack.pendingShots++;
         attack.specialStep=step+1;
@@ -334,8 +334,8 @@ window.DefenseAttackRunnerMixin = {
         this.msg.innerText = attack.text;
 
         const special=['ORDER'].includes(attack.type);
-        if(special)this.showSpecialNotice(attack);
-        const prepareTime = special?(this.challenge?.mode==='child'?1500:1100):(this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2)));
+        if(special){this.clearSpecialWave();this.challenge?.clearDefenseWind?.(this);}
+        const prepareTime = special?0:(this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2)));
 
         const session = this.sessionId;
         this.clock.setTimeout(() => {
