@@ -93,7 +93,7 @@ test('accelerated real challenge waves accept rapid and last-millisecond answers
         const attack=f.enter(type==='NORMAL'?{type,dir:'up',wait}:{type,dirs:type==='MULTI'?dirs:[...dirs,'right'],correctDirs:dirs,wrongDirs:['right'],wait});
         // 三個不同方向的有效手勢均可在最後 41ms 內送出；重複方向不重複計分。
         f.tick(wait-(type==='NORMAL'?1:41));
-        for(const dir of type==='NORMAL'?['up']:dirs){g.handleSwipe(dir);g.handleSwipe(dir);if(type!=='NORMAL'&&dir!=='down')f.tick(20);}
+        for(const dir of type==='NORMAL'?['up']:dirs){g.handleSwipe(dir);if(type!=='NORMAL'&&dir!=='down')f.tick(20);}
         f.tick(600+(type==='MULTI_MIXED'?g.levelConfig.flow.avoidHold:0));
         assert.equal(attack.finished,true,`${mode}/${stage}/${type}`);assert.equal(f.c.lives,3);assert.equal(g.mistakes,0);
     }
@@ -515,3 +515,47 @@ test('later levels mix learned mechanics from wave one without crossing teaching
         assert.equal(JSON.stringify(templates),before);
     }
 });
+
+function specialFixture(){
+ const f=fixture('adult',1,true),g=f.game;
+ const element=()=>({style:{},children:[],setAttribute(){},appendChild(n){this.children.push(n);},remove(){this.removed=true;}});
+ f.context.document.createElement=element;g.container=element();g.processNextAttack=()=>{g.next=(g.next||0)+1;};
+ g.spawnEnemy=(dir,decoy,wrong)=>g.enemies.push({dir,isWrong:wrong,element:element()});
+ g.challenge={endless:true,loseLife(){g.lost=(g.lost||0)+1;}};
+ return f;
+}
+test('ordered defense has full per-target deadlines and stops timeout immediately on a last-millisecond hit',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});
+ assert.deepEqual(g.enemies.map(e=>e.element.children[0].textContent),['1','2','3']);assert.equal(g.score,0);
+ for(const dir of a.dirs){f.tick(1899);g.handleSwipe(dir);}f.tick(600);
+ assert.equal(a.finished,true);assert.equal(a.successful,true);assert.equal(g.score,150);assert.equal(g.lost,undefined);assert.equal(g.specialCue,null);
+});
+test('memory preview blocks all swipes and has no answer deadline; hidden numbers never reappear at the next step',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],orderPreview:1600,wait:1900});
+ assert.equal(g.state,g.states.PREPARING);g.handleSwipe('up');assert.equal(g.score,0);f.tick(1599);assert.equal(a.orderPhase,'preview');assert.equal(g.lost,undefined);f.tick(1);assert.equal(a.orderPhase,'playing');assert.ok(a.orderBadges.every(b=>b.hidden));
+ const original=g.enemies.slice();f.tick(1899);g.handleSwipe('up');assert.equal(a.specialStep,1);assert.ok(a.orderBadges.every(b=>b.hidden));assert.deepEqual(g.enemies,original);assert.equal(g.lost,undefined);
+ f.tick(1899);g.handleSwipe('left');g.handleSwipe('down');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);
+});
+test('stone targets have no numbers; hitting a stone costs one life and closes this wave only once',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],stoneDirs:['right'],wait:1900});
+ assert.equal(g.enemies.length,4);assert.equal(g.enemies.find(e=>e.dir==='right').isWrong,true);assert.equal(g.enemies.find(e=>e.dir==='right').element.children.length,0);assert.equal(a.orderBadges.length,3);
+ g.handleSwipe('right');g.handleSwipe('right');g.handleSwipe('up');assert.equal(g.lost,1);assert.equal(a.resolved,true);f.tick(350);assert.equal(a.finished,true);f.tick(3000);assert.equal(g.lost,1);
+});
+test('memory and stone rules combine without revealing numbers or penalizing correct play',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],stoneDirs:['right'],orderPreview:1600,wait:1900});f.tick(1600);
+ g.handleSwipe('up');assert.ok(a.orderBadges.every(b=>b.hidden));g.handleSwipe('left');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);assert.equal(g.score,100);
+});
+test('ordered timeout deducts once and old hit or preview callbacks cannot alter a newer attack',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],wait:1900});f.tick(1900);assert.equal(g.lost,1);g.handleSwipe('up');f.tick(350);assert.equal(a.finished,true);assert.equal(g.lost,1);
+ for(const preview of [0,1600]){const stale=specialFixture(),old=stale.enter({type:'ORDER',dirs:['up','left'],wait:1900,orderPreview:preview});if(!preview)stale.game.handleSwipe('up');stale.game.currentAttack={type:'NORMAL',finished:false,resolved:false};stale.tick(10000);assert.equal(old.specialStep,preview?0:1);assert.equal(stale.game.lost,undefined);}
+});
+test('memory preview and each next answer timer pause, while input advances immediately',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],wait:1900,orderPreview:1600});f.tick(1500);g.pauseClock.pause();f.tick(10000);assert.equal(a.orderPhase,'preview');g.pauseClock.resume();f.tick(100);assert.equal(a.orderPhase,'playing');g.touchGesture={attack:a};g.handleSwipe('up');assert.equal(a.specialStep,1);assert.equal(g.touchGesture,null);f.tick(1800);g.pauseClock.pause();f.tick(10000);assert.equal(g.lost,undefined);g.pauseClock.resume();f.tick(99);g.handleSwipe('left');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);
+});
+test('all ordered variants accept three consecutive swipes before any projectile completes',()=>{
+ for(const preview of [0,1600])for(const stones of [[],['right']]){const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],stoneDirs:stones,orderPreview:preview,wait:1900});f.tick(preview);for(const dir of a.dirs)g.handleSwipe(dir);assert.equal(a.specialStep,3);assert.equal(a.pendingShots,3);assert.equal(a.finished,undefined);assert.equal(g.score,150);assert.equal(g.lost,undefined);f.tick(600);assert.equal(a.successful,true);assert.equal(a.finished,true);assert.equal(g.lost,undefined);}
+});
+test('out-of-order or duplicate hit callbacks cannot end a wave before every pending impact',()=>{
+ const f=specialFixture(),g=f.game,hits=[];g.launchProjectile=(dir,done)=>hits.push(done);const a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});g.handleSwipe('up');assert.equal(g.lost,undefined);g.handleSwipe('left');g.handleSwipe('down');hits[2]();hits[2]();assert.equal(a.pendingShots,2);assert.equal(a.finished,undefined);hits[0]();assert.equal(a.finished,undefined);hits[1]();assert.equal(a.finished,true);assert.equal(a.pendingShots,0);assert.equal(g.score,150);
+});
+test('wrong order or empty direction deducts once and closes the wave without retry lock',()=>{for(const dir of ['left','right']){const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});g.handleSwipe(dir);g.handleSwipe('up');g.handleSwipe(dir);assert.equal(g.lost,1);assert.equal(a.resolved,true);f.tick(350);assert.equal(a.finished,true);assert.equal(g.lost,1);assert.equal(g.specialCue,null);}});

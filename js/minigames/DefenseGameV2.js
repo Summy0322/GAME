@@ -332,6 +332,7 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function (options = {}) {
+        this.clearSpecialWave?.();
         this.challenge?.clearDefenseWind?.(this);
         this.touchGesture = null;
         this.hideShields();
@@ -735,6 +736,7 @@ const DefenseGameV2 = {
         if (!this.gameActive) return;
         if (this.challenge?.ending) return;
         if (!inputAttack || inputAttack !== this.currentAttack || inputSession !== this.sessionId || inputAttack.finished || inputAttack.resolved) return;
+        if(['ORDER'].includes(inputAttack.type)) {if(this.state===this.states.MULTI)this.handleSpecialSwipe(dir);return;}
         if (![this.states.NORMAL,this.states.MULTI,this.states.MULTI_MIXED,this.states.DECOY,this.states.HEAVY_CHARGING,this.states.HEAVY_FLYING].includes(this.state)) return;
         
         if (this.state === this.states.AOE_ACTIVE) {

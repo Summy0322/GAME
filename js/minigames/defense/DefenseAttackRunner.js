@@ -2,6 +2,71 @@
 // 攻擊序列與結束流程（由 DefenseGameV2 合併）
 
 window.DefenseAttackRunnerMixin = {
+    clearSpecialWave: function() {
+        this.specialNotice?.remove();this.specialCue?.remove();this.specialNotice=null;this.specialCue=null;
+    },
+    showSpecialNotice: function(attack) {
+        this.clearSpecialWave();
+        this.challenge?.clearDefenseWind?.(this);
+        const node=document.createElement('div');node.className='defense-special-notice';
+        node.textContent=attack.text;node.setAttribute('role','status');this.container.appendChild(node);this.specialNotice=node;
+    },
+    startOrderedWave: function(attack) {
+        attack.specialStep=0;attack.pendingShots=0;attack.orderBadges=[];attack.orderPhase='preview';
+        attack.dirs.forEach((dir,index)=>{
+            this.spawnEnemy(dir);
+            const enemy=this.enemies.find(e=>e.dir===dir);
+            if(enemy?.element){const badge=document.createElement('span');badge.className='defense-order-badge'+(dir==='up'?' is-top-target':'');badge.textContent=String(index+1);enemy.element.appendChild(badge);attack.orderBadges.push(badge);}
+        });
+        (attack.stoneDirs||[]).forEach(dir=>this.spawnEnemy(dir,false,true));
+        const node=document.createElement('div');node.className='defense-special-cue';node.setAttribute('role','status');node.hidden=true;this.container.appendChild(node);this.specialCue=node;
+        const begin=()=>{
+            attack.orderPhase='playing';
+            if(attack.orderPreview)attack.orderBadges.forEach(badge=>badge.hidden=true);
+            this.startSpecialStep(attack);
+        };
+        if(attack.orderPreview){
+            this.setState(this.states.PREPARING);this.touchGesture=null;this.showResponseProgress(0);
+            this.specialCue.textContent='先記住編號 · 稍後號碼會消失';
+            this.queueWaveCallback(begin,attack.orderPreview,attack);
+        }else begin();
+    },
+    startSpecialStep: function(attack) {
+        if(attack!==this.currentAttack||attack.finished||attack.resolved)return;
+        this.touchGesture=null;
+        const step=attack.specialStep||0;
+        attack.stepClosing=false;
+        this.setState(this.states.MULTI);
+        this.specialCue.textContent=`${attack.orderPreview?'記憶順序':'順序防守'} · 請接第 ${step+1} 個${attack.stoneDirs?.length?' · 避開石頭':''}`;
+        this.showResponseProgress(attack.wait);
+        attack.stepTimer=this.queueWaveCallback(()=>{
+            if(attack.specialStep!==step||attack.stepClosing)return;
+            attack.lossReason='順序目標漏接';
+            this.addScore(this.scoreTable.TIME_OUT_PENALTY);this.missAttack(attack.lossReason);this.closeTimedOutAttack(attack);
+        },attack.wait,attack);
+    },
+    handleSpecialSwipe: function(dir) {
+        const attack=this.currentAttack,step=attack.specialStep;
+        if(attack.orderPhase!=='playing'||attack.stepClosing||attack.resolved||attack.finished)return;
+        if(attack.stoneDirs?.includes(dir)){
+            this.addScore(this.scoreTable.MIXED_WRONG);this.missAttack('碰到石頭');this.closeTimedOutAttack(attack);return;
+        }
+        if(dir!==attack.dirs[step]){this.missAttack('順序錯誤');this.closeTimedOutAttack(attack);return;}
+        this.clock.clearTimeout(attack.stepTimer);
+        attack.pendingShots++;
+        attack.specialStep=step+1;
+        if(attack.specialStep<attack.dirs.length)this.startSpecialStep(attack);
+        else {attack.stepClosing=true;this.showResponseProgress(0);this.specialCue.textContent='全部接住！';}
+        this.addScore(this.scoreTable.MULTI,dir);
+        let hitDone=false;
+        this.launchProjectile(dir,()=>{
+            if(hitDone||!this.gameActive||attack!==this.currentAttack||attack.finished||attack.resolved)return;
+            hitDone=true;
+            attack.pendingShots--;
+            // 輸入立即前進；只有整波收尾才等待所有命中特效，與回呼抵達順序無關。
+            if(attack.specialStep===attack.dirs.length&&attack.pendingShots===0){attack.resolved=true;attack.successful=true;this.finishAttack();}
+        });
+    },
     buildAttackQueue: function(random = Math.random) {
         const queue = this.levelConfig.attackPatterns.map(attack => {
             const copy = {...attack, resolved:false};
@@ -268,7 +333,9 @@ window.DefenseAttackRunnerMixin = {
         this.setState(this.states.PREPARING);
         this.msg.innerText = attack.text;
 
-        const prepareTime = this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2));
+        const special=['ORDER'].includes(attack.type);
+        if(special){this.clearSpecialWave();this.challenge?.clearDefenseWind?.(this);}
+        const prepareTime = special?0:(this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2)));
 
         const session = this.sessionId;
         this.clock.setTimeout(() => {
@@ -292,8 +359,12 @@ window.DefenseAttackRunnerMixin = {
         this.clearProjectiles();
         this.showAvoidanceProgress(0);
         this.showResponseProgress(this.challenge?.endless && ['NORMAL','MULTI','MULTI_MIXED'].includes(attack.type) ? attack.wait : 0);
+        this.specialNotice?.remove();this.specialNotice=null;
+        if(!['ORDER'].includes(attack.type))this.clearSpecialWave();
 
         switch (attack.type) {
+            case 'ORDER':
+                this.startOrderedWave(attack);break;
             case 'END':
                 console.log('遊戲結束，準備結算');
                 this.setState(this.states.RESULT);
@@ -473,6 +544,7 @@ window.DefenseAttackRunnerMixin = {
         if (!this.gameActive || !attack || attack.finished) return;
         const successful = attack.successful || (attack.type === 'NORMAL' && attack.resolved && attack.correctHit);
         attack.finished = true;
+        this.clearSpecialWave?.();
         this.showAvoidanceProgress(0);
         this.showResponseProgress?.(0);
         this.clearAllTimers();

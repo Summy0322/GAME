@@ -272,3 +272,29 @@ test('repositioning the challenge panel preserves card size and resizing scales 
  g.adjustCardSize();assert.equal(cards[0].style.width,'100px');assert.equal(cards[0].style.height,'80px');
  stage.clientHeight=200;g.adjustCardSize();assert.equal(cards[0].style.width,'50px');assert.equal(cards[0].style.height,'40px');
 });
+
+test('ordered variants unlock gradually, remove relay, keep rotation and stay out of timed mode',()=>{
+ for(const mode of ['adult','child']){
+  const {c}=fixture();Object.assign(c,{kind:'defense',variant:'endless',mode});const game={levelConfig:{flow:{}}};
+  const expected={41:'visible',51:'visible',61:'memory',71:'visible',81:'stone',86:'memory',101:'memory-stone',106:'visible',111:'memory',116:'stone'};
+  for(const [wave,variant] of Object.entries(expected)){game.waveNumber=Number(wave)-1;const a=c.nextAttack(game);assert.equal(a.type,'ORDER');assert.equal(a.orderMode,variant);assert.equal(a.wait,mode==='child'?2600:1900);assert.equal(new Set(a.dirs).size,a.dirs.length);assert.equal(a.dirs.length,Number(wave)>=81?3:2);assert.equal(a.stoneDirs.length,variant.includes('stone')?1:0);assert.ok(a.stoneDirs.every(d=>!a.dirs.includes(d)));assert.equal(a.orderPreview,variant.startsWith('memory')?(mode==='child'?2200:1600):0);}
+  for(const wave of [40,60,80,100,120]){game.waveNumber=wave-1;assert.equal(c.nextAttack(game).type,'AOE');}
+  c.variant='timed';for(let i=0;i<20;i++){game.waveNumber=100;assert.notEqual(c.nextAttack(game).type,'ORDER');}
+ }
+});
+test('console order commands validate before changing state and select the requested practice variant',()=>{
+ const f=fixture(),calls=[];f.c.showInfo=(...args)=>calls.push(args);f.c.start=options=>calls.push(options);
+ assert.throws(()=>f.window.GameTest.order('typo'));assert.equal(calls.length,0);
+ f.window.GameTest.order();assert.equal(calls[1].practiceOrder,'visible');f.window.GameTest.order('memory');assert.equal(calls[3].practiceOrder,'memory');
+ assert.equal(f.window.GameTest.stop(),false);f.c.practiceOrder='memory';f.c.exit=()=>calls.push('exit');assert.equal(f.window.GameTest.stop(),true);assert.equal(calls.at(-1),'exit');
+});
+test('practice starts directly, repeats selected three-target variant, and normal start resets it',()=>{
+ const f=fixture();f.context.AbortController=AbortController;vm.runInContext(fs.readFileSync('js/core/MinigameSession.js','utf8'),f.context);f.context.showScene=()=>{};
+ f.window.GameEngine={stopMinigame(){}};f.window.ChallengeScenes={pickBackground:()=> 'background.png'};f.window.LoadingManager={showAndLoad(urls,ready){ready();}};f.window.GamePause={attach(){},end(){}};
+ let launches=0;f.c.launch=()=>launches++;f.c.kind='defense';f.c.variant='endless';f.c.start({practiceOrder:'memory'});assert.equal(launches,1);assert.equal(f.c.practiceOrder,'memory');assert.equal(f.c.replayPracticeOrder,'memory');
+ const game={levelConfig:{flow:{}}};for(const wave of [1,2,30,41,61,100]){game.waveNumber=wave-1;const a=f.c.nextAttack(game);assert.equal(a.type,'ORDER');assert.equal(a.orderMode,'memory');assert.equal(a.dirs.length,3);assert.ok(a.orderPreview>0);}
+ f.c.start();assert.equal(f.c.practiceOrder,null);assert.equal(f.c.replayPracticeOrder,null);assert.equal(launches,1);f.tick(3000);assert.equal(launches,2);
+});
+test('practice results never write best records; normal results still save',()=>{
+ for(const practice of [true,false]){const f=fixture();f.context.showScene=()=>{};f.window.GamePause={end(){}};Object.assign(f.c,{kind:'defense',variant:'endless',mode:'adult',practiceOrder:practice?'memory':null,game:{score:999,waveNumber:5,stop(){}}});f.c.finish();assert.equal(f.saved.size,practice?0:1);if(practice)assert.match(f.nodes.get('challenge-final-detail').textContent,/不保存紀錄/);}
+});
