@@ -272,3 +272,15 @@ test('repositioning the challenge panel preserves card size and resizing scales 
  g.adjustCardSize();assert.equal(cards[0].style.width,'100px');assert.equal(cards[0].style.height,'80px');
  stage.clientHeight=200;g.adjustCardSize();assert.equal(cards[0].style.width,'50px');assert.equal(cards[0].style.height,'40px');
 });
+
+test('endless special waves unlock gradually, alternate later, keep rotation anchors and never enter timed or story pools',()=>{
+ for(const mode of ['adult','child']){
+  const {c}=fixture();Object.assign(c,{kind:'defense',variant:'endless',mode});const game={levelConfig:{flow:{}}};
+  const types=[];for(const wave of [31,41,51,60,61,71,80,81,86,90,91,96]){game.waveNumber=wave-1;const a=c.nextAttack(game);types.push(a.type);
+   if(wave>=30&&wave%10===0)assert.equal(a.type,'AOE');
+   if(['RELAY','ORDER'].includes(a.type)){assert.equal(a.wait,mode==='child'?2600:1900);assert.equal(new Set(a.dirs).size,a.dirs.length);assert.ok(a.materials.enemyImage);if(a.type==='RELAY')assert.equal(a.batches.length,2);}
+  }
+  assert.deepEqual(types.slice(1,3),['RELAY','RELAY']);assert.equal(types[4],'ORDER');assert.equal(types[5],'RELAY');assert.equal(types[7],'ORDER');assert.equal(types[8],'RELAY');
+  c.variant='timed';for(let i=0;i<20;i++){game.waveNumber=80;assert.ok(!['RELAY','ORDER'].includes(c.nextAttack(game).type));}
+ }
+});

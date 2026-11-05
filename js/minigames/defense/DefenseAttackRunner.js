@@ -2,6 +2,61 @@
 // 攻擊序列與結束流程（由 DefenseGameV2 合併）
 
 window.DefenseAttackRunnerMixin = {
+    clearSpecialWave: function() {
+        this.specialNotice?.remove();this.specialCue?.remove();this.specialNotice=null;this.specialCue=null;
+    },
+    showSpecialNotice: function(attack) {
+        this.clearSpecialWave();
+        this.challenge?.clearDefenseWind?.(this);
+        const node=document.createElement('div');node.className='defense-special-notice';
+        node.textContent=attack.text;node.setAttribute('role','status');this.container.appendChild(node);this.specialNotice=node;
+    },
+    startSpecialStep: function(attack) {
+        if(attack!==this.currentAttack||attack.finished||attack.resolved)return;
+        this.clearEnemies();this.clearProjectiles();
+        this.touchGesture=null;
+        const step=attack.specialStep||0;
+        const dirs=attack.type==='RELAY'?attack.batches[step]:attack.dirs.slice(step);
+        attack.stepDirs=dirs;attack.stepHits=[];attack.pendingShots=0;attack.stepClosing=false;
+        this.setState(this.states.MULTI);
+        if(!this.specialCue){const node=document.createElement('div');node.className='defense-special-cue';node.setAttribute('role','status');this.container.appendChild(node);this.specialCue=node;}
+        this.specialCue.textContent=attack.type==='RELAY'?`接力防守 · 第 ${step+1}／${attack.batches.length} 批`:`順序防守 · 請接 ${step+1} 號`;
+        dirs.forEach((dir,index)=>{
+            this.spawnEnemy(dir);
+            if(attack.type==='ORDER'){
+                const enemy=this.enemies.find(e=>e.dir===dir);
+                if(enemy?.element){const badge=document.createElement('span');badge.className='defense-order-badge'+(dir==='up'?' is-top-target':'');badge.textContent=String(step+index+1);enemy.element.appendChild(badge);}
+            }
+        });
+        const wait=attack.wait+(attack.type==='RELAY'?Math.max(0,dirs.length-1)*400:0);
+        this.showResponseProgress(wait);
+        attack.stepTimer=this.queueWaveCallback(()=>{
+            if(attack.specialStep!==step||attack.stepClosing)return;
+            attack.lossReason=attack.type==='RELAY'?'接力目標漏接':'順序目標漏接';
+            this.addScore(this.scoreTable.TIME_OUT_PENALTY);this.missAttack(attack.lossReason);this.closeTimedOutAttack(attack);
+        },wait,attack);
+    },
+    handleSpecialSwipe: function(dir) {
+        const attack=this.currentAttack,step=attack.specialStep;
+        if(attack.stepClosing||attack.resolved||attack.finished)return;
+        const expected=attack.type==='ORDER'?[attack.dirs[step]]:attack.stepDirs;
+        if(!expected.includes(dir)){this.showWarning(attack.type==='ORDER'?`先接 ${step+1} 號目標！`:'留意本批目標！');return;}
+        if(attack.stepHits.includes(dir))return;
+        attack.stepHits.push(dir);attack.pendingShots++;
+        this.addScore(this.scoreTable.MULTI,dir);
+        if(expected.every(d=>attack.stepHits.includes(d))){
+            attack.stepClosing=true;this.clock.clearTimeout(attack.stepTimer);this.showResponseProgress(0);
+        }
+        this.launchProjectile(dir,()=>{
+            if(!this.gameActive||attack!==this.currentAttack||attack.finished||attack.resolved||attack.specialStep!==step)return;
+            attack.pendingShots--;
+            if(!attack.stepClosing||attack.pendingShots>0)return;
+            const count=attack.type==='RELAY'?attack.batches.length:attack.dirs.length;
+            if(step+1===count){attack.resolved=true;attack.successful=true;this.finishAttack();return;}
+            this.specialCue.textContent=attack.type==='RELAY'?'接得好！下一批即將進場':'接得好！準備下一號';
+            this.queueWaveCallback(()=>{attack.specialStep++;this.startSpecialStep(attack);},350,attack);
+        });
+    },
     buildAttackQueue: function(random = Math.random) {
         const queue = this.levelConfig.attackPatterns.map(attack => {
             const copy = {...attack, resolved:false};
@@ -268,7 +323,9 @@ window.DefenseAttackRunnerMixin = {
         this.setState(this.states.PREPARING);
         this.msg.innerText = attack.text;
 
-        const prepareTime = this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2));
+        const special=['RELAY','ORDER'].includes(attack.type);
+        if(special)this.showSpecialNotice(attack);
+        const prepareTime = special?(this.challenge?.mode==='child'?1500:1100):(this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2)));
 
         const session = this.sessionId;
         this.clock.setTimeout(() => {
@@ -292,8 +349,13 @@ window.DefenseAttackRunnerMixin = {
         this.clearProjectiles();
         this.showAvoidanceProgress(0);
         this.showResponseProgress(this.challenge?.endless && ['NORMAL','MULTI','MULTI_MIXED'].includes(attack.type) ? attack.wait : 0);
+        this.specialNotice?.remove();this.specialNotice=null;
+        if(!['RELAY','ORDER'].includes(attack.type))this.clearSpecialWave();
 
         switch (attack.type) {
+            case 'RELAY':
+            case 'ORDER':
+                attack.specialStep=0;this.startSpecialStep(attack);break;
             case 'END':
                 console.log('遊戲結束，準備結算');
                 this.setState(this.states.RESULT);
@@ -473,6 +535,7 @@ window.DefenseAttackRunnerMixin = {
         if (!this.gameActive || !attack || attack.finished) return;
         const successful = attack.successful || (attack.type === 'NORMAL' && attack.resolved && attack.correctHit);
         attack.finished = true;
+        this.clearSpecialWave?.();
         this.showAvoidanceProgress(0);
         this.showResponseProgress?.(0);
         this.clearAllTimers();

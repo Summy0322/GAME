@@ -515,3 +515,30 @@ test('later levels mix learned mechanics from wave one without crossing teaching
         assert.equal(JSON.stringify(templates),before);
     }
 });
+
+function specialFixture(){
+ const f=fixture('adult',1,true),g=f.game;
+ const element=()=>({style:{},children:[],setAttribute(){},appendChild(n){this.children.push(n);},remove(){this.removed=true;}});
+ f.context.document.createElement=element;g.container=element();g.processNextAttack=()=>{g.next=(g.next||0)+1;};
+ g.spawnEnemy=dir=>g.enemies.push({dir,element:element()});
+ g.challenge={endless:true,loseLife(){g.lost=(g.lost||0)+1;}};
+ return f;
+}
+test('relay has two separately timed batches and accepts a final-millisecond hit without timeout during impact',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'RELAY',batches:[['up'],['left','right']],wait:1900});
+ assert.deepEqual(Array.from(a.stepDirs),['up']);f.tick(1899);g.handleSwipe('up');g.handleSwipe('up');assert.equal(g.score,50);f.tick(600);assert.equal(a.specialStep,0);f.tick(350);assert.equal(a.specialStep,1);assert.deepEqual(Array.from(a.stepDirs),['left','right']);
+ f.tick(2299);g.handleSwipe('right');g.handleSwipe('left');f.tick(601);assert.equal(a.finished,true);assert.equal(a.successful,true);assert.equal(g.lost,undefined);assert.equal(g.score,150);assert.equal(g.specialCue,null);
+});
+test('ordered defense shows numbered targets, warns on wrong order, and gives each next target a full deadline',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});
+ assert.deepEqual(g.enemies.map(e=>e.element.children[0].textContent),['1','2','3']);g.handleSwipe('down');assert.match(g.warning,/1/);assert.equal(g.score,0);assert.equal(g.lost,undefined);
+ for(const dir of ['up','left','down']){f.tick(1899);g.handleSwipe(dir);f.tick(600);if(dir!=='down')f.tick(350);}
+ assert.equal(a.finished,true);assert.equal(a.successful,true);assert.equal(g.score,150);assert.equal(g.lost,undefined);
+});
+test('special timeout deducts once, rejects closing inputs and cannot advance after its owner is replaced',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'RELAY',batches:[['up'],['left']],wait:1900});f.tick(1900);assert.equal(g.lost,1);assert.equal(a.resolved,true);g.handleSwipe('up');assert.equal(g.lost,1);const score=g.score;f.tick(350);assert.equal(a.finished,true);assert.equal(g.score,score);
+ const stale=specialFixture(),old=stale.enter({type:'ORDER',dirs:['up','left'],wait:1900});stale.game.handleSwipe('up');stale.game.currentAttack={type:'NORMAL',finished:false,resolved:false};stale.tick(10000);assert.equal(old.specialStep,0);assert.equal(stale.game.lost,undefined);
+});
+test('special deadlines and inter-batch waits pause with the game clock; stale touch is cleared at a new step',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'RELAY',batches:[['up'],['left']],wait:1900});f.tick(1800);g.pauseClock.pause();f.tick(10000);assert.equal(g.lost,undefined);g.pauseClock.resume();g.handleSwipe('up');f.tick(600);g.touchGesture={attack:a};g.pauseClock.pause();f.tick(10000);assert.equal(a.specialStep,0);g.pauseClock.resume();f.tick(350);assert.equal(a.specialStep,1);assert.equal(g.touchGesture,null);assert.equal(g.lost,undefined);
+});
