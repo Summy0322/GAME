@@ -12,7 +12,7 @@ window.DefenseAttackRunnerMixin = {
         node.textContent=attack.text;node.setAttribute('role','status');this.container.appendChild(node);this.specialNotice=node;
     },
     startOrderedWave: function(attack) {
-        attack.specialStep=0;attack.orderBadges=[];attack.orderPhase='preview';
+        attack.specialStep=0;attack.pendingShots=0;attack.orderBadges=[];attack.orderPhase='preview';
         attack.dirs.forEach((dir,index)=>{
             this.spawnEnemy(dir);
             const enemy=this.enemies.find(e=>e.dir===dir);
@@ -35,7 +35,7 @@ window.DefenseAttackRunnerMixin = {
         if(attack!==this.currentAttack||attack.finished||attack.resolved)return;
         this.touchGesture=null;
         const step=attack.specialStep||0;
-        attack.stepHits=[];attack.pendingShots=0;attack.stepClosing=false;
+        attack.stepClosing=false;
         this.setState(this.states.MULTI);
         this.specialCue.textContent=`${attack.orderPreview?'記憶順序':'順序防守'} · 請接第 ${step+1} 個${attack.stoneDirs?.length?' · 避開石頭':''}`;
         this.showResponseProgress(attack.wait);
@@ -52,13 +52,19 @@ window.DefenseAttackRunnerMixin = {
             this.addScore(this.scoreTable.MIXED_WRONG);this.missAttack('碰到石頭');this.closeTimedOutAttack(attack);return;
         }
         if(dir!==attack.dirs[step]){this.showWarning(`先接第 ${step+1} 個目標！`);return;}
-        attack.stepClosing=true;this.clock.clearTimeout(attack.stepTimer);this.showResponseProgress(0);
+        this.clock.clearTimeout(attack.stepTimer);
+        attack.pendingShots++;
+        attack.specialStep=step+1;
+        if(attack.specialStep<attack.dirs.length)this.startSpecialStep(attack);
+        else {attack.stepClosing=true;this.showResponseProgress(0);this.specialCue.textContent='全部接住！';}
         this.addScore(this.scoreTable.MULTI,dir);
+        let hitDone=false;
         this.launchProjectile(dir,()=>{
-            if(!this.gameActive||attack!==this.currentAttack||attack.finished||attack.resolved||attack.specialStep!==step)return;
-            if(step+1===attack.dirs.length){attack.resolved=true;attack.successful=true;this.finishAttack();return;}
-            this.specialCue.textContent='接得好！準備下一個';
-            this.queueWaveCallback(()=>{attack.specialStep++;this.startSpecialStep(attack);},350,attack);
+            if(hitDone||!this.gameActive||attack!==this.currentAttack||attack.finished||attack.resolved)return;
+            hitDone=true;
+            attack.pendingShots--;
+            // 輸入立即前進；只有整波收尾才等待所有命中特效，與回呼抵達順序無關。
+            if(attack.specialStep===attack.dirs.length&&attack.pendingShots===0){attack.resolved=true;attack.successful=true;this.finishAttack();}
         });
     },
     buildAttackQueue: function(random = Math.random) {

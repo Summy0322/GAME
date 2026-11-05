@@ -527,14 +527,14 @@ function specialFixture(){
 test('ordered defense has full per-target deadlines and stops timeout immediately on a last-millisecond hit',()=>{
  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});
  assert.deepEqual(g.enemies.map(e=>e.element.children[0].textContent),['1','2','3']);g.handleSwipe('down');assert.match(g.warning,/1/);assert.equal(g.score,0);
- for(const dir of a.dirs){f.tick(1899);g.handleSwipe(dir);g.handleSwipe(dir);f.tick(600);if(dir!=='down')f.tick(350);}
+ for(const dir of a.dirs){f.tick(1899);g.handleSwipe(dir);g.handleSwipe(dir);}f.tick(600);
  assert.equal(a.finished,true);assert.equal(a.successful,true);assert.equal(g.score,150);assert.equal(g.lost,undefined);assert.equal(g.specialCue,null);
 });
 test('memory preview blocks all swipes and has no answer deadline; hidden numbers never reappear at the next step',()=>{
  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],orderPreview:1600,wait:1900});
  assert.equal(g.state,g.states.PREPARING);g.handleSwipe('up');assert.equal(g.score,0);f.tick(1599);assert.equal(a.orderPhase,'preview');assert.equal(g.lost,undefined);f.tick(1);assert.equal(a.orderPhase,'playing');assert.ok(a.orderBadges.every(b=>b.hidden));
- const original=g.enemies.slice();f.tick(1899);g.handleSwipe('up');f.tick(950);assert.equal(a.specialStep,1);assert.ok(a.orderBadges.every(b=>b.hidden));assert.deepEqual(g.enemies,original);assert.equal(g.lost,undefined);
- f.tick(1899);g.handleSwipe('left');f.tick(950);g.handleSwipe('down');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);
+ const original=g.enemies.slice();f.tick(1899);g.handleSwipe('up');assert.equal(a.specialStep,1);assert.ok(a.orderBadges.every(b=>b.hidden));assert.deepEqual(g.enemies,original);assert.equal(g.lost,undefined);
+ f.tick(1899);g.handleSwipe('left');g.handleSwipe('down');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);
 });
 test('stone targets have no numbers; hitting a stone costs one life and closes this wave only once',()=>{
  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],stoneDirs:['right'],wait:1900});
@@ -543,12 +543,18 @@ test('stone targets have no numbers; hitting a stone costs one life and closes t
 });
 test('memory and stone rules combine without revealing numbers or penalizing correct play',()=>{
  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],stoneDirs:['right'],orderPreview:1600,wait:1900});f.tick(1600);
- g.handleSwipe('up');f.tick(950);assert.ok(a.orderBadges.every(b=>b.hidden));g.handleSwipe('left');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);assert.equal(g.score,100);
+ g.handleSwipe('up');assert.ok(a.orderBadges.every(b=>b.hidden));g.handleSwipe('left');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);assert.equal(g.score,100);
 });
 test('ordered timeout deducts once and old hit or preview callbacks cannot alter a newer attack',()=>{
  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],wait:1900});f.tick(1900);assert.equal(g.lost,1);g.handleSwipe('up');f.tick(350);assert.equal(a.finished,true);assert.equal(g.lost,1);
- for(const preview of [0,1600]){const stale=specialFixture(),old=stale.enter({type:'ORDER',dirs:['up','left'],wait:1900,orderPreview:preview});if(!preview)stale.game.handleSwipe('up');stale.game.currentAttack={type:'NORMAL',finished:false,resolved:false};stale.tick(10000);assert.equal(old.specialStep,0);assert.equal(stale.game.lost,undefined);}
+ for(const preview of [0,1600]){const stale=specialFixture(),old=stale.enter({type:'ORDER',dirs:['up','left'],wait:1900,orderPreview:preview});if(!preview)stale.game.handleSwipe('up');stale.game.currentAttack={type:'NORMAL',finished:false,resolved:false};stale.tick(10000);assert.equal(old.specialStep,preview?0:1);assert.equal(stale.game.lost,undefined);}
 });
-test('memory preview and answer timer pause; stale touch clears at a new ordered step',()=>{
- const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],wait:1900,orderPreview:1600});f.tick(1500);g.pauseClock.pause();f.tick(10000);assert.equal(a.orderPhase,'preview');g.pauseClock.resume();f.tick(100);assert.equal(a.orderPhase,'playing');g.handleSwipe('up');f.tick(600);g.touchGesture={attack:a};g.pauseClock.pause();f.tick(10000);assert.equal(a.specialStep,0);g.pauseClock.resume();f.tick(350);assert.equal(a.specialStep,1);assert.equal(g.touchGesture,null);assert.equal(g.lost,undefined);
+test('memory preview and each next answer timer pause, while input advances immediately',()=>{
+ const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left'],wait:1900,orderPreview:1600});f.tick(1500);g.pauseClock.pause();f.tick(10000);assert.equal(a.orderPhase,'preview');g.pauseClock.resume();f.tick(100);assert.equal(a.orderPhase,'playing');g.touchGesture={attack:a};g.handleSwipe('up');assert.equal(a.specialStep,1);assert.equal(g.touchGesture,null);f.tick(1800);g.pauseClock.pause();f.tick(10000);assert.equal(g.lost,undefined);g.pauseClock.resume();f.tick(99);g.handleSwipe('left');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);
+});
+test('all ordered variants accept three consecutive swipes before any projectile completes',()=>{
+ for(const preview of [0,1600])for(const stones of [[],['right']]){const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],stoneDirs:stones,orderPreview:preview,wait:1900});f.tick(preview);for(const dir of a.dirs)g.handleSwipe(dir);assert.equal(a.specialStep,3);assert.equal(a.pendingShots,3);assert.equal(a.finished,undefined);assert.equal(g.score,150);assert.equal(g.lost,undefined);f.tick(600);assert.equal(a.successful,true);assert.equal(a.finished,true);assert.equal(g.lost,undefined);}
+});
+test('out-of-order or duplicate hit callbacks cannot end a wave before every pending impact',()=>{
+ const f=specialFixture(),g=f.game,hits=[];g.launchProjectile=(dir,done)=>hits.push(done);const a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});g.handleSwipe('up');assert.equal(g.lost,undefined);g.handleSwipe('left');g.handleSwipe('down');hits[2]();hits[2]();assert.equal(a.pendingShots,2);assert.equal(a.finished,undefined);hits[0]();assert.equal(a.finished,undefined);hits[1]();assert.equal(a.finished,true);assert.equal(a.pendingShots,0);assert.equal(g.score,150);
 });
