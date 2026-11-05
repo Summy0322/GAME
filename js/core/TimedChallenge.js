@@ -44,7 +44,7 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-copy').textContent = this.endless
             ? (memory
                 ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對消一格、換盤清空。每對 +10 分、每盤 +20 分。第 2 盤起，雲影會隨機眨眼，不預告也不影響點擊。每盤隨機換位一次，後段可有兩次；中央大字通知後，翻開的單張牌先蓋回，再追蹤亮框換位。已配對的牌不動。`
-                : '三條命，不限時。漏接、打到石頭或格擋失敗扣一命，同一波最多扣一命。每 10 波加速，多方向題保留連續滑動時間；右上細線顯示作答時間，失誤先回饋再換波。第 41 波起加入接力防守，第 61 波起加入編號順序；每一步保留完整作答時間。音樂隨波次小幅加速，以分數與波次挑戰紀錄。')
+                : '三條命，不限時。漏接、打到石頭或格擋失敗扣一命，同一波最多扣一命。每 10 波加速，多方向題保留連續滑動時間；右上細線顯示作答時間，失誤先回饋再換波。第 41 波起依序接編號目標，第 61 波起記憶編號，第 81 波起混入石頭；每一步保留完整作答時間。音樂隨波次小幅加速，以分數與波次挑戰紀錄。')
             : memory
             ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
             : '90 秒連續防守，滑動處理目標、避開石頭；重擊逐格點燃速度會隨時間加快，依提示滑動格擋。約第 25、60 秒後各有一次旋轉，沿畫面畫圈，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
@@ -103,7 +103,6 @@ window.TimedChallenge = {
         this.lastLossReason = '';
         this.feedbackId = 0;
         this.nextWindWave = 41;
-        this.lastDefenseSpecial = null;
         this.score = this.pairs = this.boards = this.penalties = this.successes = 0;
         this.aoeMilestone = 0;
         this.session = new window.MinigameSession();
@@ -315,14 +314,14 @@ window.TimedChallenge = {
         }
         // 旋轉錨點保留；特殊波之間穿插普通波，避免每波都增加規則。
         if(this.endless && !dueAOE && wave>=41 && (wave%10===1 || (wave>=81 && wave%10===6))) {
-            const kind=wave<61?'RELAY':this.lastDefenseSpecial==='ORDER'?'RELAY':'ORDER';
-            this.lastDefenseSpecial=kind;
+            const mode=wave<61?'visible':wave<81?(wave%20===1?'memory':'visible'):wave<101?(wave%10===1?'stone':'memory'):['memory-stone','visible','memory','stone'][Math.floor((wave-101)/5)%4];
             const dirs=['up','right','down','left'];
             for(let i=dirs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[dirs[i],dirs[j]]=[dirs[j],dirs[i]];}
-            Object.assign(attack,{type:kind,dirs:dirs.slice(0,kind==='ORDER'&&wave>=81?3:2),
-                text:kind==='RELAY'?'接力防守 · 分兩批接住目標':'順序防守 · 依照編號滑動',
+            Object.assign(attack,{type:'ORDER',orderMode:mode,dirs:dirs.slice(0,wave>=81?3:2),
+                text:{visible:'順序防守 · 依照編號滑動',memory:'記憶順序 · 先記住編號，再依序接住',stone:'順序辨識 · 依序接目標，避開石頭','memory-stone':'記憶辨識 · 記住順序，也要避開石頭'}[mode],
                 wait:this.mode==='child'?2600:1900});
-            if(kind==='RELAY')attack.batches=wave>=81?[[dirs[0]],[dirs[1],dirs[2]]]:[[dirs[0]],[dirs[1]]];
+            attack.stoneDirs=mode.includes('stone')?[dirs[3]]:[];
+            attack.orderPreview=mode.startsWith('memory')?(this.mode==='child'?2200:1600):0;
         }
         // 每波建立獨立材質設定，舊投射物／命中特效不會讀到下一波的圖片。
         const assets = {};

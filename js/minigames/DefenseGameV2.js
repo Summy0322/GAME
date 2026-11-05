@@ -736,7 +736,7 @@ const DefenseGameV2 = {
         if (!this.gameActive) return;
         if (this.challenge?.ending) return;
         if (!inputAttack || inputAttack !== this.currentAttack || inputSession !== this.sessionId || inputAttack.finished || inputAttack.resolved) return;
-        if(['RELAY','ORDER'].includes(inputAttack.type)) {if(this.state===this.states.MULTI)this.handleSpecialSwipe(dir);return;}
+        if(['ORDER'].includes(inputAttack.type)) {if(this.state===this.states.MULTI)this.handleSpecialSwipe(dir);return;}
         if (![this.states.NORMAL,this.states.MULTI,this.states.MULTI_MIXED,this.states.DECOY,this.states.HEAVY_CHARGING,this.states.HEAVY_FLYING].includes(this.state)) return;
         
         if (this.state === this.states.AOE_ACTIVE) {

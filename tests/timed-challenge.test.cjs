@@ -273,14 +273,12 @@ test('repositioning the challenge panel preserves card size and resizing scales 
  stage.clientHeight=200;g.adjustCardSize();assert.equal(cards[0].style.width,'50px');assert.equal(cards[0].style.height,'40px');
 });
 
-test('endless special waves unlock gradually, alternate later, keep rotation anchors and never enter timed or story pools',()=>{
+test('ordered variants unlock gradually, remove relay, keep rotation and stay out of timed mode',()=>{
  for(const mode of ['adult','child']){
   const {c}=fixture();Object.assign(c,{kind:'defense',variant:'endless',mode});const game={levelConfig:{flow:{}}};
-  const types=[];for(const wave of [31,41,51,60,61,71,80,81,86,90,91,96]){game.waveNumber=wave-1;const a=c.nextAttack(game);types.push(a.type);
-   if(wave>=30&&wave%10===0)assert.equal(a.type,'AOE');
-   if(['RELAY','ORDER'].includes(a.type)){assert.equal(a.wait,mode==='child'?2600:1900);assert.equal(new Set(a.dirs).size,a.dirs.length);assert.ok(a.materials.enemyImage);if(a.type==='RELAY')assert.equal(a.batches.length,2);}
-  }
-  assert.deepEqual(types.slice(1,3),['RELAY','RELAY']);assert.equal(types[4],'ORDER');assert.equal(types[5],'RELAY');assert.equal(types[7],'ORDER');assert.equal(types[8],'RELAY');
-  c.variant='timed';for(let i=0;i<20;i++){game.waveNumber=80;assert.ok(!['RELAY','ORDER'].includes(c.nextAttack(game).type));}
+  const expected={41:'visible',51:'visible',61:'memory',71:'visible',81:'stone',86:'memory',101:'memory-stone',106:'visible',111:'memory',116:'stone'};
+  for(const [wave,variant] of Object.entries(expected)){game.waveNumber=Number(wave)-1;const a=c.nextAttack(game);assert.equal(a.type,'ORDER');assert.equal(a.orderMode,variant);assert.equal(a.wait,mode==='child'?2600:1900);assert.equal(new Set(a.dirs).size,a.dirs.length);assert.equal(a.dirs.length,Number(wave)>=81?3:2);assert.equal(a.stoneDirs.length,variant.includes('stone')?1:0);assert.ok(a.stoneDirs.every(d=>!a.dirs.includes(d)));assert.equal(a.orderPreview,variant.startsWith('memory')?(mode==='child'?2200:1600):0);}
+  for(const wave of [40,60,80,100,120]){game.waveNumber=wave-1;assert.equal(c.nextAttack(game).type,'AOE');}
+  c.variant='timed';for(let i=0;i<20;i++){game.waveNumber=100;assert.notEqual(c.nextAttack(game).type,'ORDER');}
  }
 });

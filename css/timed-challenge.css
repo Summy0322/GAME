@@ -170,3 +170,4 @@
 .defense-special-cue { position:absolute;left:3%;bottom:20%;max-width:26%;box-sizing:border-box;padding:5px 12px;border:1px solid #e5c18d77;border-radius:9px 3px;background:#16364bd9;color:#ffe2ad;font-size:clamp(11px,2.7cqh,18px);text-align:center;pointer-events:none;z-index:65; }
 .defense-order-badge { position:absolute;right:-7px;top:-7px;display:grid;place-items:center;width:clamp(21px,5cqh,32px);height:clamp(21px,5cqh,32px);border:2px solid #ffdda0;border-radius:50%;background:#19364cf2;color:#ffe4b4;font:bold clamp(13px,3.5cqh,22px)/1 sans-serif;box-shadow:0 2px 5px #07172966;pointer-events:none; }
 .defense-order-badge.is-top-target { top:auto;bottom:-5px; }
+.defense-order-badge[hidden] { display:none; }
