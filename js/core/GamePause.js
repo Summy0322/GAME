@@ -38,6 +38,7 @@ window.GamePause = {
             this.animations.forEach(animation=>animation.pause());
             window.GameMusic?.player?.pause();
             window.AudioManager?.stopDialogueChirp();
+            window.AudioManager?.stopDefenseSounds?.();
             window.AudioManager?.sfxPlayer?.pause();
         }
         document.getElementById('game-pause-button').hidden = true;

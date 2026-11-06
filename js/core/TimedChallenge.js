@@ -29,6 +29,46 @@ window.TimedChallenge = {
             : kind === 'defense' ? ` · 第 ${record.progress} 波` : ` · 完成 ${record.progress} 盤`;
         return `個人最佳：${record.score.toLocaleString('zh-TW')} 分${detail}`;
     },
+    resetFeedback() {
+        this.defenseFeedback={streak:0,best:0,failures:{}};
+        this.memoryPairStreak=this.memoryBestStreak=0;
+    },
+    recordDefenseMistake(attack) {
+        if(!this.active||this.kind!=='defense'||!attack||attack.feedbackMistake)return;
+        attack.feedbackMistake=true;
+        const stats=this.defenseFeedback ||= {streak:0,best:0,failures:{}};
+        const reason=attack.lossReason||'';
+        let category;
+        if(/石頭/.test(reason)||(attack.type==='DECOY'&&!reason))category='打到石頭';
+        else if(attack.type==='ORDER')category=/漏接/.test(reason)?'順序漏接':'順序錯誤';
+        else if(attack.type==='HEAVY')category='重擊格擋';
+        else if(attack.type==='AOE')category='旋轉防守';
+        else category=/方向/.test(reason)?'方向錯誤':'目標漏接';
+        stats.failures[category]=(stats.failures[category]||0)+1;stats.streak=0;
+    },
+    defenseWaveFinished(attack) {
+        if(!this.active||this.kind!=='defense'||!attack||attack.feedbackFinished)return;
+        attack.feedbackFinished=true;
+        const stats=this.defenseFeedback ||= {streak:0,best:0,failures:{}};
+        if(!attack.feedbackMistake){stats.streak++;stats.best=Math.max(stats.best,stats.streak);}
+    },
+    feedbackItems() {
+        if(this.kind==='defense'){
+            const stats=this.defenseFeedback||{best:0,failures:{}};
+            const failures=Object.entries(stats.failures).sort((a,b)=>b[1]-a[1]);
+            return [['最長連續無失誤',`${stats.best} 波`],['主要失誤',failures.length?failures.slice(0,2).map(([label,count])=>`${label} ${count} 次`).join(' · '):'沒有失誤']];
+        }
+        const attempts=(this.pairs||0)+(this.memoryErrors||0);
+        return [['配對準確率',attempts?`${Math.round((this.pairs||0)/attempts*100)}%`:'尚未完成配對'],['最長連續配對',`${this.memoryBestStreak||0} 對`]];
+    },
+    lobbyPoints() {
+        if(this.kind==='defense')return this.endless
+            ? ['三條命，不限時，挑戰最高分與波次。','滑動命中目標；石頭別滑，重擊等全亮。','每十波加速，後段加入旋轉與順序防守。']
+            : ['90 秒連續防守，挑戰最高分。','滑動命中目標、避開石頭；重擊等全亮。','後段加入旋轉防守；失誤扣分，繼續挑戰。'];
+        return this.endless
+            ? ['三條命，不限時，挑戰更多盤。',`配錯累積 ${this.memoryMistakeLimit()} 格扣命；配對消一格，換盤清空。`,'後段有眨眼與換位；換位前會先通知。']
+            : ['90 秒連續配對，挑戰最高分。','每對 +10 分，完成一盤再 +20 分。','配錯亮紅燈，三盞扣分；記憶與換盤不扣時間。'];
+    },
     showInfo(kind, variant = 'timed') {
         this.stop();
         this.replayPracticeOrder = null;
@@ -42,6 +82,8 @@ window.TimedChallenge = {
         const memory = kind === 'memory';
         document.getElementById('challenge-lobby-kicker').textContent = this.endless ? '三條命・無限模式' : '90 秒・限時挑戰';
         document.getElementById('challenge-lobby-title').textContent = `${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
+        document.getElementById('challenge-lobby-points').innerHTML=this.lobbyPoints().map(point=>`<li>${point}</li>`).join('');
+        document.getElementById('challenge-lobby-rules').open=false;
         document.getElementById('challenge-lobby-copy').textContent = this.endless
             ? (memory
                 ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對消一格、換盤清空。每對 +10 分、每盤 +20 分。第 2 盤起，雲影會隨機眨眼，不預告也不影響點擊。每盤隨機換位一次，後段可有兩次；中央大字通知後，翻開的單張牌先蓋回，再追蹤亮框換位。已配對的牌不動。`
@@ -104,6 +146,7 @@ window.TimedChallenge = {
         this.ending = false;
         this.damagedAttack = null;
         this.memoryMistakes = this.memoryErrors = 0;
+        this.resetFeedback();
         this.lastLossReason = '';
         this.feedbackId = 0;
         this.nextWindWave = 41;
@@ -484,6 +527,7 @@ window.TimedChallenge = {
     paired() {
         if (!this.active || this.ending) return;
         this.pairs++;this.score+=10;
+        this.memoryPairStreak=(this.memoryPairStreak||0)+1;this.memoryBestStreak=Math.max(this.memoryBestStreak||0,this.memoryPairStreak);
         if (this.endless && this.kind==='memory' && this.memoryMistakes>0) {
             this.memoryMistakes--;
             if (this.game?.statusText) this.game.statusText.innerText='配對成功，消除一格失誤';
@@ -492,8 +536,10 @@ window.TimedChallenge = {
     },
     memoryMistakeLimit() { return this.mode==='child'?4:3; },
     memoryMiss() {
-        if (!this.active || !this.endless || this.kind!=='memory' || this.ending) return '';
+        if (!this.active || this.kind!=='memory' || this.ending) return '';
         this.memoryErrors=(this.memoryErrors||0)+1;
+        this.memoryPairStreak=0;
+        if(!this.endless)return '';
         this.memoryMistakes=(this.memoryMistakes||0)+1;
         let message=`失誤 ${this.memoryMistakes}／${this.memoryMistakeLimit()}`;
         if (this.memoryMistakes>=this.memoryMistakeLimit()) {
@@ -549,6 +595,7 @@ window.TimedChallenge = {
             : this.kind==='defense' ? `處理結果：${this.game.mistakes} 次失誤` : `完成 ${this.boards} 盤・配對 ${this.pairs} 對・紅燈懲罰 ${this.penalties} 次`;
         const progress=this.kind==='defense'?this.game.waveNumber:this.boards;
         const best = practice ? old : this.bestRecord(this.kind,this.mode,score,progress);
+        const feedback=this.feedbackItems();
         const improved=!practice && (score>old.score||(score===old.score&&progress>(old.progress??-1)));
         this.game.gameActive=false;
         this.game.challenge = null;
@@ -561,6 +608,7 @@ window.TimedChallenge = {
         showScene('challenge-results');
         document.getElementById('challenge-final-score').textContent=`${score} 分`;
         document.getElementById('challenge-final-detail').textContent=(practice?'測試模式，不保存紀錄 · ':'')+detail;
+        document.getElementById('challenge-final-feedback').innerHTML=feedback.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
         document.getElementById('challenge-final-best').textContent=`${improved?'新紀錄！　':''}${this.bestLabel(this.kind,this.mode,best)}`;
         document.getElementById('challenge-play-again').focus();
     },

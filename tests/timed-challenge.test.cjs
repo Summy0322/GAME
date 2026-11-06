@@ -309,3 +309,28 @@ test('endless AOE wait shortens across actual generated waves in both age modes 
   assert.ok(waits.every((n,i)=>i===0||n<=waits[i-1]));
  }
 });
+
+test('feedback counts clean waves and only one failure category per failed wave, preserving the longest streak',()=>{
+ const {c}=fixture();c.kind='defense';c.resetFeedback();
+ for(let i=0;i<3;i++)c.defenseWaveFinished({type:'NORMAL'});
+ const stone={type:'ORDER',lossReason:'碰到石頭'};c.recordDefenseMistake(stone);c.recordDefenseMistake(stone);c.defenseWaveFinished(stone);c.defenseWaveFinished(stone);
+ for(let i=0;i<2;i++)c.defenseWaveFinished({type:'HEAVY'});
+ const heavy={type:'HEAVY',lossReason:'格擋失敗：太早'};c.recordDefenseMistake(heavy);c.defenseWaveFinished(heavy);
+ const rows=c.feedbackItems();assert.equal(rows[0][1],'3 波');assert.match(rows[1][1],/打到石頭 1 次/);assert.match(rows[1][1],/重擊格擋 1 次/);assert.equal(c.defenseFeedback.streak,0);
+ c.resetFeedback();assert.equal(c.feedbackItems()[0][1],'0 波');assert.equal(c.feedbackItems()[1][1],'沒有失誤');
+});
+test('memory accuracy includes every failed pair in timed and endless play and streak spans boards',()=>{
+ for(const variant of ['timed','endless']){
+  const {c}=fixture();c.kind='memory';c.variant=variant;c.lives=3;c.resetFeedback();c.memoryErrors=0;
+  assert.equal(c.feedbackItems()[0][1],'尚未完成配對');c.paired();c.paired();c.memoryMiss();c.paired();
+  assert.equal(c.memoryErrors,1);assert.equal(c.feedbackItems()[0][1],'75%');assert.equal(c.feedbackItems()[1][1],'2 對');assert.equal(c.memoryPairStreak,1);
+  c.resetFeedback();assert.equal(c.memoryBestStreak,0);
+ }
+});
+test('all challenge lobby variants contain exactly three short points and reset expanded rules',()=>{
+ const f=fixture();f.context.showScene=()=>{};
+ for(const kind of ['defense','memory'])for(const variant of ['timed','endless']){
+  f.c.showInfo(kind,variant);const points=f.c.lobbyPoints();assert.equal(points.length,3);assert.ok(points.every(p=>p.length<=34));
+  assert.equal((f.nodes.get('challenge-lobby-points').innerHTML.match(/<li>/g)||[]).length,3);assert.equal(f.nodes.get('challenge-lobby-rules').open,false);assert.match(f.nodes.get('challenge-lobby-copy').textContent,/三盞|旋轉|三條命/);
+ }
+});

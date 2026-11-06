@@ -65,6 +65,7 @@ window.DefenseAttackRunnerMixin = {
         if(attack.specialStep<attack.dirs.length)this.startSpecialStep(attack);
         else {attack.stepClosing=true;this.showResponseProgress(0);this.specialCue.textContent='全部接住！';}
         this.addScore(this.scoreTable.MULTI,dir);
+        window.AudioManager?.playDefenseSound?.('order',step);
         let hitDone=false;
         this.launchProjectile(dir,()=>{
             if(hitDone||!this.gameActive||attack!==this.currentAttack||attack.finished||attack.resolved)return;
@@ -549,6 +550,7 @@ window.DefenseAttackRunnerMixin = {
     finishAttack: function () {
         const attack = this.currentAttack;
         if (!this.gameActive || !attack || attack.finished) return;
+        this.challenge?.defenseWaveFinished?.(attack);
         const successful = attack.successful || (attack.type === 'NORMAL' && attack.resolved && attack.correctHit);
         attack.finished = true;
         this.clearSpecialWave?.();

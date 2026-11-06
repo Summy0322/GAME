@@ -5,6 +5,9 @@ const AudioManager = {
     chirpContext: null,
     chirpNodes: new Set(),
     chirpLastTime: -Infinity,
+    defenseNodes: new Set(),
+    defenseLastTime: -Infinity,
+    defenseBus: null,
     dialogueVolume: 0.30,
     sfxVolume: 0.7,
     bgVolume: 0.5,
@@ -15,12 +18,14 @@ const AudioManager = {
         if (this.bgMusic) this.bgMusic.volume = this.bgVolume * music;
         if (this.sfxPlayer) this.sfxPlayer.volume = this.currentSFXVolume * sfx;
         if (sfx === 0) this.stopDialogueChirp();
+        if (this.defenseBus && this.chirpContext) this.defenseBus.gain.setValueAtTime(.5 * this.sfxVolume * sfx,this.chirpContext.currentTime);
+        if (sfx === 0 || this.sfxVolume === 0) this.stopDefenseSounds();
     },
     unlockDialogueAudio: function() {
         try {
             const Audio = window.AudioContext || window.webkitAudioContext;
             if (!Audio) return;
-            if (!this.chirpContext || this.chirpContext.state === 'closed') this.chirpContext = new Audio();
+            if (!this.chirpContext || this.chirpContext.state === 'closed') {this.stopDefenseSounds();this.defenseBus=null;this.chirpContext = new Audio();}
             if (this.chirpContext.state !== 'running') this.chirpContext.resume().catch(() => {});
         } catch (_) { /* 音訊不可用不影響文字。 */ }
     },
@@ -48,6 +53,32 @@ const AudioManager = {
         this.chirpNodes.clear();
         this.chirpLastTime = -Infinity;
     },
+    playDefenseSound: function(kind,step=0) {
+        const ctx=this.chirpContext;
+        if(document.hidden || window.GamePause?.paused || !ctx || ctx.state!=='running' || this.sfxPlayer?.muted || this.sfxVolume<=0 || (window.AudioSettings?.factor('sfx')??1)===0)return;
+        const profiles={hit:[620,420,.065],order:[[440,554,659,784][Math.min(3,Math.max(0,step))],880,.09],block:[660,990,.16],fail:[180,95,.12],aoe:[520,780,.15]};
+        const profile=profiles[kind];if(!profile)return;
+        const now=ctx.currentTime;
+        // 同幀多方向命中合成一聲；連續順序輸入保留各自的音階。
+        if(kind==='hit' && now-this.defenseLastTime<.035)return;
+        if(this.defenseNodes.size>=12)return;
+        try {
+            if(!this.defenseBus){this.defenseBus=ctx.createGain();this.defenseBus.connect(ctx.destination);}
+            this.defenseBus.gain.setValueAtTime(.5*this.sfxVolume*(window.AudioSettings?.factor('sfx')??1),now);
+            const oscillator=ctx.createOscillator(),gain=ctx.createGain(),[frequency,end,duration]=profile;
+            oscillator.type=kind==='fail'?'sine':'triangle';
+            oscillator.frequency.setValueAtTime(frequency,now);
+            oscillator.frequency.exponentialRampToValueAtTime(kind==='order'?frequency*1.08:end,now+duration);
+            gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(.18,now+.004);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+            oscillator.connect(gain);gain.connect(this.defenseBus);this.defenseNodes.add(oscillator);
+            oscillator.onended=()=>{this.defenseNodes.delete(oscillator);oscillator.disconnect();gain.disconnect();};
+            oscillator.start(now);oscillator.stop(now+duration+.005);this.defenseLastTime=now;
+        }catch(_){ /* 音訊不可用時，操作與判定照常。 */ }
+    },
+    stopDefenseSounds: function() {
+        for(const oscillator of this.defenseNodes){try{oscillator.stop();}catch(_){}}
+        this.defenseNodes.clear();this.defenseLastTime=-Infinity;
+    },
     
     init: function() {
         console.log('🔧 AudioManager 初始化');
@@ -59,8 +90,8 @@ const AudioManager = {
             const unlock = () => this.unlockDialogueAudio();
             document.addEventListener('pointerdown', unlock, {passive:true});
             document.addEventListener('keydown', unlock);
-            document.addEventListener('visibilitychange', () => { if (document.hidden) this.stopDialogueChirp(); });
-            window.addEventListener('pagehide', () => this.stopDialogueChirp());
+            document.addEventListener('visibilitychange', () => { if (document.hidden) {this.stopDialogueChirp();this.stopDefenseSounds();} });
+            window.addEventListener('pagehide', () => {this.stopDialogueChirp();this.stopDefenseSounds();});
         }
     },
     
