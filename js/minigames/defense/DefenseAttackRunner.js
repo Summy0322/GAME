@@ -20,20 +20,23 @@ window.DefenseAttackRunnerMixin = {
         });
         (attack.stoneDirs||[]).forEach(dir=>this.spawnEnemy(dir,false,true));
         const node=document.createElement('div');node.className='defense-special-cue';node.setAttribute('role','status');node.hidden=true;this.container.appendChild(node);this.specialCue=node;
-        const begin=()=>{
-            attack.orderPhase='playing';
-            if(attack.orderPreview)attack.orderBadges.forEach(badge=>badge.hidden=true);
-            this.startSpecialStep(attack);
-        };
         if(attack.orderPreview){
-            this.setState(this.states.PREPARING);this.touchGesture=null;this.showResponseProgress(0);
-            this.specialCue.textContent='先記住編號 · 稍後號碼會消失';
-            this.queueWaveCallback(begin,attack.orderPreview,attack);
-        }else begin();
+            this.setState(this.states.MULTI);this.touchGesture=null;this.showResponseProgress(0);
+            this.specialCue.textContent='記住順序，隨時可滑動開始';
+            attack.previewTimer=this.queueWaveCallback(()=>this.beginOrderedAnswer(attack),attack.orderPreview,attack);
+        }else this.beginOrderedAnswer(attack);
     },
-    startSpecialStep: function(attack) {
+    beginOrderedAnswer: function(attack) {
+        if(attack!==this.currentAttack||attack.finished||attack.resolved||attack.orderPhase!=='preview')return;
+        this.clock.clearTimeout(attack.previewTimer);
+        attack.orderPhase='playing';
+        if(attack.orderPreview)attack.orderBadges.forEach(badge=>badge.hidden=true);
+        // 號碼自動消失時，保留已經開始、尚未放開的同波手勢。
+        this.startSpecialStep(attack,true);
+    },
+    startSpecialStep: function(attack,preserveGesture=false) {
         if(attack!==this.currentAttack||attack.finished||attack.resolved)return;
-        this.touchGesture=null;
+        if(!preserveGesture)this.touchGesture=null;
         const step=attack.specialStep||0;
         attack.stepClosing=false;
         this.setState(this.states.MULTI);
@@ -47,6 +50,7 @@ window.DefenseAttackRunnerMixin = {
     },
     handleSpecialSwipe: function(dir) {
         const attack=this.currentAttack,step=attack.specialStep;
+        if(attack.orderPhase==='preview')this.beginOrderedAnswer(attack);
         if(attack.orderPhase!=='playing'||attack.stepClosing||attack.resolved||attack.finished)return;
         if(attack.stoneDirs?.includes(dir)||dir!==attack.dirs[step]){
             // 錯誤輸入也立即發射；只等待飛行與命中特效，不開放重試或推進順序。
