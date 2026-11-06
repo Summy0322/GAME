@@ -208,6 +208,7 @@ const DefenseGameV2 = {
     
     // ========== 初始化 ==========
     start: function(options) {
+        window.DefenseTutorial?.cancel(this);
         this.touchGesture = null;
         this.pauseClock?.dispose();
         // ✅ 加入這兩行
@@ -325,13 +326,17 @@ const DefenseGameV2 = {
         this.setState(this.states.IDLE);
         this.challenge?.ready(this);
         window.GameMusic?.start('defense', this.currentLevel);
-        this.queueWaveCallback(() => this.startAttackSequence(), 1000);
+        window.DefenseTutorial?.registerReplay(this,options);
+        const begin=()=>this.queueWaveCallback(() => this.startAttackSequence(), 1000);
+        if(!window.DefenseTutorial?.begin(this,begin,options.forceTutorial))begin();
     },
 
     /**
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function (options = {}) {
+        window.DefenseTutorial?.cancel(this);
+        const replay=document.getElementById('defense-replay-tutorial');if(replay)replay.hidden=true;
         this.clearSpecialWave?.();
         this.challenge?.clearDefenseWind?.(this);
         this.touchGesture = null;
