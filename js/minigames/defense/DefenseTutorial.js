@@ -38,7 +38,13 @@ window.DefenseTutorial = {
             if(run.step==='swipe'){banner.textContent='往目標方向滑一下';hint.textContent='跟著手指，從角色往右滑。';}
             if(run.step==='heavy'){
                 banner.textContent='重擊：等五格全亮，再滑向目標';hint.textContent='教學會等你準備好，不用急。';
-                [...node.querySelectorAll('.tutorial-lights i')].forEach((light,index)=>later(()=>{light.classList.add('lit');if(index===4){run.ready=true;node.dataset.ready='true';hint.textContent='全亮了！現在往右滑動格擋。';}},400*(index+1)));
+                const ignite=()=>{
+                    if(run.step!=='heavy')return;
+                    run.ready=false;node.dataset.ready='false';hint.textContent='等五格全亮再往右滑；示範會重複播放。';
+                    const lights=[...node.querySelectorAll('.tutorial-lights i')];lights.forEach(light=>light.classList.remove?.('lit'));
+                    lights.forEach((light,index)=>later(()=>{if(run.step!=='heavy')return;light.classList.add('lit');if(index===4){run.ready=true;node.dataset.ready='true';hint.textContent='現在往右滑動格擋！';}},400*(index+1)));
+                    later(ignite,3400);
+                };ignite();
             }
             if(run.step==='circle'){
                 banner.textContent='旋轉防守：畫圈推開四面攻擊';hint.textContent='四面攻擊往中央靠近時，按住繞角色畫圈。';run.waveProgress=0;run.lastTurn=-Infinity;

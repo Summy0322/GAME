@@ -454,3 +454,7 @@
 .tutorial-wave { background-size:0 0; }
 .tutorial-wave::before { content:"";position:absolute;inset:0;background-image:inherit;background-size:100% 100%;background-repeat:no-repeat; }
 .wave-left::before,.wave-right::before { inset:auto;left:50%;top:50%;width:60cqh;height:6cqh;transform:translate(-50%,-50%) rotate(90deg); }
+/* 右側火牆的格擋波紋採正式關卡的 -90 度方向及相近長寬比。 */
+.tutorial-shield { left:62%;width:42cqh;height:10cqh;transform:translate(-50%,-50%) rotate(-90deg); }
+.defense-tutorial[data-step="complete"] .tutorial-target { display:none; }
+.defense-tutorial[data-lesson="circle"] .tutorial-target { display:none; }

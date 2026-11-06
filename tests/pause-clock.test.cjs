@@ -144,3 +144,7 @@ test('defense gameplay uses the virtual clock for all timers, animation frames a
 test('story replay is hidden during exit confirmation and restored only after cancellation',()=>{
  const f=fixture(),replay=f.element();f.nodes.set('defense-replay-tutorial',replay);const owner={container:f.element(),pauseClock:f.clock()};f.window.GamePause.attach(owner,'defense');f.window.GamePause.pause();assert.equal(replay.hidden,false);f.window.GamePause.exit();assert.equal(f.window.GamePause.phase,'confirm-exit');assert.equal(replay.hidden,true);f.window.GamePause.continueGame();assert.equal(f.window.GamePause.phase,'paused');assert.equal(replay.hidden,false);f.window.GamePause.continueGame();assert.equal(f.window.GamePause.phase,'countdown');assert.equal(replay.hidden,true);
 });
+
+test('continuing an active tutorial resumes immediately but normal gameplay still counts down',()=>{
+ const f=fixture(),owner={container:f.element(),pauseClock:f.clock()};f.window.DefenseTutorial={run:{game:owner}};f.window.GamePause.attach(owner,'defense');f.window.GamePause.pause();f.window.GamePause.continueGame();assert.equal(f.window.GamePause.paused,false);assert.equal(f.window.GamePause.phase,'idle');assert.equal(f.window.GamePause.countdownTimer,null);f.window.DefenseTutorial.run=null;f.window.GamePause.pause();f.window.GamePause.continueGame();assert.equal(f.window.GamePause.phase,'countdown');
+});

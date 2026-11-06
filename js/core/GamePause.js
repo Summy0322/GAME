@@ -75,6 +75,7 @@ window.GamePause = {
             document.getElementById('game-pause-status').textContent = '請將畫面橫放後再繼續';
             return;
         }
+        if(window.DefenseTutorial?.run?.game===this.owner){this.resume();return;}
         const generation = this.generation;
         this.phase = 'countdown';
         const replay=document.getElementById('defense-replay-tutorial');if(replay)replay.hidden=true;

@@ -29,3 +29,7 @@ test('blocked storage remains playable and paused pointer input never advances a
 test('tutorial visuals use actual heavy/wave assets and stone countdown restarts on interaction',()=>{
  const f=fixture();Object.assign(f.game.levelConfig,{heavyEnemyImage:'heavy.png',aoeLineImage:'wave.png',shieldImage:'shield.png'});f.begin();assert.ok(f.tutorial.run.node.querySelectorAll('.tutorial-lights i').every(n=>n.style.backgroundImage==="url('heavy.png')"));assert.ok(f.tutorial.run.node.querySelectorAll('.tutorial-wave').every(n=>n.style.backgroundImage==="url('wave.png')"));f.event('pointerdown');f.event('pointerup',170);const fill=f.tutorial.run.node.querySelector('.tutorial-stone-fill');assert.match(fill.style.animation,/2200ms/);f.event('pointerdown');assert.equal(fill.style.animation,'none');f.event('pointerup');assert.match(fill.style.animation,/2200ms/);
 });
+
+test('heavy ignition repeats until a correct swipe and never restarts after completion',()=>{
+ const f=fixture(2);f.begin();f.tick(2000);assert.equal(f.tutorial.run.ready,true);f.tick(1400);assert.equal(f.tutorial.run.ready,false);f.tick(2000);assert.equal(f.tutorial.run.ready,true);f.event('pointerdown');f.event('pointerup',170);assert.equal(f.tutorial.run.step,'complete');f.tick(10000);assert.equal(f.tutorial.run.step,'complete');assert.equal(f.starts,0);
+});
