@@ -519,7 +519,7 @@ const DefenseGameV2 = {
                 <div id="defense-combo" style="font-size:${comboFontSize}px; font-weight:bold; color:#00ffaa; background:rgba(0,0,0,0.5); display:inline-block; padding:5px 15px; border-radius:30px;">分數: 0</div>
                 <div id="defense-wave-progress" aria-live="polite">準備開始</div>
                 <div id="defense-wait-meter" hidden>
-                    <span>保持不滑，等待石頭離開</span>
+                    <span>停手，避開石頭</span>
                     <div class="defense-wait-track" role="progressbar" aria-label="等待石頭離開" aria-valuetext="請保持不滑">
                         <div class="defense-wait-fill"></div>
                     </div>
