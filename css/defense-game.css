@@ -398,3 +398,32 @@
         bottom: 3%;
     }
 }
+
+/* 故事操作教學：暖棕提示、米白文字，手指只作示範，不攔截操作。 */
+.defense-tutorial { position:absolute;inset:0;z-index:180;background:#3b2c23ed;color:#fff0d5;display:flex;align-items:center;flex-direction:column;touch-action:none; }
+.tutorial-banner { width:100%;box-sizing:border-box;text-align:center;padding:2cqh 10px;background:linear-gradient(90deg,#6d4c2f00,#90683bb8 20%,#90683bb8 80%,#6d4c2f00);font-size:clamp(16px,4cqh,28px);line-height:1.4; }
+.tutorial-arena { position:relative;width:85%;height:52%;flex-shrink:0;touch-action:none; }
+.tutorial-player { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18%;height:45%;background:center/contain no-repeat;pointer-events:none; }
+.tutorial-target { position:absolute;left:78%;top:50%;transform:translate(-50%,-50%);width:12%;height:30%;object-fit:contain;pointer-events:none; }
+.tutorial-hand { position:absolute;left:50%;top:56%;width:clamp(30px,8cqh,58px);height:clamp(36px,9cqh,68px);pointer-events:none;animation:tutorial-swipe 1.7s ease-in-out infinite; }
+.tutorial-hand svg { width:100%;height:100%; }
+@keyframes tutorial-swipe { 0%,15% { transform:translateX(0);opacity:.2; } 30% { opacity:.95; } 75%,100% { transform:translateX(20cqw);opacity:0; } }
+.tutorial-hint { margin:1cqh 12px;text-align:center;max-width:90%;font-size:clamp(12px,3cqh,20px);line-height:1.5; }
+.tutorial-skip,.tutorial-start { border:1px solid #e8c68c88;border-radius:9px 3px;background:#725236;color:#fff1d6;padding:8px 18px;font:inherit;cursor:pointer;min-height:40px; }
+.tutorial-skip { position:absolute;right:3%;bottom:4%;font-size:clamp(12px,2.8cqh,18px); }
+.tutorial-start { margin-top:1cqh;background:#a8793e; }
+.tutorial-start[hidden] { display:none; }
+.tutorial-lights { display:none;position:absolute;left:56%;top:20%;gap:5px; }
+.tutorial-lights i { width:clamp(12px,4cqh,24px);height:clamp(12px,4cqh,24px);border:1px solid #f2cf8d;border-radius:3px;background:#483426; }
+.tutorial-lights i.lit { background:#f4b659;box-shadow:0 0 9px #f4b65977; }
+.defense-tutorial[data-step="heavy"] .tutorial-lights { display:flex; }
+.defense-tutorial[data-step="heavy"]:not([data-ready="true"]) .tutorial-hand { visibility:hidden; }
+.defense-tutorial[data-step="stone"] .tutorial-hand,.defense-tutorial[data-step="complete"] .tutorial-hand { display:none; }
+.tutorial-ring { display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30cqh;height:30cqh;border:2px dashed #e8c68c99;border-radius:50%;text-align:center;font:clamp(26px,7cqh,46px)/1 sans-serif;color:#f3d59d;pointer-events:none; }
+.defense-tutorial[data-step="circle"] .tutorial-target { display:none; }
+.defense-tutorial[data-step="circle"] .tutorial-ring { display:block; }
+.defense-tutorial[data-step="circle"] .tutorial-hand { left:50%;top:50%;animation:tutorial-circle 2.7s linear infinite; }
+@keyframes tutorial-circle { from { transform:rotate(0deg) translateX(15cqh) rotate(0deg); } to { transform:rotate(360deg) translateX(15cqh) rotate(-360deg); } }
+@media(prefers-reduced-motion:reduce) { .tutorial-hand { animation:none!important;opacity:.85; } }
+#defense-replay-tutorial[hidden] { display:none; }
+.tutorial-active #defense-stage > * { visibility:hidden; }

@@ -14,6 +14,7 @@ window.DefenseInputMixin = {
             this.touchStart.y = e.touches[0].clientY;
 
             const rect = this.stage.getBoundingClientRect();
+            if(this.state===this.states.AOE_ACTIVE)this.rotationAccumulator.lastAngle=Math.atan2(touch.clientY-rect.top-rect.height/2,touch.clientX-rect.left-rect.width/2)*180/Math.PI;
             this.lastTrailX = e.touches[0].clientX - rect.left;
             this.lastTrailY = e.touches[0].clientY - rect.top;
 
@@ -26,6 +27,8 @@ window.DefenseInputMixin = {
             const rect = this.stage.getBoundingClientRect();
             const x = e.touches[0].clientX - rect.left;
             const y = e.touches[0].clientY - rect.top;
+            // 與第三小關教學一致：單指繞角色畫圈；原雙指旋轉仍可使用。
+            if(this.state===this.states.AOE_ACTIVE && Math.hypot(x-rect.width/2,y-rect.height/2)>24)this.handleRotate({detail:{angle:Math.atan2(y-rect.height/2,x-rect.width/2)*180/Math.PI}});
 
             if (this.lastTrailX !== null && this.lastTrailY !== null) {
                 const dx = x - this.lastTrailX;
