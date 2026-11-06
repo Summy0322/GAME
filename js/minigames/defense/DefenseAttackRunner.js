@@ -48,10 +48,13 @@ window.DefenseAttackRunnerMixin = {
     handleSpecialSwipe: function(dir) {
         const attack=this.currentAttack,step=attack.specialStep;
         if(attack.orderPhase!=='playing'||attack.stepClosing||attack.resolved||attack.finished)return;
-        if(attack.stoneDirs?.includes(dir)){
-            this.addScore(this.scoreTable.MIXED_WRONG);this.missAttack('碰到石頭');this.closeTimedOutAttack(attack);return;
+        if(attack.stoneDirs?.includes(dir)||dir!==attack.dirs[step]){
+            // 錯誤輸入也立即發射；只等待飛行與命中特效，不開放重試或推進順序。
+            this.launchProjectile(dir,()=>{});
+            if(attack.stoneDirs?.includes(dir)){this.addScore(this.scoreTable.MIXED_WRONG);this.missAttack('碰到石頭');}
+            else this.missAttack('順序錯誤');
+            this.closeTimedOutAttack(attack,650);return;
         }
-        if(dir!==attack.dirs[step]){this.missAttack('順序錯誤');this.closeTimedOutAttack(attack);return;}
         this.clock.clearTimeout(attack.stepTimer);
         attack.pendingShots++;
         attack.specialStep=step+1;
@@ -184,7 +187,7 @@ window.DefenseAttackRunnerMixin = {
         if(fill){fill.style.animation='none';if(duration){void fill.offsetWidth;fill.style.animation=`defense-wait ${duration}ms linear forwards`;}}
     },
 
-    closeTimedOutAttack: function(attack) {
+    closeTimedOutAttack: function(attack,feedbackDuration=350) {
         if (!this.gameActive || attack!==this.currentAttack || attack.finished) return;
         if (!this.challenge?.endless) {this.finishAttack();return;}
         attack.resolved=true;
@@ -192,7 +195,7 @@ window.DefenseAttackRunnerMixin = {
         attack.closing=true;
         this.showResponseProgress(0);
         this.showAvoidanceProgress(0);
-        this.queueWaveCallback(()=>this.finishAttack(),350,attack);
+        this.queueWaveCallback(()=>this.finishAttack(),feedbackDuration,attack);
     },
 
     updateWaveProgress: function() {
