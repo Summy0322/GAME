@@ -1911,6 +1911,8 @@ const DefenseGameV2 = {
         this.aoeStartTime = this.clock.now();
         this.aoeDuration = wait;
         this.aoePushProgress = 0;
+        this.aoePressure = 0;
+        this.rotationAccumulator = { totalAngle: 0, lastAngle: undefined };
         this.lastRotateTime = null;
         
         let finished = false;
@@ -1943,36 +1945,21 @@ const DefenseGameV2 = {
             }
         };
         
-        let smoothProgress = 0;
+        let lastFrameTime = startTime;
         
         const animate = () => {
             if (finished || !isCurrent() || this.state !== this.states.AOE_ACTIVE) {
                 return;
             }
             
-            const elapsed = this.clock.now() - startTime;
-            const actualProgress = Math.min(1, elapsed / duration);
-            
+            // 只積分當下的內壓與回推，不在停手後追趕歷史時間。
             const now = this.clock.now();
-            const timeSinceLastRotate = now - (this.lastRotateTime || 0);
-            const isRotating = timeSinceLastRotate < 300;
-            
-            let targetProgress;
-            
-            if (isRotating) {
-                const pushDelay = (this.aoePushProgress || 0) * 200;
-                const adjustedElapsed = Math.max(0, elapsed - pushDelay);
-                targetProgress = Math.min(1, adjustedElapsed / duration);
-                smoothProgress = targetProgress;
-            } else {
-                const catchUpSpeed = 0.015;
-                if (smoothProgress < actualProgress) {
-                    smoothProgress = Math.min(actualProgress, smoothProgress + catchUpSpeed);
-                } else {
-                    smoothProgress = actualProgress;
-                }
-                targetProgress = smoothProgress;
-            }
+            const deltaMs = Math.max(0, Math.min(50, now - lastFrameTime));
+            lastFrameTime = now;
+            const push = Math.min(this.aoePushProgress || 0, 1.5 * deltaMs / duration);
+            this.aoePushProgress = Math.max(0, (this.aoePushProgress || 0) - push);
+            this.aoePressure = Math.max(0, Math.min(1, this.aoePressure + deltaMs / duration - push));
+            const targetProgress = this.aoePressure;
             
             const easeProgress = 1 - Math.pow(1 - targetProgress, 2);
             
@@ -2059,9 +2046,6 @@ const DefenseGameV2 = {
         if (!this.gameActive || !this.currentAttack || this.currentAttack.finished) return;
         if (this.state !== this.states.AOE_ACTIVE) return;
         
-        // ✅ 記錄最後旋轉時間
-        this.lastRotateTime = this.clock.now();
-        
         let angle = 0;
         if (e.detail) {
             angle = e.detail.angle || 0;
@@ -2080,30 +2064,19 @@ const DefenseGameV2 = {
         
         this.rotationAccumulator.lastAngle = angle;
         
-        if (Math.abs(delta) > 2) {
+        // 忽略換指、越過中心等造成的角度跳變。
+        if (Math.abs(delta) > 75) return;
+        if (Math.abs(delta) > 0.25) {
+            this.lastRotateTime = this.clock.now();
             this.rotationAccumulator.totalAngle = (this.rotationAccumulator.totalAngle || 0) + Math.abs(delta);
             
             if (this.rotationAccumulator.totalAngle >= 20) {
-                this.rotationAccumulator.totalAngle = 0;
-                
-                // 計算當前時間進度
-                let timeProgress = 0;
-                if (this.aoeStartTime) {
-                    const elapsed = this.clock.now() - this.aoeStartTime;
-                    timeProgress = Math.min(1, elapsed / this.aoeDuration);
-                }
-                
-                // 根據時間進度動態調整回推量
-                let pushAmount = 0.17 - (timeProgress * 0.1);
-                pushAmount = Math.max(0.07, Math.min(0.17, pushAmount));
-                
-                this.aoePushProgress = (this.aoePushProgress || 0) + pushAmount;
-                
-                console.log('🔄 旋轉回推！', {
-                    時間進度: (timeProgress * 100).toFixed(0) + '%',
-                    回推量: pushAmount.toFixed(3),
-                    總回推: this.aoePushProgress.toFixed(3)
-                });
+                const degrees = Math.floor(this.rotationAccumulator.totalAngle / 20) * 20;
+                this.rotationAccumulator.totalAngle -= degrees;
+                // 每圈抵消約 1.6 秒內壓；最多保留 120ms 回推，不能囤積到停手後。
+                const duration = this.aoeDuration || 5500;
+                const pushAmount = degrees / 360 * 1600 / duration;
+                this.aoePushProgress = Math.min(120 / duration, (this.aoePushProgress || 0) + pushAmount);
                 
                 // 視覺回饋
                 const aoeLines = ['aoe-up', 'aoe-down', 'aoe-left', 'aoe-right'];

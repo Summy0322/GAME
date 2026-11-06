@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 
-function fixture(mode = 'adult', level = 1, virtualClock = false) {
+function fixture(mode = 'adult', level = 1, virtualClock = false, frameMs = 16) {
     let now = 10000, next = 0;
     const timers = new Map();
     const elements = {
@@ -17,7 +17,7 @@ function fixture(mode = 'adult', level = 1, virtualClock = false) {
         Date: {now: () => now},
         setTimeout(fn, delay = 0) { const id = ++next; timers.set(id,{fn,at:now+delay}); return id; },
         clearTimeout(id) { timers.delete(id); }, clearInterval(id) { timers.delete(id); },
-        requestAnimationFrame(fn) { const id=++next;timers.set(id,{fn:()=>fn(now),at:now+16});return id; },
+        requestAnimationFrame(fn) { const id=++next;timers.set(id,{fn:()=>fn(now),at:now+frameMs});return id; },
         cancelAnimationFrame(id) { timers.delete(id); }
     });
     const read = file => fs.readFileSync(path.join(root, file), 'utf8');
@@ -559,3 +559,36 @@ test('out-of-order or duplicate hit callbacks cannot end a wave before every pen
  const f=specialFixture(),g=f.game,hits=[];g.launchProjectile=(dir,done)=>hits.push(done);const a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});g.handleSwipe('up');assert.equal(g.lost,undefined);g.handleSwipe('left');g.handleSwipe('down');hits[2]();hits[2]();assert.equal(a.pendingShots,2);assert.equal(a.finished,undefined);hits[0]();assert.equal(a.finished,undefined);hits[1]();assert.equal(a.finished,true);assert.equal(a.pendingShots,0);assert.equal(g.score,150);
 });
 test('wrong order or empty direction deducts once and closes the wave without retry lock',()=>{for(const dir of ['left','right']){const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});g.handleSwipe(dir);g.handleSwipe('up');g.handleSwipe(dir);assert.equal(g.lost,1);assert.equal(a.resolved,true);f.tick(350);assert.equal(a.finished,true);assert.equal(g.lost,1);assert.equal(g.specialCue,null);}});
+
+function aoeMotionFixture(frameMs=16){
+ const f=fixture('adult',3,true,frameMs),g=f.game;
+ for(const dir of ['up','down','left','right'])f.elements['aoe-'+dir]={style:{},getBoundingClientRect:()=>({bottom:-1000,top:1000,left:1000,right:-1000})};
+ g.stage={clientWidth:844,clientHeight:390,getBoundingClientRect:()=>({left:0,top:0,width:844,height:390})};
+ g.player={getBoundingClientRect:()=>({left:350,top:120,width:140,height:140})};
+ g.currentAttack={type:'AOE',resolved:false};g.state=g.states.AOE_ACTIVE;g.startAOE(5500);f.tick(50);
+ return f;
+}
+test('AOE circles oppose inward pressure; stopping never catches up or banks a long outward stall',()=>{
+ const f=aoeMotionFixture(),g=f.game;f.tick(1000);const before=g.aoePressure;let angle=0;
+ g.handleRotate({detail:{angle}});
+ for(let i=0;i<20;i++){f.tick(50);angle+=18;g.handleRotate({detail:{angle}});}
+ const held=g.aoePressure;assert.ok(held>0.04&&held<before+.04,'a steady circle maintains a contest, rather than clearing the wave to the edge');
+ f.tick(100);assert.equal(g.aoePushProgress,0);const stopped=g.aoePressure;
+ f.tick(100);const first=g.aoePressure-stopped;f.tick(100);const second=g.aoePressure-stopped-first;
+ assert.ok(first>0&&first<.025);assert.ok(Math.abs(first-second)<.004,'stopping resumes the same inward speed without time catch-up');
+ const resume=g.aoePressure;g.handleRotate({detail:{angle:angle+20}});f.tick(16);assert.ok(Math.abs(g.aoePressure-resume)<.004,'resuming does not jump back to the edge');
+});
+test('AOE input cannot bank unlimited push or gain credit from angle jumps; paused motion remains frozen',()=>{
+ const f=aoeMotionFixture(),g=f.game;g.handleRotate({detail:{angle:0}});g.handleRotate({detail:{angle:170}});assert.equal(g.aoePushProgress,0);
+ for(let i=0;i<100;i++)g.handleRotate({detail:{angle:170+20*i}});
+ assert.ok(g.aoePushProgress<=120/5500);g.clock.pause();const pressure=g.aoePressure,push=g.aoePushProgress;f.tick(1000);assert.equal(g.aoePressure,pressure);assert.equal(g.aoePushProgress,push);g.clock.resume();f.tick(100);assert.equal(g.aoePushProgress,0);
+});
+test('AOE motion is consistent across frame rates and rotation event sampling',()=>{
+ const values=[];
+ for(const frame of [8,16,33])for(const degrees of [1,5,20]){
+  const f=aoeMotionFixture(frame),g=f.game;f.tick(1000);g.handleRotate({detail:{angle:0}});
+  for(let angle=degrees;angle<=360;angle+=degrees){f.tick(degrees/360*1000);g.handleRotate({detail:{angle}});}
+  f.tick(150);values.push(g.aoePressure);
+ }
+ assert.ok(Math.max(...values)-Math.min(...values)<.015,JSON.stringify(values));
+});
