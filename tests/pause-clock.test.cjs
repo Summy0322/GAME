@@ -140,3 +140,7 @@ test('defense gameplay uses the virtual clock for all timers, animation frames a
         assert.equal(/Date\.now\(|performance\.now\(/.test(gameplay),false,file);
     }
 });
+
+test('story replay is hidden during exit confirmation and restored only after cancellation',()=>{
+ const f=fixture(),replay=f.element();f.nodes.set('defense-replay-tutorial',replay);const owner={container:f.element(),pauseClock:f.clock()};f.window.GamePause.attach(owner,'defense');f.window.GamePause.pause();assert.equal(replay.hidden,false);f.window.GamePause.exit();assert.equal(f.window.GamePause.phase,'confirm-exit');assert.equal(replay.hidden,true);f.window.GamePause.continueGame();assert.equal(f.window.GamePause.phase,'paused');assert.equal(replay.hidden,false);f.window.GamePause.continueGame();assert.equal(f.window.GamePause.phase,'countdown');assert.equal(replay.hidden,true);
+});

@@ -43,6 +43,7 @@ window.GamePause = {
         document.getElementById('game-pause-button').hidden = true;
         document.getElementById('game-pause-overlay').hidden = false;
         document.getElementById('game-pause-status').textContent = '遊戲已暫停';
+        const replay=document.getElementById('defense-replay-tutorial');if(replay)replay.hidden=this.kind!=='defense'||!!this.owner?.challenge;
         const detail = document.getElementById('game-pause-detail');
         if (detail) {
             detail.textContent = window.TimedChallenge?.pauseDetail?.() || '';
@@ -76,6 +77,7 @@ window.GamePause = {
         }
         const generation = this.generation;
         this.phase = 'countdown';
+        const replay=document.getElementById('defense-replay-tutorial');if(replay)replay.hidden=true;
         document.getElementById('game-pause-overlay').dataset.countdown = 'true';
         let remaining = 3;
         const status = document.getElementById('game-pause-status');
@@ -140,6 +142,7 @@ window.GamePause = {
         if (window.TimedChallenge?.active) { window.TimedChallenge.confirmExit(); return; }
         if (!this.paused || !['paused', 'confirm-exit'].includes(this.phase)) return;
         if (this.phase !== 'confirm-exit') {
+            const replay=document.getElementById('defense-replay-tutorial');if(replay)replay.hidden=true;
             this.phase = 'confirm-exit';
             document.getElementById('game-pause-status').textContent = '確定要返回章節選擇嗎？本次小遊戲進度不會保存。';
             document.getElementById('game-pause-exit').textContent = '確認返回';
