@@ -31,8 +31,18 @@ window.DefenseTutorial = {
         const fill=node.querySelector('.tutorial-stone-fill');
         const waitStone=()=>{fill.style.animation='none';void fill.offsetWidth;fill.style.animation='tutorial-stone-countdown 2200ms linear forwards';run.hold=later(success,2200);};
         const finish=()=>{if(!current())return;this.remember(game.currentLevel,game.getGameMode());this.cancel(game);done();};
-        const success=()=>{run.step='complete';node.dataset.step='complete';banner.textContent='學會了，準備開始！';hint.textContent='正式遊戲即將開始，教學不計分也不扣命。';start.hidden=false;this.remember(game.currentLevel,game.getGameMode());start.focus();};
+        const success=()=>{node.dataset.timing='';run.step='complete';node.dataset.step='complete';banner.textContent='學會了，準備開始！';hint.textContent='正式遊戲即將開始，教學不計分也不扣命。';start.hidden=false;this.remember(game.currentLevel,game.getGameMode());start.focus();};
         const stone=()=>{run.step='stone';node.dataset.step='stone';banner.textContent='石頭不要滑，停手就能避開';hint.textContent='等倒計條走完，石頭就會離開。';target.src=game.levelConfig.decoyImage;waitStone();};
+        // 練習也使用正式素材；動畫與步驟都由可暫停的遊戲時鐘收尾。
+        const shoot=(dx,dy,hit,after)=>{
+            const projectile=document.createElement('div'),rect=arena.getBoundingClientRect();
+            const horizontal=Math.abs(dx)>=Math.abs(dy),x=horizontal?Math.sign(dx)*rect.width*.28:0,y=horizontal?0:Math.sign(dy)*rect.height*.4;
+            projectile.className='tutorial-projectile';projectile.style.backgroundImage=`url('${game.levelConfig.projectileImage}')`;
+            projectile.style.setProperty('--shot-x',`${x}px`);projectile.style.setProperty('--shot-y',`${y}px`);arena.appendChild(projectile);
+            later(()=>{projectile.remove();if(hit){target.src=game.levelConfig.projectileHitImage||game.levelConfig.enemyImage;}},280);
+            if(after)later(after,620);
+        };
+        const shield=()=>{node.dataset.blocking='true';game.clock.clearTimeout(run.blockTimer);run.blockTimer=later(()=>{node.dataset.blocking='false';},500);};
         const show=()=>{
             node.dataset.step=run.step;target.src=game.levelConfig.enemyImage;
             if(run.step==='swipe'){banner.textContent='往目標方向滑一下';hint.textContent='跟著手指，從角色往右滑。';}
@@ -40,9 +50,10 @@ window.DefenseTutorial = {
                 banner.textContent='重擊：等五格全亮，再滑向目標';hint.textContent='教學會等你準備好，不用急。';
                 const ignite=()=>{
                     if(run.step!=='heavy')return;
-                    run.ready=false;node.dataset.ready='false';hint.textContent='等五格全亮再往右滑；示範會重複播放。';
+                    run.ready=false;run.late=false;node.dataset.ready='false';hint.textContent='等五格全亮再往右滑；太早出手，護盾會先消失。';
                     const lights=[...node.querySelectorAll('.tutorial-lights i')];lights.forEach(light=>light.classList.remove?.('lit'));
                     lights.forEach((light,index)=>later(()=>{if(run.step!=='heavy')return;light.classList.add('lit');if(index===4){run.ready=true;node.dataset.ready='true';hint.textContent='現在往右滑動格擋！';}},400*(index+1)));
+                    later(()=>{if(run.step!=='heavy')return;run.ready=false;run.late=true;hint.textContent='攻擊已經通過，等下一輪五格全亮再出手。';},2700);
                     later(ignite,3400);
                 };ignite();
             }
@@ -70,10 +81,21 @@ window.DefenseTutorial = {
         listen(arena,'pointerup',e=>{
             if(!current()||run.pointer!==e.pointerId)return;run.pointer=null;
             if(window.GamePause?.paused)return;
-            if(run.step==='stone'){waitStone();return;}
             const dx=e.clientX-run.x,dy=e.clientY-run.y;
-            if(dx<35||Math.abs(dx)<Math.abs(dy)){if(['swipe','heavy'].includes(run.step))hint.textContent='從角色往右邊的目標滑動，再試一次。';return;}
-            if(run.step==='swipe')stone();else if(run.step==='heavy'){if(run.ready)success();else hint.textContent='先等五格全部亮起，再滑動格擋。';}
+            const isSwipe=Math.hypot(dx,dy)>=35,right=dx>=35&&Math.abs(dx)>=Math.abs(dy);
+            if(run.step==='stone'){
+                if(isSwipe){shoot(dx,dy,false);hint.textContent='滑動會射出攻擊，但石頭不能打；這次停手，等倒計條走完。';}
+                waitStone();return;
+            }
+            if(!isSwipe||!['swipe','heavy'].includes(run.step))return;
+            if(run.step==='swipe'){
+                if(right){run.step='swipe-feedback';hint.textContent='命中！滑動就會射出攻擊。';shoot(dx,dy,true,stone);}
+                else{shoot(dx,dy,false);hint.textContent='已射出攻擊！目標在右邊，往右滑再試一次。';}
+            }else{
+                shield();
+                if(right&&run.ready)success();
+                else{node.dataset.timing='wrong';game.clock.clearTimeout(run.feedbackTimer);run.feedbackTimer=later(()=>{node.dataset.timing='';},650);hint.textContent=!right?'方向不對：目標在右邊，往右滑動格擋。':run.late?'太晚了！攻擊已通過，等下一輪五格全亮再滑。':'太早了！護盾只能維持一下，等五格全亮再滑。';}
+            }
         });
         listen(arena,'pointercancel',()=>{run.pointer=null;if(run.step==='stone')waitStone();});
         listen(start,'click',finish);listen(node.querySelector('.tutorial-skip'),'click',finish);show();return true;

@@ -458,3 +458,9 @@
 .tutorial-shield { left:62%;width:42cqh;height:10cqh;transform:translate(-50%,-50%) rotate(-90deg); }
 .defense-tutorial[data-step="complete"] .tutorial-target { display:none; }
 .defense-tutorial[data-lesson="circle"] .tutorial-target { display:none; }
+.tutorial-projectile { position:absolute;left:50%;top:50%;width:12%;height:24%;pointer-events:none;background:center/contain no-repeat;animation:tutorial-shot 280ms linear forwards; }
+@keyframes tutorial-shot { from { transform:translate(-50%,-50%); } to { transform:translate(calc(-50% + var(--shot-x)),calc(-50% + var(--shot-y))); } }
+.defense-tutorial[data-blocking="true"] .tutorial-shield { display:block; }
+.defense-tutorial[data-timing="wrong"] .tutorial-hint { color:#ffd1aa;background:#703d2c;border-radius:8px; }
+.defense-tutorial[data-step="swipe"]:has(.tutorial-projectile) .tutorial-hand,
+.defense-tutorial[data-step="swipe-feedback"] .tutorial-hand { display:none; }
