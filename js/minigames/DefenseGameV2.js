@@ -1958,7 +1958,7 @@ const DefenseGameV2 = {
             lastFrameTime = now;
             const push = Math.min(this.aoePushProgress || 0, 1.5 * deltaMs / duration);
             this.aoePushProgress = Math.max(0, (this.aoePushProgress || 0) - push);
-            this.aoePressure = Math.max(0, Math.min(1, this.aoePressure + deltaMs / duration - push));
+            this.aoePressure = Math.max(0, Math.min(1, this.aoePressure + 1.15 * deltaMs / duration - push));
             const targetProgress = this.aoePressure;
             
             const easeProgress = 1 - Math.pow(1 - targetProgress, 2);

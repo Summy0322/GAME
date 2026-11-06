@@ -298,3 +298,14 @@ test('practice starts directly, repeats selected three-target variant, and norma
 test('practice results never write best records; normal results still save',()=>{
  for(const practice of [true,false]){const f=fixture();f.context.showScene=()=>{};f.window.GamePause={end(){}};Object.assign(f.c,{kind:'defense',variant:'endless',mode:'adult',practiceOrder:practice?'memory':null,game:{score:999,waveNumber:5,stop(){}}});f.c.finish();assert.equal(f.saved.size,practice?0:1);if(practice)assert.match(f.nodes.get('challenge-final-detail').textContent,/不保存紀錄/);}
 });
+
+test('endless AOE wait shortens across actual generated waves in both age modes and respects its floor',()=>{
+ for(const mode of ['adult','child']){
+  const {c}=fixture();c.kind='defense';c.mode=mode;c.variant='endless';const waits=[];
+  for(const wave of [30,40,50,60,100,200]){
+   const game={waveNumber:wave-1,levelConfig:{flow:{}}};const attack=c.nextAttack(game);assert.equal(attack.type,'AOE');waits.push(attack.wait);
+  }
+  assert.ok(waits[0]>waits[1]);assert.ok(waits[1]>waits.at(-1));assert.equal(waits.at(-1),mode==='child'?3400:2600);
+  assert.ok(waits.every((n,i)=>i===0||n<=waits[i-1]));
+ }
+});

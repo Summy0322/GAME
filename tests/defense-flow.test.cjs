@@ -560,12 +560,12 @@ test('out-of-order or duplicate hit callbacks cannot end a wave before every pen
 });
 test('wrong order or empty direction deducts once and closes the wave without retry lock',()=>{for(const dir of ['left','right']){const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],wait:1900});g.handleSwipe(dir);g.handleSwipe('up');g.handleSwipe(dir);assert.equal(g.lost,1);assert.equal(a.resolved,true);f.tick(350);assert.equal(a.finished,true);assert.equal(g.lost,1);assert.equal(g.specialCue,null);}});
 
-function aoeMotionFixture(frameMs=16){
+function aoeMotionFixture(frameMs=16,wait=5500){
  const f=fixture('adult',3,true,frameMs),g=f.game;
  for(const dir of ['up','down','left','right'])f.elements['aoe-'+dir]={style:{},getBoundingClientRect:()=>({bottom:-1000,top:1000,left:1000,right:-1000})};
  g.stage={clientWidth:844,clientHeight:390,getBoundingClientRect:()=>({left:0,top:0,width:844,height:390})};
  g.player={getBoundingClientRect:()=>({left:350,top:120,width:140,height:140})};
- g.currentAttack={type:'AOE',resolved:false};g.state=g.states.AOE_ACTIVE;g.startAOE(5500);f.tick(50);
+ g.currentAttack={type:'AOE',resolved:false};g.state=g.states.AOE_ACTIVE;g.startAOE(wait);f.tick(50);
  return f;
 }
 test('AOE circles oppose inward pressure; stopping never catches up or banks a long outward stall',()=>{
@@ -591,4 +591,14 @@ test('AOE motion is consistent across frame rates and rotation event sampling',(
   f.tick(150);values.push(g.aoePressure);
  }
  assert.ok(Math.max(...values)-Math.min(...values)<.015,JSON.stringify(values));
+});
+
+test('AOE inward movement is 15 percent quicker and shortened challenge waits increase actual motion',()=>{
+ const pressures=[];
+ for(const wait of [6500,5500,4696,3520,3400,2816,2600]){
+  const f=aoeMotionFixture(16,wait);f.tick(400);const pressure=f.game.aoePressure;
+  assert.ok(Math.abs(pressure-1.15*400/wait)<.00001);pressures.push({wait,pressure});
+ }
+ assert.ok(pressures.find(x=>x.wait===2600).pressure>pressures.find(x=>x.wait===3520).pressure);
+ assert.ok(pressures.find(x=>x.wait===3400).pressure>pressures.find(x=>x.wait===4696).pressure);
 });
