@@ -1,6 +1,233 @@
-<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>操作練習 UI 預覽</title><style>
-*{box-sizing:border-box}body{margin:0;background:#102334;color:#e6eff2;font-family:system-ui,'Microsoft JhengHei',sans-serif;min-height:100vh;display:grid;place-items:center}main{width:min(92vw,960px);padding:24px}button{font:inherit;color:inherit;cursor:pointer}nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}nav button{border:1px solid #7797a955;background:transparent;padding:8px 18px;border-radius:30px;font-size:13px}.eyebrow{font-size:12px;letter-spacing:.2em;color:#9ebbc9}h1{font-size:30px;margin:6px 0}header p{color:#b2c5ce;font-size:14px;margin:8px 0 24px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{border:1px solid #93b3bd40;border-radius:16px;background:#28445380;text-align:left;padding:20px 16px;min-height:168px;transition:.2s}.card:hover,.card[aria-pressed=true]{border-color:#d8bd86;background:#38545b;transform:translateY(-3px)}.icon{font-size:30px;color:#d8bd86;display:block;height:48px}.card strong{display:block;font-size:18px;margin:12px 0 8px}.card small{color:#b3c8d0;font-size:12px;line-height:1.7}.detail{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:20px 0;border-bottom:1px solid #8eacb533}.detail p{margin:6px 0;color:#b3c8d0;font-size:13px}.action{border:0;border-radius:30px;background:#cfb57f;color:#20313b;padding:12px 28px;white-space:nowrap;font-weight:bold}footer{font-size:12px;color:#99b2bd;margin-top:16px}.catalog{display:none}.catalog .grid{grid-template-columns:1fr 1fr}.practice-link{width:100%;margin-top:16px;border:1px solid #b6c6be44;background:#28464b;padding:16px 20px;border-radius:14px;display:flex;justify-content:space-between;text-align:left}.practice-link small{display:block;color:#abc1c7;margin-top:5px}.notice{min-height:18px;color:#dfc796;font-size:13px}@media(max-width:650px){main{padding:12px}.grid{grid-template-columns:1fr 1fr}.card{min-height:120px;padding:12px}.icon{font-size:23px;height:26px}nav{margin-bottom:12px}header p{margin-bottom:14px}h1{font-size:24px}.detail{padding:12px 0}.card strong{font-size:16px;margin:8px 0}.detail p{max-width:250px}}</style>
-<main><nav><button onclick="view('catalog')">← 挑戰目錄</button><span class="eyebrow">UI 設計預覽</span></nav><section id="practice"><header><span class="eyebrow">先熟悉，再挑戰</span><h1>操作練習</h1><p>挑一種想熟悉的操作，依自己的步調反覆練習。</p></header><div class="grid">
-<button class="card" aria-pressed="true" onclick="pick(this,'重擊格擋','等目標全亮，再滑動格擋。')"><span class="icon">▥</span><strong>重擊格擋</strong><small>掌握全亮後的出手時機</small></button><button class="card" aria-pressed="false" onclick="pick(this,'旋轉防守','繞著角色畫圈，練習維持回推節奏。')"><span class="icon">↻</span><strong>旋轉防守</strong><small>找到與波紋拉鋸的節奏</small></button><button class="card" aria-pressed="false" onclick="pick(this,'順序滑動','照編號連續滑動，數字會一直保留。')"><span class="icon">① → ②</span><strong>順序滑動</strong><small>照編號，連續接住目標</small></button><button class="card" aria-pressed="false" onclick="pick(this,'記憶順序','記住編號；隨時可滑動開始，第一下後數字隱藏。')"><span class="icon">① · ·</span><strong>記憶順序</strong><small>記住位置，再依序滑動</small></button></div><div class="detail"><div><strong id="selection">重擊格擋</strong><p id="description">等目標全亮，再滑動格擋。</p></div><button class="action" onclick="document.querySelector('.notice').textContent='目前為 UI 預覽；此按鈕尚未接入練習關卡。'">開始練習 →</button></div><footer>不計分・不扣生命・可隨時離開</footer><p class="notice" role="status"></p></section>
-<section id="catalog" class="catalog"><header><span class="eyebrow">夜間挑戰</span><h1>挑戰自己，再進步一點</h1><p>選擇限時或無限模式，留下你的最佳紀錄。</p></header><div class="grid"><div class="card"><span class="icon">◇</span><strong>防守挑戰</strong><small>限時挑戰　／　無限模式</small></div><div class="card"><span class="icon">▧</span><strong>記憶挑戰</strong><small>限時挑戰　／　無限模式</small></div></div><button class="practice-link" onclick="view('practice')"><span>操作練習<small>想先熟悉手感？從一種操作開始。</small></span><span>前往練習 →</span></button></section></main>
-<script>function view(id){document.getElementById('practice').style.display=id==='practice'?'block':'none';document.getElementById('catalog').style.display=id==='catalog'?'block':'none'}function pick(button,title,description){document.querySelectorAll('.card[aria-pressed]').forEach(n=>n.setAttribute('aria-pressed',String(n===button)));document.getElementById('selection').textContent=title;document.getElementById('description').textContent=description;document.querySelector('.notice').textContent=''}</script></html>
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>現有挑戰版面・練習 UI 預覽</title><style>/* 舞台內的日夜目錄：所有夜色樣式只作用於選章畫面。 */
+#level-select { isolation:isolate; }
+#level-select::before { content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(29,21,15,.28),rgba(50,29,19,.54));transition:background .8s; }
+#level-select::after { content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 78% 8%,#668aa54a,transparent 52%),linear-gradient(180deg,#0c1935ed,#112c47e8 55%,#0d2234f5);opacity:0;transition:opacity .85s ease; }
+#level-select.night-world::after { opacity:1; }
+.world-directory { position:relative;z-index:1;text-align:center;width:100%; }
+.world-directory[hidden] { display:none; }
+#level-select .world-directory h2 { box-sizing:border-box;width:100%;max-width:none;text-align:center; }
+#story-directory h2 { margin:0 0 4cqh;text-shadow:0 2px 12px #38230e; }
+#world-switch { position:absolute;right:2.5%;top:3%;z-index:5;display:flex;align-items:center;gap:10px;width:clamp(132px,17cqw,186px);height:clamp(46px,9cqh,66px);box-sizing:border-box;margin:0;padding:6px 10px 6px 6px;border:1px solid #ffe2a19c;border-radius:40px;background:linear-gradient(135deg,#553921e8,#302923ed);box-shadow:0 4px 16px #17120e40,inset 0 1px #fff3;color:#fff0cf;text-align:left;transition:background .7s,border-color .7s,box-shadow .3s; }
+#world-switch:hover { box-shadow:0 5px 22px #17120e66,0 0 0 3px #ffdc8c24; }
+#world-switch:focus-visible { outline:3px solid #ffe1a0;outline-offset:4px; }
+.world-switch-label { font-size:clamp(13px,1.5cqw,18px);font-weight:bold;line-height:1.35;white-space:nowrap; }
+.world-switch-label span { display:block;font-size:clamp(9px,.9cqw,11px);font-weight:normal;opacity:.78;letter-spacing:.06em; }
+.world-switch-sky { position:relative;flex:1;min-width:60px;height:100%;overflow:hidden;border-radius:30px;background:linear-gradient(#82b3c1,#d9e5cc);box-shadow:inset 0 2px 5px #19394f66;transition:background .7s; }
+.switch-orb { position:absolute;left:6px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:50%;background:#ffe6a0;box-shadow:0 0 0 5px #ffe7a02e,0 0 15px #ffe9ad80;transition:left .65s cubic-bezier(.22,.8,.25,1),background .65s,box-shadow .65s;z-index:2; }
+.switch-orb::after { content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 32%,#9fb5c2 0 3px,transparent 3.5px),radial-gradient(circle at 65% 58%,#9fb5c2 0 4px,transparent 4.5px),radial-gradient(circle at 40% 78%,#9fb5c2 0 2px,transparent 2.5px);opacity:0;transition:opacity .6s; }
+.switch-cloud { position:absolute;width:38px;height:12px;right:-4px;bottom:10px;border-radius:20px;background:#fff8e7;box-shadow:-9px 5px #fff8e7;transition:transform .65s,opacity .5s; }
+.switch-cloud::before { content:"";position:absolute;width:19px;height:19px;left:8px;bottom:0;background:inherit;border-radius:50%; }
+.switch-stars { position:absolute;top:4px;left:9px;color:#d9f3ff;font:15px/1.4 serif;letter-spacing:5px;opacity:0;transform:translateY(-18px);transition:opacity .65s,transform .65s; }
+.switch-hills { position:absolute;bottom:-18px;left:-5px;width:78px;height:30px;background:#547d75;border-radius:50%;transform:rotate(-15deg);opacity:.65;transition:background .65s; }
+.night-world #world-switch { background:linear-gradient(135deg,#263c58ed,#101e34f5);border-color:#92c8e17d;color:#e4f4ff; }
+.night-world .world-switch-sky { background:linear-gradient(#14243e,#31526c); }
+.night-world .switch-orb { left:calc(100% - 36px);background:#e0ebed;box-shadow:0 0 0 5px #d8f4ff15,0 0 15px #d1efff66; }
+.night-world .switch-orb::after { opacity:.75; }
+.night-world .switch-cloud { transform:translateY(30px);opacity:0; }
+.night-world .switch-stars { opacity:1;transform:translateY(0); }
+.night-world .switch-hills { background:#0a172d; }
+.night-stars { position:absolute;inset:0;pointer-events:none;opacity:0;background-image:radial-gradient(circle at 12% 20%,#d6edffbb 0 1px,transparent 2px),radial-gradient(circle at 32% 13%,#d6edff88 0 1px,transparent 2px),radial-gradient(circle at 58% 22%,#d6edff99 0 1px,transparent 2px),radial-gradient(circle at 72% 12%,#d6edff99 0 1px,transparent 2px),radial-gradient(circle at 89% 36%,#d6edffaa 0 1px,transparent 2px);transition:opacity 1s; }
+.night-world .night-stars { opacity:1; }
+#challenge-directory { color:#e4f3fc;animation:night-arrival .65s ease both; }
+.night-eyebrow { color:#a8d6e2;font-size:clamp(10px,2.1cqh,15px);letter-spacing:.35em;margin:0 0 1.4cqh; }
+#challenge-directory h2 { margin:0;font-size:clamp(23px,6cqh,42px);letter-spacing:.12em;font-weight:normal;text-shadow:0 0 25px #81d5f34d; }
+.night-intro { font-size:clamp(12px,2.5cqh,18px);color:#bed2e2;margin:1.7cqh 0 4cqh; }
+.challenge-previews { display:flex;justify-content:center;gap:3cqw; }
+.challenge-preview { width:25cqw;max-width:300px;box-sizing:border-box;padding:2.5cqh 2cqw;border:1px solid #9ed0e345;border-radius:16px;background:linear-gradient(145deg,#3655739c,#142b46b8);box-shadow:0 12px 32px #020d202b,inset 0 1px #d4efff17;text-align:left; }
+.challenge-number { display:block;color:#99c4d9;font-size:clamp(10px,2cqh,14px);letter-spacing:.12em; }
+.challenge-preview svg { display:block;width:clamp(42px,10cqh,75px);height:clamp(35px,8cqh,60px);margin:1.5cqh 0;fill:#24415d;stroke:#b8e3ed;stroke-width:2;stroke-linejoin:round;stroke-linecap:round; }
+.challenge-preview h3 { margin:0 0 1cqh;font-size:clamp(16px,3.6cqh,25px);font-weight:normal;letter-spacing:.08em; }
+.challenge-preview p { font-size:clamp(11px,2.2cqh,16px);color:#bfd1de;margin:0 0 2cqh; }
+.challenge-soon { display:inline-block;padding:4px 12px;border:1px solid #86bed15c;border-radius:20px;color:#a8d7e4;font-size:clamp(10px,2cqh,14px); }
+.night-world > .back-btn { background:#29475f;border:1px solid #83b6ce70;color:#e1f1fb; }
+.visually-hidden { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+@keyframes night-arrival { from { opacity:0;transform:translateY(12px); } to { opacity:1;transform:translateY(0); } }
+@media (prefers-reduced-motion:reduce) { #level-select *,#level-select::before,#level-select::after { animation:none!important;transition:none!important; } }
+.challenge-blue-scene { background:radial-gradient(ellipse at 70% 15%,#315878,#0d203a 70%);color:#e5f1fa; }
+.challenge-blue-window { box-sizing:border-box;width:70%;max-width:760px;max-height:90%;padding:4cqh 4cqw;border:1px solid #8fbed17a;border-radius:20px;background:linear-gradient(135deg,#345772d9,#142d48ed);box-shadow:0 15px 50px #020c2580;text-align:center; }
+.challenge-blue-window h2 { max-width:none;font-size:clamp(24px,6cqh,44px);margin:1cqh 0;color:#e5f5ff; }
+.challenge-blue-window p { font-size:clamp(12px,3cqh,21px);line-height:1.6;margin:2cqh 0; }
+.challenge-kicker { color:#a4d0e1;letter-spacing:.2em; }
+.challenge-window-actions { display:flex;justify-content:center;gap:2cqw;margin-top:3cqh; }
+.challenge-window-actions button { margin:0;border:1px solid #90c9db77;border-radius:24px;background:#2d536d;padding:1.5cqh 2cqw;font-size:clamp(13px,3cqh,21px);min-height:40px; }
+.challenge-window-actions button:last-child { background:#447b95; }
+.challenge-window-actions button:focus-visible { outline:3px solid #ffe1a0;outline-offset:4px; }
+#challenge-countdown { font-size:clamp(18px,4cqh,30px); }
+#challenge-countdown-number { font-size:clamp(60px,24cqh,160px);line-height:1.2;color:#b9e7f6; }
+.challenge-play-stage { isolation:isolate; }
+.challenge-play-background { position:absolute;inset:0;z-index:-2;pointer-events:none;background:center/cover;filter:brightness(.6) saturate(.65); }
+.challenge-play-stage::before { content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(160deg,#123d7870,#122f5860 55%,#081d3d9c);pointer-events:none; }
+.challenge-live-hud { position:absolute;top:1%;left:50%;transform:translateX(-50%);z-index:180;white-space:nowrap;color:#e3f3fd;background:#10283de8;padding:1cqh 2cqw;border:1px solid #92c9dd66;border-radius:30px;font-size:clamp(13px,3cqh,23px);pointer-events:none; }
+.challenge-time-warning { color:#ffd09a;border-color:#ffd09a; }
+.night-challenge-game .memory-panel { top:52%;width:96%;height:90%;max-height:90%;box-sizing:border-box;border-color:#80b7d0;background-image:linear-gradient(145deg,#345d7fe8,#17334de8);color:#e4f1fa;box-shadow:inset 0 1px #b8ddf33b,0 10px 30px #08192b66; }
+.night-challenge-game .memory-grid { max-width:none;max-height:none;flex-shrink:0; }
+.night-challenge-game .memory-hint,.night-challenge-game .defense-controls-hint { display:none; }
+.night-challenge-game .challenge-live-hud { top:2%;left:2%;transform:none; }
+.night-challenge-game .memory-timer-large { display:none; }
+.challenge-preview p { white-space:nowrap;font-size:clamp(10px,1.9cqh,16px); }
+#game-wrapper.challenge-active #loading-screen { color:#d4edfc;background:radial-gradient(ellipse at 75% 15%,#315b7cf2,#0b1c34f5 75%); }
+#game-wrapper.challenge-active .loading-content { background:linear-gradient(135deg,#305571e8,#142e48ed);border-color:#8bc1d6;box-shadow:0 12px 35px #030d2366; }
+#game-wrapper.challenge-active .loading-content .spinner { border-color:#385b76;border-top-color:#b3e4f7; }
+#game-wrapper.challenge-active #loading-progress { color:#b6e9fa; }
+.night-challenge-game .memory-info,.night-challenge-game .memory-info-item,.night-challenge-game .memory-hint,.night-challenge-game .memory-timer-large { color:#e6f4ff; }
+.night-challenge-game .memory-hint { background:#152f49cc;border-color:#7aafc877; }
+.night-challenge-game .memory-card { border-color:#87b8ce; }
+.night-challenge-game .memory-top-bar { background-image:linear-gradient(110deg,#203f5ce8,#294d6be8);border-color:#79abc6; }
+.night-challenge-game .memory-timer-large,.night-challenge-game .memory-status,.night-challenge-game .memory-strikes { background:#17334bd9;border-color:#7db5d0; }
+.night-challenge-game .memory-status,.night-challenge-game .memory-timer-label,.night-challenge-game .memory-info-item span { color:#d0efff; }
+.night-challenge-game #memory-timer { color:#ccefff;text-shadow:0 0 6px #77bcdd60; }
+.night-challenge-game #defense-combo { display:none!important; }
+.night-challenge-game #defense-player { width:20%!important;height:34%!important; }
+.night-challenge-game #defense-msg { display:none!important; }
+.night-challenge-game #defense-wave-progress { color:#d9effa; }
+.timed-challenge > .back-btn { display:none!important; }
+#game-wrapper.challenge-active #game-pause-resume { background:#477e99; }
+#game-wrapper.challenge-active #game-pause-exit { background:#29475e; }
+#game-wrapper.challenge-active #game-pause-overlay { color:#dcefff; }
+@media (prefers-reduced-motion:reduce) { .challenge-blue-scene * { transition:none!important; } }
+
+/* 同亮度的霧藍／靛藍，入口與整場視窗共用主題。 */
+[data-challenge-kind="defense"] {
+    --challenge-light:#3d647b;--challenge-dark:#203c53;--challenge-accent:#507f97;
+    --challenge-border:#96c6d7;--challenge-ink:#e6f4fc;--challenge-soft:#b9d8e7;
+}
+[data-challenge-kind="memory"] {
+    --challenge-light:#4b5e82;--challenge-dark:#2c3757;--challenge-accent:#647b9e;
+    --challenge-border:#aabddd;--challenge-ink:#edf1ff;--challenge-soft:#c7d2ee;
+}
+.challenge-preview[data-challenge-kind] {
+    background:linear-gradient(145deg,var(--challenge-light),var(--challenge-dark));
+    border-color:var(--challenge-border);color:var(--challenge-ink);
+}
+.challenge-preview[data-challenge-kind] .challenge-number,
+.challenge-preview[data-challenge-kind] p { color:var(--challenge-soft); }
+.challenge-preview[data-challenge-kind] svg { fill:var(--challenge-dark);stroke:var(--challenge-border); }
+.challenge-preview[data-challenge-kind] button { background:var(--challenge-accent);border-color:var(--challenge-border);color:var(--challenge-ink);margin-right:.6cqw; }
+.challenge-preview[data-challenge-kind] button:last-child { background:var(--challenge-dark); }
+.challenge-blue-scene[data-challenge-kind] { background:radial-gradient(ellipse at 70% 15%,var(--challenge-light),var(--challenge-dark) 75%);color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] .challenge-blue-window,
+#game-wrapper.challenge-active .loading-content { background:linear-gradient(135deg,var(--challenge-light),var(--challenge-dark));border-color:var(--challenge-border); }
+.challenge-blue-scene[data-challenge-kind] h2 { color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] .challenge-kicker { color:var(--challenge-soft); }
+.challenge-blue-scene[data-challenge-kind] button { background:var(--challenge-dark);border-color:var(--challenge-border);color:var(--challenge-ink); }
+.challenge-blue-scene[data-challenge-kind] button:last-child { background:var(--challenge-accent); }
+#game-wrapper.challenge-active #loading-screen { background:radial-gradient(ellipse at 75% 15%,var(--challenge-light),var(--challenge-dark) 75%);color:var(--challenge-ink); }
+#game-wrapper.challenge-active #game-pause-overlay { background:color-mix(in srgb,var(--challenge-dark) 85%,transparent);color:var(--challenge-ink); }
+#game-wrapper.challenge-active #game-pause-resume { background:var(--challenge-accent); }
+#game-wrapper.challenge-active #game-pause-exit { background:var(--challenge-dark); }
+#game-wrapper.challenge-active .night-challenge-game .memory-panel { background-image:linear-gradient(145deg,var(--challenge-light),var(--challenge-dark));border-color:var(--challenge-border); }
+#game-wrapper.challenge-active .night-challenge-game .memory-top-bar { background-image:linear-gradient(110deg,var(--challenge-dark),var(--challenge-light));border-color:var(--challenge-border); }
+#game-wrapper.challenge-active .challenge-live-hud { background:var(--challenge-dark);border-color:var(--challenge-border); }
+.challenge-hearts { display:inline-flex;gap:4px;vertical-align:middle;margin-right:1cqw; }
+.challenge-hearts img { width:clamp(16px,3.8cqh,28px);height:clamp(16px,3.8cqh,28px);object-fit:contain;image-rendering:pixelated; }
+.challenge-hearts .heart-lost { opacity:.25;filter:grayscale(1); }
+#challenge-lobby .challenge-blue-window { overflow:auto; }
+#challenge-lobby-title { font-size:clamp(22px,5cqh,38px); }
+#challenge-lobby-copy { font-size:clamp(12px,2.8cqh,20px); }
+#challenge-lobby-points { padding-left:1.4em;margin:2cqh 0;text-align:left;font-size:clamp(12px,2.9cqh,20px);line-height:1.6; }
+#challenge-lobby-points li + li { margin-top:1cqh; }
+#challenge-lobby-rules { text-align:left;font-size:clamp(12px,2.7cqh,18px); }
+#challenge-lobby-rules summary { cursor:pointer;color:var(--challenge-soft,#b9dce9);width:fit-content;margin:auto;padding:.7cqh 8px; }
+#challenge-lobby-rules summary:focus-visible { outline:2px solid #ffe1a0;outline-offset:2px; }
+#challenge-final-feedback { display:grid;grid-template-columns:1fr 1fr;gap:1.5cqw;margin:2cqh 0; }
+#challenge-final-feedback > div { min-width:0;padding:1.5cqh 1cqw;background:#06182c40;border:1px solid #b1cde52e;border-radius:12px; }
+#challenge-final-feedback dt { font-size:clamp(11px,2.6cqh,17px);color:var(--challenge-soft,#bdddeb); }
+#challenge-final-feedback dd { font-size:clamp(13px,3.3cqh,23px);line-height:1.5;margin:.7cqh 0 0;font-weight:bold;overflow-wrap:anywhere; }
+#challenge-results .challenge-blue-window { overflow:auto; }
+@media (max-height:400px) { #challenge-results .challenge-blue-window { width:84%;padding:2cqh 3cqw; } #challenge-results p { margin:1cqh 0; } #challenge-final-feedback { margin:1cqh 0; } #challenge-results .challenge-window-actions { margin-top:1.5cqh; } }
+@media (max-height:400px) { #challenge-lobby .challenge-blue-window { padding:2cqh 3cqw;width:80%; } #challenge-lobby p { margin:1cqh 0; } #challenge-lobby .challenge-window-actions { margin-top:1.5cqh; } }
+
+/* 無限防守：資訊分居兩角，中央與四方向目標保留完整視線。 */
+#game-wrapper.challenge-active .challenge-live-hud.defense-endless-hud {
+    inset:0;left:0;top:0;width:100%;height:100%;box-sizing:border-box;
+    transform:none;padding:0;border:0;border-radius:0;background:none;pointer-events:none;
+    font-variant-numeric:tabular-nums;
+}
+.defense-endless-game #defense-wave-progress { display:none; }
+.endless-score-card,.endless-wave-card {
+    position:absolute;top:2%;width:clamp(84px,11cqw,118px);box-sizing:border-box;
+    padding:7px 9px;border:1px solid #9dcddd66;border-radius:12px 4px 12px 4px;
+    background:linear-gradient(145deg,#31566bd9,#122d42d9);
+    box-shadow:inset 0 1px #d5f3ff18,0 3px 10px #06182633;
+    color:#e5f4fc;text-align:left;
+}
+.endless-score-card { left:2%; }
+.endless-wave-card { right:2%; }
+.endless-vitality { display:flex;align-items:center;justify-content:space-between;gap:4px; }
+.defense-endless-hud .challenge-hearts { gap:3px;margin:0; }
+.defense-endless-hud .challenge-hearts img { width:clamp(12px,3cqh,17px);height:clamp(12px,3cqh,17px); }
+.endless-mark { font-size:14px;line-height:1;color:#9dcddd99; }
+.endless-score-line,.endless-wave-line { display:flex;align-items:baseline;gap:4px;margin-top:4px; }
+.endless-score-value,.endless-wave-value { font-size:clamp(18px,4.5cqh,26px);line-height:1.1;font-weight:600;letter-spacing:-.025em; }
+.endless-score-line>span,.endless-wave-line>span { font-size:clamp(9px,2cqh,12px);color:#a5c9da; }
+.endless-stage { display:block;font-size:clamp(9px,2cqh,12px);line-height:1;letter-spacing:.08em;color:#b8d8e6; }
+.endless-wave-line { margin-top:3px; }
+.endless-wave-ticks { display:flex;gap:2px;margin-top:5px; }
+.endless-wave-ticks i { height:3px;flex:1;min-width:0;border-radius:1px;background:#adcddd28; }
+.endless-wave-ticks i.is-lit { background:#a7d9e9; }
+.defense-endless-hud.challenge-time-warning .endless-score-card { border-color:#f4bb8caa; }
+.defense-endless-hud.challenge-time-warning .endless-mark { color:#f4bb8c; }
+#game-pause-detail { margin:0;max-width:90%;font-size:clamp(13px,3cqh,21px);line-height:1.6;color:#bdd9e8;font-variant-numeric:tabular-nums;text-align:center; }
+#game-pause-detail[hidden] { display:none; }
+.defense-endless-hud #defense-wait-meter {
+    position:static;width:100%;margin:6px 0 0;padding:5px 0 0;
+    border-top:1px solid #a7d9e944;border-radius:0;background:none;
+    font-size:clamp(9px,2cqh,12px);line-height:1.2;color:#c2e4ef;white-space:normal;
+}
+.defense-endless-hud .defense-wait-track { height:3px;margin-top:4px;background:#adcddd28; }
+.defense-endless-hud .defense-wait-fill { background:#a7d9e9; }
+.defense-response-meter { height:3px;margin-top:6px;border-radius:2px;background:#e4be8733;overflow:hidden; }
+.defense-response-fill { height:100%;background:#e8c189;transform-origin:left; }
+.defense-response-meter[hidden],.defense-wave-feedback[hidden] { display:none; }
+.defense-wave-feedback { position:absolute;bottom:4%;left:50%;transform:translateX(-50%);max-width:82%;padding:6px 12px;border:1px solid #e4bc7c88;border-radius:10px 4px 10px 4px;background:#203c53ed;color:#ffe3b5;white-space:normal;text-align:center;font-size:clamp(12px,2.8cqh,20px); }
+.memory-challenge-vitality { display:flex;align-items:center;gap:9px; }
+.memory-mistake-meter { display:flex;gap:3px; }
+.memory-mistake-meter i { display:block;width:clamp(5px,1.5cqh,9px);height:clamp(5px,1.5cqh,9px);border:1px solid #e4be8766;border-radius:2px;background:#e4be8722; }
+.memory-mistake-meter i.is-lit { background:#e8c189; }
+/* 雲影只遮牌區，380ms 合攏、180ms 停留、380ms 打開，無白色閃光。 */
+.night-challenge-game .memory-grid { position:relative;isolation:isolate; }
+.memory-blink-cover { position:absolute;inset:0;z-index:5;overflow:hidden;border-radius:10px;pointer-events:none; }
+.memory-blink-cover[hidden] { display:none; }
+.memory-blink-shutter { position:absolute;left:0;right:0;height:50.1%;background:linear-gradient(145deg,#203553,#101e35);transform:scaleY(0);transition:transform 380ms cubic-bezier(.2,.7,.3,1); }
+.memory-blink-top { top:0;transform-origin:top; }
+.memory-blink-bottom { bottom:0;transform-origin:bottom; }
+.memory-blink-cover[data-phase="closing"] .memory-blink-shutter { transform:scaleY(1); }
+.memory-wind-selected { outline:2px solid #ffe0a0;outline-offset:3px;border-radius:12px;z-index:3; }
+@media (prefers-reduced-motion:reduce) { .memory-blink-shutter { transition:none; } }
+/* 夜風走兩條對角邊帶，裁切範圍不進入中央與四向目標軸線。 */
+.defense-night-wind { position:absolute;inset:0;z-index:60;pointer-events:none;overflow:hidden; }
+.defense-wind-lane { position:absolute;width:25%;height:12%;overflow:hidden;pointer-events:none; }
+.wind-upper-left { left:2%;top:23%; }
+.wind-lower-right { right:2%;bottom:23%;transform:scaleX(-1); }
+.defense-wind-leaf {
+    position:absolute;left:-24px;top:50%;width:clamp(14px,5.2cqh,26px);height:clamp(8px,2.8cqh,14px);
+    border-radius:85% 0 85% 0;background:linear-gradient(135deg,#b6a47b,#80745e);border:1px solid #c6bb9633;
+    opacity:0;will-change:transform;animation:defense-night-leaf 1800ms cubic-bezier(.25,.45,.55,.8) both;
+}
+.defense-wind-leaf::after { content:"";position:absolute;left:15%;right:12%;top:48%;height:1px;background:#f2dfaf55;transform:rotate(-28deg); }
+.wind-lower-right .defense-wind-leaf { animation-delay:180ms;background:linear-gradient(135deg,#a1ad8c,#68786e); }
+@keyframes defense-night-leaf {
+    0% { transform:translate3d(0,1cqh,0) rotate(-35deg);opacity:0; }
+    15% { opacity:.58; }
+    50% { transform:translate3d(13cqw,-1cqh,0) rotate(30deg);opacity:.58; }
+    85% { opacity:.45; }
+    100% { transform:translate3d(28cqw,-4cqh,0) rotate(105deg);opacity:0; }
+}
+@media (prefers-reduced-motion:reduce) { .defense-night-wind { display:none; } }
+
+/* 中央單行提示帶：全寬、半透明，兩側漸隱；只在預告期間淡入淡出。 */
+.memory-swap-notice { position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:30;box-sizing:border-box;width:100%;padding:clamp(14px,4cqh,30px) 12px;text-align:center;pointer-events:none;background:linear-gradient(90deg,#172b4700,#172b47b8 18%,#243b59cc 50%,#172b47b8 82%,#172b4700);animation:memory-swap-banner 1100ms ease-in-out both; }
+.memory-swap-notice[hidden] { display:none; }
+.memory-swap-notice strong { display:block;color:#ffe3ac;font-size:clamp(24px,6.5cqh,46px);line-height:1.3;letter-spacing:.12em;white-space:nowrap;text-shadow:0 2px 8px #071427aa; }
+@keyframes memory-swap-banner { 0%,100% { opacity:0; } 18%,76% { opacity:1; } }
+@media (prefers-reduced-motion:reduce) { .memory-swap-notice { animation:none; } }
+/* 特殊波的提示只占預備時間；作答時保留角色與四向目標的視線。 */
+.defense-special-notice { position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;box-sizing:border-box;padding:14px 12px;z-index:90;text-align:center;pointer-events:none;color:#ffe2ad;background:linear-gradient(90deg,#18364c00,#18364cdb 18%,#18364cdb 82%,#18364c00);font-size:clamp(17px,4.5cqh,30px);line-height:1.4; }
+.defense-special-cue { position:absolute;left:3%;bottom:20%;max-width:26%;box-sizing:border-box;padding:5px 12px;border:1px solid #e5c18d77;border-radius:9px 3px;background:#16364bd9;color:#ffe2ad;font-size:clamp(11px,2.7cqh,18px);text-align:center;pointer-events:none;z-index:65; }
+.defense-order-badge { position:absolute;right:-7px;top:-7px;display:grid;place-items:center;width:clamp(21px,5cqh,32px);height:clamp(21px,5cqh,32px);border:2px solid #ffdda0;border-radius:50%;background:#19364cf2;color:#ffe4b4;font:bold clamp(13px,3.5cqh,22px)/1 sans-serif;box-shadow:0 2px 5px #07172966;pointer-events:none; }
+.defense-order-badge.is-top-target { top:auto;bottom:-5px; }
+.defense-order-badge[hidden] { display:none; }
+
+*{box-sizing:border-box}body{margin:0;background:#090f19;color:#e4f3fc;font-family:'Microsoft JhengHei',serif;min-height:100vh;display:grid;place-items:center}#level-select{width:min(100vw,177.777vh);height:min(56.25vw,100vh);position:relative;container-type:size;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#11263d}button{font:inherit;cursor:pointer;color:inherit}#challenge-directory{animation:none}.night-intro{height:5cqh;display:flex;align-items:center;justify-content:center;gap:0;margin:1.7cqh 0 3cqh}.mode-tabs{display:inline-flex;border:1px solid #a9c9dc55;border-radius:24px;padding:3px;background:#0b2034b0}.mode-tabs button{border:0;background:transparent;border-radius:20px;padding:1cqh 3cqw;font-size:clamp(11px,2.4cqh,18px);color:#abc8db}.mode-tabs button[aria-selected=true]{background:#446c84;color:#f1f7fc;box-shadow:inset 0 1px #d5ebf530}.challenge-previews{height:49cqh}.challenge-preview{width:30cqw;max-width:360px;position:relative}.mock-actions{display:flex;gap:.6cqw}.mock-actions button{border:1px solid #a9cddd66;background:#30556c;border-radius:20px;padding:1cqh 1.2cqw;font-size:clamp(11px,2.3cqh,18px);white-space:nowrap}.mock-actions button:last-child{background:#193951}.back-btn{position:absolute;bottom:3%;left:3%;border-radius:24px;padding:1cqh 2.5cqw;font-size:clamp(12px,2.8cqh,20px)}#practice-grid{display:none;grid-template-columns:repeat(2,30cqw);grid-template-rows:repeat(2,1fr);justify-content:center;gap:2cqh 3cqw;height:49cqh}.practice-tile{display:flex;align-items:center;gap:1.4cqw;border:1px solid #b1cbd44d;border-radius:16px;padding:2cqh 1.8cqw;background:linear-gradient(145deg,#345772d9,#18364ded);text-align:left;box-shadow:inset 0 1px #d4efff17,0 8px 22px #020d202b}.practice-tile:hover,.practice-tile[aria-pressed=true]{border-color:#d8c48d;background:linear-gradient(145deg,#476b7d,#284858)}.practice-tile svg{width:7cqw;height:11cqh;flex-shrink:0;stroke:#b9dce7;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}.practice-tile strong{font-weight:normal;font-size:clamp(15px,3.5cqh,25px);display:block;margin-bottom:1cqh}.practice-tile small{font-size:clamp(10px,2.1cqh,15px);color:#b6d0dd;display:block;line-height:1.5}.tile-arrow{margin-left:auto;color:#c8dce7;font-size:3cqh}.badge{position:absolute;bottom:3%;right:3%;font-size:clamp(9px,1.9cqh,14px);color:#a8bfcd}dialog{color:#e4f3fc;background:linear-gradient(145deg,#345772,#18364d);border:1px solid #aecbdb77;border-radius:20px;padding:4cqh 4cqw;width:min(66vw,620px);text-align:center}dialog::backdrop{background:#061322b0}dialog h3{font-size:clamp(19px,4cqh,30px);margin:0 0 2cqh}dialog p{font-size:clamp(12px,2.8cqh,20px);line-height:1.7}dialog button{border:1px solid #a9ccdb66;border-radius:24px;background:#416e85;padding:1cqh 3cqw}button:focus-visible{outline:2px solid #e7d2a0;outline-offset:3px}</style>
+<div id="level-select" class="night-world"><div class="night-stars"></div><button id="world-switch" aria-label="日夜模式外觀預覽"><span class="world-switch-sky"><span class="switch-stars">✦ · ✧</span><span class="switch-orb"></span><span class="switch-hills"></span></span><span class="world-switch-label">挑戰<span>月下老街</span></span></button><div id="challenge-directory" class="world-directory"><p class="night-eyebrow">月光下的老街</p><h2 id="heading">老街夜間挑戰</h2><div class="night-intro"><div class="mode-tabs" role="tablist" aria-label="挑戰與練習"><button role="tab" aria-selected="true" onclick="switchMode(false)">挑戰模式</button><button role="tab" aria-selected="false" onclick="switchMode(true)">操作練習</button></div></div><div class="challenge-previews"><article class="challenge-preview"><span class="challenge-number">01 ／ 防守</span><svg viewBox="0 0 80 64" aria-hidden="true"><path d="M40 6 64 16v18c0 13-24 25-24 25S16 47 16 34V16Z"/><path d="m29 32 8 8 15-19"/></svg><h3>防守挑戰</h3><p>眼明手快，挑戰你的反應。</p><div class="mock-actions"><button>限時挑戰</button><button>無限模式</button></div></article><article class="challenge-preview"><span class="challenge-number">02 ／ 配對</span><svg viewBox="0 0 80 64" aria-hidden="true"><rect x="13" y="9" width="30" height="43" rx="5" transform="rotate(-12 28 30)"/><rect x="37" y="13" width="30" height="43" rx="5" transform="rotate(9 52 34)"/><path d="m52 24 4 7 8 2-8 3-4 8-3-8-8-3 8-2Z"/></svg><h3>記憶挑戰</h3><p>翻開卡片，找回成對的記憶。</p><div class="mock-actions"><button>限時挑戰</button><button>無限模式</button></div></article></div><div id="practice-grid">
+<button class="practice-tile" aria-pressed="false" onclick="choose(this,'重擊格擋')"><svg viewBox="0 0 72 64" aria-hidden="true"><path d="M16 9h32M16 17h32M16 25h32M16 33h32M16 41h32"/><path d="m52 18 9 9-9 9"/></svg><span><strong>重擊格擋</strong><small>等五格全亮，掌握出手時機</small></span><span class="tile-arrow">↗</span></button><button class="practice-tile" aria-pressed="false" onclick="choose(this,'旋轉防守')"><svg viewBox="0 0 72 64" aria-hidden="true"><path d="M52 19a22 22 0 1 0 3 23M52 8v14H38"/><circle cx="32" cy="32" r="6"/></svg><span><strong>旋轉防守</strong><small>畫圈回推，找到防守節奏</small></span><span class="tile-arrow">↗</span></button><button class="practice-tile" aria-pressed="false" onclick="choose(this,'順序滑動')"><svg viewBox="0 0 72 64" aria-hidden="true"><circle cx="18" cy="20" r="11"/><circle cx="48" cy="43" r="11"/><path d="M18 15v10M45 39q9-7 7 0l-8 9h10M30 24l7 8"/></svg><span><strong>順序滑動</strong><small>編號保留，依序連續滑動</small></span><span class="tile-arrow">↗</span></button><button class="practice-tile" aria-pressed="false" onclick="choose(this,'記憶順序')"><svg viewBox="0 0 72 64" aria-hidden="true"><circle cx="18" cy="20" r="11"/><path d="M18 15v10M38 39h4m7 0h4m7 0h2M31 25l8 7"/></svg><span><strong>記憶順序</strong><small>記住位置，滑動後隱藏編號</small></span><span class="tile-arrow">↗</span></button></div></div><button class="back-btn" onclick="switchMode(false)">返回</button><span class="badge" id="footnote">介面預覽</span></div><dialog id="detail"><h3 id="selected"></h3><p>依自己的步調反覆練習<br>不計分・不扣生命・隨時可離開</p><p style="font-size:12px;opacity:.7">此為介面設計預覽，尚未連接關卡。</p><button onclick="document.getElementById('detail').close()">回到選擇</button></dialog><script>function switchMode(practice){document.querySelector('.challenge-previews').style.display=practice?'none':'flex';document.getElementById('practice-grid').style.display=practice?'grid':'none';document.querySelectorAll('[role=tab]').forEach((n,i)=>n.setAttribute('aria-selected',String(i===(practice?1:0))));document.getElementById('heading').textContent=practice?'老街操作練習':'老街夜間挑戰';document.getElementById('footnote').textContent=practice?'不計分・不扣生命・介面預覽':'介面預覽'}function choose(button,title){document.querySelectorAll('.practice-tile').forEach(n=>n.setAttribute('aria-pressed',String(n===button)));document.getElementById('selected').textContent=title;document.getElementById('detail').showModal()}</script></html>
