@@ -201,7 +201,7 @@ test('challenge lobby retains selected variant, separate best and theme through 
  const f=fixture();f.context.showScene=()=>{};f.window.gameMode='child';
  f.c.showInfo('memory','endless');assert.equal(f.c.endless,true);assert.equal(f.c.mode,'child');
  for(const id of ['game-wrapper','challenge-lobby','challenge-countdown','challenge-results'])assert.equal(f.nodes.get(id).dataset.challengeKind,'memory');
- assert.match(f.nodes.get('challenge-lobby-copy').textContent,/三條命/);
+ assert.match(f.nodes.get('challenge-lobby-points').innerHTML,/三條命/);
  f.c.showInfo('defense');assert.equal(f.c.endless,false);assert.match(f.nodes.get('challenge-lobby-kicker').textContent,/90/);
 });
 test('completed memory boards award once and exclude the following memorization time',()=>{
@@ -308,4 +308,56 @@ test('endless AOE wait shortens across actual generated waves in both age modes 
   assert.ok(waits[0]>waits[1]);assert.ok(waits[1]>waits.at(-1));assert.equal(waits.at(-1),mode==='child'?3400:2600);
   assert.ok(waits.every((n,i)=>i===0||n<=waits[i-1]));
  }
+});
+
+test('feedback counts clean waves and only one failure category per failed wave, preserving the longest streak',()=>{
+ const {c}=fixture();c.kind='defense';c.resetFeedback();
+ for(let i=0;i<3;i++)c.defenseWaveFinished({type:'NORMAL'});
+ const stone={type:'ORDER',lossReason:'碰到石頭'};c.recordDefenseMistake(stone);c.recordDefenseMistake(stone);c.defenseWaveFinished(stone);c.defenseWaveFinished(stone);
+ for(let i=0;i<2;i++)c.defenseWaveFinished({type:'HEAVY'});
+ const heavy={type:'HEAVY',lossReason:'格擋失敗：太早'};c.recordDefenseMistake(heavy);c.defenseWaveFinished(heavy);
+ const rows=c.feedbackItems();assert.equal(rows[0][1],'3 波');assert.match(rows[1][1],/打到石頭 1 次/);assert.match(rows[1][1],/重擊格擋 1 次/);assert.equal(c.defenseFeedback.streak,0);
+ c.resetFeedback();assert.equal(c.feedbackItems()[0][1],'0 波');assert.equal(c.feedbackItems()[1][1],'沒有失誤');
+});
+test('memory accuracy includes every failed pair in timed and endless play and streak spans boards',()=>{
+ for(const variant of ['timed','endless']){
+  const {c}=fixture();c.kind='memory';c.variant=variant;c.lives=3;c.resetFeedback();c.memoryErrors=0;
+  assert.equal(c.feedbackItems()[0][1],'尚未完成配對');c.paired();c.paired();c.memoryMiss();c.paired();
+  assert.equal(c.memoryErrors,1);assert.equal(c.feedbackItems()[0][1],'75%');assert.equal(c.feedbackItems()[1][1],'2 對');assert.equal(c.memoryPairStreak,1);
+  c.resetFeedback();assert.equal(c.memoryBestStreak,0);
+ }
+});
+test('all challenge lobby variants contain exactly three short points without duplicate rule text',()=>{
+ const f=fixture();f.context.showScene=()=>{};
+ for(const kind of ['defense','memory'])for(const variant of ['timed','endless']){
+  f.c.showInfo(kind,variant);const points=f.c.lobbyPoints();assert.equal(points.length,3);assert.ok(points.every(p=>p.length<=34));
+  assert.equal((f.nodes.get('challenge-lobby-points').innerHTML.match(/<li>/g)||[]).length,3);
+ }
+});
+
+test('formal practice keeps its selected real mechanic and authored speed through later waves in both age modes',()=>{
+ for(const mode of ['adult','child'])for(const kind of ['heavy','aoe','visible','memory']){
+  const {c}=fixture();Object.assign(c,{kind:'defense',mode,variant:'endless',practiceKind:kind,practiceOrder:['visible','memory'].includes(kind)?kind:null});const waits=[];
+  for(const wave of [1,30,41,60,81,101,200]){
+   const a=c.nextAttack({waveNumber:wave-1,levelConfig:{flow:{}}});assert.equal(a.type,kind==='heavy'?'HEAVY':kind==='aoe'?'AOE':'ORDER');waits.push(a.wait);assert.equal(a.heavyIgnitionInterval,400);
+   if(a.type==='ORDER'){assert.equal(a.orderMode,kind);assert.equal(a.dirs.length,3);assert.equal(a.orderPreview>0,kind==='memory');}
+  }
+  assert.ok(waits.every(wait=>wait===waits[0]));
+ }
+});
+test('actual defense practice score and life hooks preserve zero score and three lives after repeated successes and mistakes',()=>{
+ const f=fixture();f.context.DefenseLevels=f.window.DefenseLevels;vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),f.context);const g=f.window.DefenseGameV2,c=f.c;
+ Object.assign(c,{kind:'defense',variant:'endless',practiceKind:'heavy',lives:3});Object.assign(g,{challenge:c,score:0,gameActive:true,sessionId:1,currentAttack:{type:'HEAVY',lossReason:'格擋失敗'}});
+ for(let i=0;i<5;i++){g.addScore(100);g.addScore(-50);g.recordMistake();}assert.equal(g.score,0);assert.equal(c.lives,3);assert.notEqual(c.ending,true);assert.equal(f.saved.size,0);
+});
+test('formal practice launches without countdown, derives order mode safely and normal challenge resets practice',()=>{
+ const f=fixture();f.context.AbortController=AbortController;vm.runInContext(fs.readFileSync('js/core/MinigameSession.js','utf8'),f.context);f.context.showScene=()=>{};
+ f.window.GameEngine={stopMinigame(){}};f.window.ChallengeScenes={pickBackground:()=> 'background.png'};f.window.LoadingManager={showAndLoad(urls,ready){ready();}};f.window.GamePause={attach(){},end(){}};let launches=0;f.c.launch=()=>launches++;
+ Object.assign(f.c,{kind:'defense',variant:'endless'});
+ f.c.start({practiceKind:'memory'});assert.equal(launches,1);assert.equal(f.c.practiceOrder,'memory');assert.equal(f.c.isPractice,true);
+ f.c.start({practiceKind:'heavy',practiceOrder:'memory'});assert.equal(launches,2);assert.equal(f.c.practiceOrder,null);assert.equal(f.c.practiceKind,'heavy');
+ f.c.start();assert.equal(f.c.practiceKind,null);assert.equal(f.c.isPractice,false);assert.equal(launches,2);f.tick(3000);assert.equal(launches,3);
+});
+test('formal heavy and AOE practice never write a best record, even if finish is requested',()=>{
+ for(const kind of ['heavy','aoe']){const f=fixture();f.context.showScene=()=>{};f.window.GamePause={end(){}};Object.assign(f.c,{kind:'defense',variant:'endless',practiceKind:kind,game:{score:999,waveNumber:5,stop(){}}});f.c.finish();assert.equal(f.saved.size,0);assert.equal(f.c.active,false);}
 });

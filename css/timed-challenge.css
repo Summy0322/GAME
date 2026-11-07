@@ -79,6 +79,17 @@
 #challenge-lobby .challenge-blue-window { overflow:auto; }
 #challenge-lobby-title { font-size:clamp(22px,5cqh,38px); }
 #challenge-lobby-copy { font-size:clamp(12px,2.8cqh,20px); }
+#challenge-lobby-points { padding-left:1.4em;margin:2cqh 0;text-align:left;font-size:clamp(12px,2.9cqh,20px);line-height:1.6; }
+#challenge-lobby-points li + li { margin-top:1cqh; }
+#challenge-lobby-rules { text-align:left;font-size:clamp(12px,2.7cqh,18px); }
+#challenge-lobby-rules summary { cursor:pointer;color:var(--challenge-soft,#b9dce9);width:fit-content;margin:auto;padding:.7cqh 8px; }
+#challenge-lobby-rules summary:focus-visible { outline:2px solid #ffe1a0;outline-offset:2px; }
+#challenge-final-feedback { display:grid;grid-template-columns:1fr 1fr;gap:1.5cqw;margin:2cqh 0; }
+#challenge-final-feedback > div { min-width:0;padding:1.5cqh 1cqw;background:#06182c40;border:1px solid #b1cde52e;border-radius:12px; }
+#challenge-final-feedback dt { font-size:clamp(11px,2.6cqh,17px);color:var(--challenge-soft,#bdddeb); }
+#challenge-final-feedback dd { font-size:clamp(13px,3.3cqh,23px);line-height:1.5;margin:.7cqh 0 0;font-weight:bold;overflow-wrap:anywhere; }
+#challenge-results .challenge-blue-window { overflow:auto; }
+@media (max-height:400px) { #challenge-results .challenge-blue-window { width:84%;padding:2cqh 3cqw; } #challenge-results p { margin:1cqh 0; } #challenge-final-feedback { margin:1cqh 0; } #challenge-results .challenge-window-actions { margin-top:1.5cqh; } }
 @media (max-height:400px) { #challenge-lobby .challenge-blue-window { padding:2cqh 3cqw;width:80%; } #challenge-lobby p { margin:1cqh 0; } #challenge-lobby .challenge-window-actions { margin-top:1.5cqh; } }
 
 /* 無限防守：資訊分居兩角，中央與四方向目標保留完整視線。 */
@@ -171,3 +182,9 @@
 .defense-order-badge { position:absolute;right:-7px;top:-7px;display:grid;place-items:center;width:clamp(21px,5cqh,32px);height:clamp(21px,5cqh,32px);border:2px solid #ffdda0;border-radius:50%;background:#19364cf2;color:#ffe4b4;font:bold clamp(13px,3.5cqh,22px)/1 sans-serif;box-shadow:0 2px 5px #07172966;pointer-events:none; }
 .defense-order-badge.is-top-target { top:auto;bottom:-5px; }
 .defense-order-badge[hidden] { display:none; }
+
+.practice-live-hud { position:absolute;inset:3% 3% auto;z-index:180;display:flex;align-items:center;justify-content:space-between;pointer-events:none; }
+.practice-live-label { padding:1cqh 1.5cqw;border:1px solid #92c9dd66;border-radius:12px;background:#18364de8;font-size:clamp(13px,3cqh,23px); }
+.practice-live-hud > div { display:flex;gap:1cqw;pointer-events:auto; }
+.practice-live-hud button { margin:0;padding:1cqh 1.5cqw;font-size:clamp(12px,2.6cqh,19px);min-height:36px;border:1px solid #9ec5d577;border-radius:22px;background:#274a61;color:#e4f3fc; }
+.practice-live-hud button:focus-visible { outline:3px solid #ffe1a0;outline-offset:3px; }

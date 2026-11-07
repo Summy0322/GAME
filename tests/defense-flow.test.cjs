@@ -531,9 +531,9 @@ test('ordered defense has full per-target deadlines and stops timeout immediatel
  for(const dir of a.dirs){f.tick(1899);g.handleSwipe(dir);}f.tick(600);
  assert.equal(a.finished,true);assert.equal(a.successful,true);assert.equal(g.score,150);assert.equal(g.lost,undefined);assert.equal(g.specialCue,null);
 });
-test('memory preview blocks all swipes and has no answer deadline; hidden numbers never reappear at the next step',()=>{
+test('memory preview accepts input but keeps the automatic hide time when untouched; numbers stay hidden between answers',()=>{
  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],orderPreview:1600,wait:1900});
- assert.equal(g.state,g.states.PREPARING);g.handleSwipe('up');assert.equal(g.score,0);f.tick(1599);assert.equal(a.orderPhase,'preview');assert.equal(g.lost,undefined);f.tick(1);assert.equal(a.orderPhase,'playing');assert.ok(a.orderBadges.every(b=>b.hidden));
+ assert.equal(g.state,g.states.MULTI);assert.equal(g.score,0);f.tick(1599);assert.equal(a.orderPhase,'preview');assert.equal(g.lost,undefined);f.tick(1);assert.equal(a.orderPhase,'playing');assert.ok(a.orderBadges.every(b=>b.hidden));
  const original=g.enemies.slice();f.tick(1899);g.handleSwipe('up');assert.equal(a.specialStep,1);assert.ok(a.orderBadges.every(b=>b.hidden));assert.deepEqual(g.enemies,original);assert.equal(g.lost,undefined);
  f.tick(1899);g.handleSwipe('left');g.handleSwipe('down');f.tick(600);assert.equal(a.successful,true);assert.equal(g.lost,undefined);
 });
@@ -624,4 +624,25 @@ test('real wrong-order projectile reaches its target and shows impact before the
  assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].className,'defense-projectile');assert.equal(g.lost,1);
  f.tick(416);assert.match(enemy.element.style.backgroundImage,/projectile-hit/);assert.notEqual(a.finished,true);
  f.tick(234);assert.equal(a.finished,true);assert.equal(g.lost,1);assert.equal(g.score,0);
+});
+
+test('memory order accepts the first swipe during preview and cancels its old timer without restarting later steps',()=>{
+ for(const stones of [[],['right']]){
+  const f=specialFixture(),g=f.game,a=f.enter({type:'ORDER',dirs:['up','left','down'],stoneDirs:stones,orderPreview:1600,wait:1900});f.tick(200);
+  g.handleSwipe('up');assert.equal(a.orderPhase,'playing');assert.equal(a.specialStep,1);assert.ok(a.orderBadges.every(b=>b.hidden));assert.equal(g.score,50);assert.equal(g.lost,undefined);
+  f.tick(1400);assert.equal(a.specialStep,1);g.handleSwipe('left');g.handleSwipe('down');f.tick(600);assert.equal(a.successful,true);assert.equal(g.score,150);assert.equal(g.lost,undefined);
+ }
+});
+test('wrong first swipe during memory preview still fires and deducts only once',()=>{
+ const f=specialFixture(),g=f.game,shots=[];g.launchProjectile=dir=>shots.push(dir);const a=f.enter({type:'ORDER',dirs:['up','left'],orderPreview:1600,wait:1900});
+ g.handleSwipe('left');assert.deepEqual(shots,['left']);assert.equal(g.lost,1);assert.equal(a.specialStep,0);assert.ok(a.orderBadges.every(b=>b.hidden));g.handleSwipe('up');assert.equal(shots.length,1);f.tick(1600);assert.equal(a.finished,true);assert.equal(g.lost,1);
+});
+test('real touch gestures work both during memory preview and across automatic number hiding',()=>{
+ for(const crossBoundary of [false,true]){
+  const f=specialFixture(),g=f.game,events={};vm.runInContext(fs.readFileSync(path.join(root,'js/minigames/defense/DefenseInput.js'),'utf8'),f.context);Object.assign(g,f.context.window.DefenseInputMixin);
+  g.container.addEventListener=(type,fn)=>(events[type]||=[]).push(fn);g.stage={getBoundingClientRect:()=>({left:0,top:0,width:400,height:200})};g.addTrailPoint=()=>{};g.initEventListeners();
+  const emit=(type,touches,changedTouches=[])=>events[type].forEach(fn=>fn({touches,changedTouches}));const touch=(x,y)=>({identifier:1,clientX:x,clientY:y});
+  const a=f.enter({type:'ORDER',dirs:['up','left'],orderPreview:1600,wait:1900});f.tick(crossBoundary?1500:200);emit('touchstart',[touch(200,100)]);f.tick(200);emit('touchend',[],[touch(200,40)]);
+  assert.equal(a.specialStep,1);assert.equal(g.score,50);assert.equal(g.lost,undefined);assert.ok(a.orderBadges.every(b=>b.hidden));
+ }
 });

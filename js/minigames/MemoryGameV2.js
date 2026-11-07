@@ -1070,9 +1070,8 @@ const MemoryGameV2 = {
             }, 500);
         } else {
             // ✅ 配對失敗
-            if (this.challenge?.endless) {
-                this.statusText.innerText = this.challenge.memoryMiss();
-            }
+            const missFeedback=this.challenge?.memoryMiss?.();
+            if (this.challenge?.endless) this.statusText.innerText = missFeedback;
             if (isGreenEnabled) {
                 this.rightStreak = 0;
             }

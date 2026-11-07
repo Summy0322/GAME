@@ -335,6 +335,7 @@ const DefenseGameV2 = {
      * 強制結束並清理 DOM／計時器（切換小遊戲或離開時避免殘留）
      */
     stop: function (options = {}) {
+        window.AudioManager?.stopDefenseSounds?.();
         window.DefenseTutorial?.cancel(this);
         const replay=document.getElementById('defense-replay-tutorial');if(replay)replay.hidden=true;
         this.clearSpecialWave?.();
@@ -972,6 +973,7 @@ const DefenseGameV2 = {
                         // ✅ 檢查滑動方向是否就是石頭的方向
                         if (dir === this.currentAttack.dir) {
                             // 滑到石頭：扣分
+                            this.currentAttack.lossReason='碰到石頭';
                             this.recordMistake();
                             this.updateScoreDisplay();
                             this.showWarning('💥 那是石頭！不能滑！');
@@ -993,6 +995,7 @@ const DefenseGameV2 = {
                             // 滑到其他地方：輕微懲罰
                             console.log('⚠️ 滑到空白處，但石頭還在');
                             this.showWarning('⚠️ 滑空了！石頭還在！');
+                            this.currentAttack.lossReason='方向錯誤';
                             this.recordMistake();
                             this.updateScoreDisplay();
                             // ✅ 使用權重
@@ -1029,6 +1032,7 @@ const DefenseGameV2 = {
                                 console.log(`✅ 正確！滑動 ${dir}，+${this.scoreTable.MIXED_CORRECT}分`);
                             } else if (isWrong) {
                                 // ❌ 錯誤方向：滑到石頭扣分
+                                this.currentAttack.lossReason='碰到石頭';
                                 this.recordMistake();
                                 this.updateScoreDisplay();
                                 this.showWarning(`❌ 那是石頭！不能滑 ${dir} 方向！`);
@@ -1080,6 +1084,8 @@ const DefenseGameV2 = {
     
     recordMistake: function(attack = this.currentAttack, session = this.sessionId) {
         if (!this.gameActive || !attack || attack !== this.currentAttack || session !== this.sessionId || attack.finished) return;
+        this.challenge?.recordDefenseMistake?.(attack);
+        if(!attack.failureSoundPlayed){attack.failureSoundPlayed=true;window.AudioManager?.playDefenseSound?.('fail');}
         this.mistakes++;
         this.challenge?.loseLife?.(attack);
     },
@@ -1093,6 +1099,7 @@ const DefenseGameV2 = {
         }
         attack.resolved = true;
         attack.successful = true;
+        window.AudioManager?.playDefenseSound?.('block');
         this.addScore(attack.points || this.scoreTable.HEAVY);
         const text = document.createElement('div');
         text.textContent = '✨ 完美格擋！ ✨';
@@ -1105,6 +1112,7 @@ const DefenseGameV2 = {
     },
 
     wrongDirection: function() {
+        if(this.currentAttack)this.currentAttack.lossReason='方向錯誤';
         // 只增加錯誤次數和顯示警告
         this.recordMistake();
         this.updateScoreDisplay();
@@ -1165,6 +1173,7 @@ const DefenseGameV2 = {
     },
     
     addScore: function(points, dir = null) {
+        if(this.challenge?.isPractice)return;
         this.score = this.challenge ? Math.max(0,this.score + points) : this.score + points;
         this.updateScoreDisplay();
         
@@ -1369,6 +1378,7 @@ const DefenseGameV2 = {
                         this.turnEnemyRed(targetEnemy);
                     } else {
                         // 正常敵人：變成 hit 圖片
+                        if(currentAttackRef.type!=='ORDER')window.AudioManager?.playDefenseSound?.('hit');
                         targetEnemy.element.style.backgroundImage = `url('${cfg.projectileHitImage}')`;
                         targetEnemy.element.style.backgroundSize = 'contain';
                         targetEnemy.element.style.backgroundRepeat = 'no-repeat';
@@ -1523,6 +1533,7 @@ const DefenseGameV2 = {
                         this.turnEnemyRed(targetEnemy);
                     } else {
                         // 正常敵人：變成 hit 圖片
+                        if(currentAttackRef.type!=='ORDER')window.AudioManager?.playDefenseSound?.('hit');
                         targetEnemy.element.style.backgroundImage = `url('${cfg.projectileHitImage}')`;
                         targetEnemy.element.style.backgroundSize = 'contain';
                         targetEnemy.element.style.backgroundRepeat = 'no-repeat';
@@ -1925,6 +1936,7 @@ const DefenseGameV2 = {
             finished = true;
             if (animationId) this.clock.cancelAnimationFrame(animationId);
             console.log('✨ AOE 防禦成功！');
+            window.AudioManager?.playDefenseSound?.('aoe');
             if (this.state === this.states.AOE_ACTIVE) {
                 this.addScore(this.currentAttack?.points || this.scoreTable.AOE);
                 this.finishAttack();

@@ -38,6 +38,7 @@ window.GamePause = {
             this.animations.forEach(animation=>animation.pause());
             window.GameMusic?.player?.pause();
             window.AudioManager?.stopDialogueChirp();
+            window.AudioManager?.stopDefenseSounds?.();
             window.AudioManager?.sfxPlayer?.pause();
         }
         document.getElementById('game-pause-button').hidden = true;
@@ -53,7 +54,7 @@ window.GamePause = {
         resume.textContent = '繼續遊戲';
         resume.hidden = false;
         const exit = document.getElementById('game-pause-exit');
-        exit.textContent = window.TimedChallenge?.active ? '返回挑戰目錄' : '返回章節選擇';
+        exit.textContent = window.TimedChallenge?.isPractice ? '返回練習選單' : window.TimedChallenge?.active ? '返回挑戰目錄' : '返回章節選擇';
         exit.hidden = false;
         exit.disabled = false;
         resume.disabled = false;
