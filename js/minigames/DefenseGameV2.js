@@ -1173,6 +1173,7 @@ const DefenseGameV2 = {
     },
     
     addScore: function(points, dir = null) {
+        if(this.challenge?.isPractice)return;
         this.score = this.challenge ? Math.max(0,this.score + points) : this.score + points;
         this.updateScoreDisplay();
         

@@ -182,3 +182,9 @@
 .defense-order-badge { position:absolute;right:-7px;top:-7px;display:grid;place-items:center;width:clamp(21px,5cqh,32px);height:clamp(21px,5cqh,32px);border:2px solid #ffdda0;border-radius:50%;background:#19364cf2;color:#ffe4b4;font:bold clamp(13px,3.5cqh,22px)/1 sans-serif;box-shadow:0 2px 5px #07172966;pointer-events:none; }
 .defense-order-badge.is-top-target { top:auto;bottom:-5px; }
 .defense-order-badge[hidden] { display:none; }
+
+.practice-live-hud { position:absolute;inset:3% 3% auto;z-index:180;display:flex;align-items:center;justify-content:space-between;pointer-events:none; }
+.practice-live-label { padding:1cqh 1.5cqw;border:1px solid #92c9dd66;border-radius:12px;background:#18364de8;font-size:clamp(13px,3cqh,23px); }
+.practice-live-hud > div { display:flex;gap:1cqw;pointer-events:auto; }
+.practice-live-hud button { margin:0;padding:1cqh 1.5cqw;font-size:clamp(12px,2.6cqh,19px);min-height:36px;border:1px solid #9ec5d577;border-radius:22px;background:#274a61;color:#e4f3fc; }
+.practice-live-hud button:focus-visible { outline:3px solid #ffe1a0;outline-offset:3px; }

@@ -334,3 +334,30 @@ test('all challenge lobby variants contain exactly three short points without du
   assert.equal((f.nodes.get('challenge-lobby-points').innerHTML.match(/<li>/g)||[]).length,3);
  }
 });
+
+test('formal practice keeps its selected real mechanic and authored speed through later waves in both age modes',()=>{
+ for(const mode of ['adult','child'])for(const kind of ['heavy','aoe','visible','memory']){
+  const {c}=fixture();Object.assign(c,{kind:'defense',mode,variant:'endless',practiceKind:kind,practiceOrder:['visible','memory'].includes(kind)?kind:null});const waits=[];
+  for(const wave of [1,30,41,60,81,101,200]){
+   const a=c.nextAttack({waveNumber:wave-1,levelConfig:{flow:{}}});assert.equal(a.type,kind==='heavy'?'HEAVY':kind==='aoe'?'AOE':'ORDER');waits.push(a.wait);assert.equal(a.heavyIgnitionInterval,400);
+   if(a.type==='ORDER'){assert.equal(a.orderMode,kind);assert.equal(a.dirs.length,3);assert.equal(a.orderPreview>0,kind==='memory');}
+  }
+  assert.ok(waits.every(wait=>wait===waits[0]));
+ }
+});
+test('actual defense practice score and life hooks preserve zero score and three lives after repeated successes and mistakes',()=>{
+ const f=fixture();f.context.DefenseLevels=f.window.DefenseLevels;vm.runInContext(fs.readFileSync('js/minigames/DefenseGameV2.js','utf8'),f.context);const g=f.window.DefenseGameV2,c=f.c;
+ Object.assign(c,{kind:'defense',variant:'endless',practiceKind:'heavy',lives:3});Object.assign(g,{challenge:c,score:0,gameActive:true,sessionId:1,currentAttack:{type:'HEAVY',lossReason:'格擋失敗'}});
+ for(let i=0;i<5;i++){g.addScore(100);g.addScore(-50);g.recordMistake();}assert.equal(g.score,0);assert.equal(c.lives,3);assert.notEqual(c.ending,true);assert.equal(f.saved.size,0);
+});
+test('formal practice launches without countdown, derives order mode safely and normal challenge resets practice',()=>{
+ const f=fixture();f.context.AbortController=AbortController;vm.runInContext(fs.readFileSync('js/core/MinigameSession.js','utf8'),f.context);f.context.showScene=()=>{};
+ f.window.GameEngine={stopMinigame(){}};f.window.ChallengeScenes={pickBackground:()=> 'background.png'};f.window.LoadingManager={showAndLoad(urls,ready){ready();}};f.window.GamePause={attach(){},end(){}};let launches=0;f.c.launch=()=>launches++;
+ Object.assign(f.c,{kind:'defense',variant:'endless'});
+ f.c.start({practiceKind:'memory'});assert.equal(launches,1);assert.equal(f.c.practiceOrder,'memory');assert.equal(f.c.isPractice,true);
+ f.c.start({practiceKind:'heavy',practiceOrder:'memory'});assert.equal(launches,2);assert.equal(f.c.practiceOrder,null);assert.equal(f.c.practiceKind,'heavy');
+ f.c.start();assert.equal(f.c.practiceKind,null);assert.equal(f.c.isPractice,false);assert.equal(launches,2);f.tick(3000);assert.equal(launches,3);
+});
+test('formal heavy and AOE practice never write a best record, even if finish is requested',()=>{
+ for(const kind of ['heavy','aoe']){const f=fixture();f.context.showScene=()=>{};f.window.GamePause={end(){}};Object.assign(f.c,{kind:'defense',variant:'endless',practiceKind:kind,game:{score:999,waveNumber:5,stop(){}}});f.c.finish();assert.equal(f.saved.size,0);assert.equal(f.c.active,false);}
+});

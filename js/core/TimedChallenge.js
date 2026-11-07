@@ -3,6 +3,10 @@ window.TimedChallenge = {
     generation: 0,
     storageKey: 'redbrick.challenge.best.v1',
     variant: 'timed',
+    practiceKind: null,
+    get isPractice(){return !!this.practiceKind;},
+    practiceLabel(){return {heavy:'重擊格擋',aoe:'旋轉防守',visible:'順序滑動',memory:'記憶順序'}[this.practiceKind]||'操作練習';},
+    startPractice(kind){if(!['heavy','aoe','visible','memory'].includes(kind))return;this.showInfo('defense','endless');this.start({practiceKind:kind,practiceOrder:['visible','memory'].includes(kind)?kind:null});},
     get endless() { return this.variant === 'endless'; },
     bestRecord(kind, mode, score, progress) {
         let records = {};
@@ -91,6 +95,7 @@ window.TimedChallenge = {
         this.generation++;
         this.active = false;
         this.practiceOrder = null;
+        this.practiceKind = null;
         this.session?.dispose();
         this.session = null;
         this.hud?.remove(); this.hud = null;
@@ -100,10 +105,12 @@ window.TimedChallenge = {
         document.getElementById('game-wrapper')?.classList.remove('challenge-active');
     },
     exit() {
+        const practice=this.isPractice;
         this.stop();
         window.LoadingManager?.cancel();
         window.GameEngine?.stopMinigame();
         showScene('level-select');
+        if(practice){window.WorldSwitch?.setNight(true);window.WorldSwitch?.setDirectory('practice');document.getElementById('directory-practice-tab')?.focus();}
     },
     confirmExit() {
         const pause = window.GamePause;
@@ -111,14 +118,14 @@ window.TimedChallenge = {
         if (this.exitConfirmed && pause.phase === 'confirm-exit') { this.exit(); return; }
         pause.phase = 'confirm-exit';
         this.exitConfirmed = true;
-        document.getElementById('game-pause-status').textContent = '要返回挑戰目錄嗎？本次成績不會保存。';
+        document.getElementById('game-pause-status').textContent = this.isPractice?'要離開練習，返回練習選單嗎？':'要返回挑戰目錄嗎？本次成績不會保存。';
         document.getElementById('game-pause-exit').textContent = '確認返回';
         document.getElementById('game-pause-resume').textContent = '取消';
         document.getElementById('game-pause-resume').focus();
     },
     resetExitConfirmation() {
         this.exitConfirmed = false;
-        document.getElementById('game-pause-exit').textContent = '返回挑戰目錄';
+        document.getElementById('game-pause-exit').textContent = this.isPractice?'返回練習選單':'返回挑戰目錄';
     },
     requestExit() {
         if (!this.active) return;
@@ -126,9 +133,11 @@ window.TimedChallenge = {
         // 暫停視窗已提供返回入口，讓取消時仍由繼續按鈕恢復。
     },
     start(options = {}) {
-        const practiceOrder=['visible','memory','stone','memory-stone'].includes(options.practiceOrder)?options.practiceOrder:null;
+        const practiceKind=['heavy','aoe','visible','memory'].includes(options.practiceKind)?options.practiceKind:null;
+        const practiceOrder=practiceKind?(['visible','memory'].includes(practiceKind)?practiceKind:null):['visible','memory','stone','memory-stone'].includes(options.practiceOrder)?options.practiceOrder:null;
         this.stop();
         this.practiceOrder = this.replayPracticeOrder = practiceOrder;
+        this.practiceKind=practiceKind;
         window.GameEngine.stopMinigame();
         this.active = true;
         document.getElementById('game-wrapper').classList.add('challenge-active');
@@ -156,7 +165,7 @@ window.TimedChallenge = {
             showScene('challenge-countdown');
             const owner = {container:document.getElementById('challenge-countdown'),session:this.session};
             window.GamePause.attach(owner, this.kind);
-            let count = this.practiceOrder ? 0 : 3;
+            let count = (this.practiceOrder||this.isPractice) ? 0 : 3;
             const tick = () => {
                 if (!this.active || run !== this.generation) return;
                 document.getElementById('challenge-countdown-number').textContent = count;
@@ -208,6 +217,14 @@ window.TimedChallenge = {
         this.hud.className = 'challenge-live-hud';
         this.hudParts = null;
         this.memoryHudParts = null;
+        if(this.isPractice){
+            root.classList.add('defense-endless-game');this.hud.className='practice-live-hud';
+            this.hud.innerHTML='<span class="practice-live-label">'+this.practiceLabel()+'</span><div><button type="button" data-practice-restart>重新練習</button><button type="button" data-practice-leave>離開練習</button></div>';
+            for(const type of ['touchstart','touchmove','touchend','pointerdown'])this.hud.querySelector('div').addEventListener(type,event=>event.stopPropagation());
+            this.hud.querySelector('[data-practice-restart]').onclick=()=>this.start({practiceKind:this.practiceKind,practiceOrder:this.practiceOrder});
+            this.hud.querySelector('[data-practice-leave]').onclick=()=>{window.GamePause.pause();this.confirmExit();};
+            root.appendChild(this.hud);return;
+        }
         if (this.kind === 'defense') {
             root.classList.add('defense-endless-game');
             this.hud.classList.add('defense-endless-hud');
@@ -265,7 +282,7 @@ window.TimedChallenge = {
         if (!this.endless && this.remaining <= 0) this.finish();
     },
     updateHUD() {
-        if (!this.hud) return;
+        if (!this.hud || this.isPractice) return;
         if (this.kind === 'memory' && this.memoryHudParts) {
             const parts = this.memoryHudParts;
             if (parts.hearts) {
@@ -321,19 +338,20 @@ window.TimedChallenge = {
         return score>=1e8 ? `${(score/1e8).toFixed(1)}億` : score>=1e5 ? `${(score/1e4).toFixed(1)}萬` : score.toLocaleString('zh-TW');
     },
     pauseDetail() {
+        if(this.isPractice)return this.practiceLabel()+' · 不計分、不扣生命';
         if (!this.active || !this.endless) return '';
         return `得分 ${this.score.toLocaleString('zh-TW')} 分　·　${this.kind==='defense'?`第 ${this.game?.waveNumber || 0} 波`:`完成 ${this.boards} 盤`}`;
     },
     nextAttack(game) {
         const elapsed = 90000-this.remaining;
         const wave = (game.waveNumber || 0)+1;
-        if (this.active && this.endless && this.kind==='defense') window.GameMusic?.setPlaybackRate?.(this.defenseMusicRate(wave),'defense');
-        const stage = Math.floor((wave-1)/10);
+        if (this.active && this.endless && !this.isPractice && this.kind==='defense') window.GameMusic?.setPlaybackRate?.(this.defenseMusicRate(wave),'defense');
+        const stage = this.isPractice?0:Math.floor((wave-1)/10);
         const speed = this.defenseSpeed(stage,elapsed);
-        const dueAOE = !this.practiceOrder && (this.endless ? wave >= 30 && wave%10===0 : elapsed >= [25000,60000][this.aoeMilestone || 0]);
-        const level = dueAOE ? 3 : 1+Math.floor(Math.random()*3);
+        const dueAOE = this.practiceKind==='aoe' || (!this.isPractice && !this.practiceOrder && (this.endless ? wave >= 30 && wave%10===0 : elapsed >= [25000,60000][this.aoeMilestone || 0]));
+        const level = dueAOE ? 3 : this.practiceKind==='heavy'?2:1+Math.floor(Math.random()*3);
         const source = window.DefenseLevels[level][this.mode];
-        const allowed = dueAOE ? ['AOE'] : this.endless
+        const allowed = dueAOE ? ['AOE'] : this.practiceKind==='heavy'?['HEAVY']:this.endless
             ? stage===0 ? ['NORMAL'] : stage===1 ? ['NORMAL','MULTI','MULTI_MIXED'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY']
             : elapsed<20000 ? ['NORMAL','MULTI'] : ['NORMAL','MULTI','MULTI_MIXED','HEAVY'];
         const pool = source.attackPatterns.filter(a => allowed.includes(a.type));
@@ -341,7 +359,7 @@ window.TimedChallenge = {
         const minimum = this.mode === 'child' ? 2400 : 1700;
         if (dueAOE) { this.aoeMilestone=(this.aoeMilestone||0)+1;attack.points=400; }
         else if (!this.endless && attack.wait) attack.wait = Math.max(minimum,attack.wait*(elapsed>60000?.78:elapsed>20000?.9:1));
-        if (this.endless) {
+        if (this.endless && !this.isPractice) {
             // 僅在新波次調整，旋轉與重擊保留較長的操作時間。
             const floor = attack.type==='AOE' ? (this.mode==='child'?3400:2600) : speed.minimumWait;
             attack.wait = Math.max(floor,Math.round(attack.wait * speed.factor));
@@ -352,7 +370,7 @@ window.TimedChallenge = {
             game.levelConfig = {...game.levelConfig,flow:{...game.levelConfig.flow,prepareTime:speed.prepareTime,successGap:speed.gap}};
         }
         // 旋轉錨點保留；特殊波之間穿插普通波，避免每波都增加規則。
-        if(this.endless && (this.practiceOrder || (!dueAOE && wave>=41 && (wave%10===1 || (wave>=81 && wave%10===6))))) {
+        if(this.endless && (this.practiceOrder || (!this.isPractice && !dueAOE && wave>=41 && (wave%10===1 || (wave>=81 && wave%10===6))))) {
             const mode=this.practiceOrder || (wave<61?'visible':wave<81?(wave%20===1?'memory':'visible'):wave<101?(wave%10===1?'stone':'memory'):['memory-stone','visible','memory','stone'][Math.floor((wave-101)/5)%4]);
             const dirs=['up','right','down','left'];
             for(let i=dirs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[dirs[i],dirs[j]]=[dirs[j],dirs[i]];}
@@ -401,7 +419,7 @@ window.TimedChallenge = {
         wind.node.remove();
     },
     onDefenseWaveStarted(game, attack) {
-        if (!this.active || !this.endless || this.kind!=='defense' || this.game!==game || game.challenge!==this || this.ending) return;
+        if (this.isPractice || !this.active || !this.endless || this.kind!=='defense' || this.game!==game || game.challenge!==this || this.ending) return;
         if (attack!==game.currentAttack || attack.finished) return;
         // 重擊與旋轉需要完整視線；既有落葉也在這些題型開始前收起。
         if (!['NORMAL','MULTI','MULTI_MIXED'].includes(attack.type) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
@@ -542,7 +560,7 @@ window.TimedChallenge = {
     },
     penalty() { if(this.active){this.penalties++;this.score=Math.max(0,this.score-10);this.updateHUD();} },
     loseLife(attack) {
-        if (!this.active || !this.endless || this.ending) return;
+        if (!this.active || !this.endless || this.ending || this.isPractice) return;
         if (this.kind === 'defense' && (!attack || attack !== this.game?.currentAttack || attack.finished)) return;
         if (attack && this.damagedAttack === attack) return;
         this.damagedAttack = attack || null;
@@ -579,7 +597,7 @@ window.TimedChallenge = {
     },
     finish() {
         if (!this.active) return;
-        const practice=!!this.practiceOrder;
+        const practice=!!this.practiceOrder||this.isPractice;
         const old = this.bestRecord(this.kind,this.mode);
         const score = this.kind==='defense' ? Math.max(0,this.game.score) : this.score;
         const detail = this.endless

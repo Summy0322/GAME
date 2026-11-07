@@ -107,12 +107,12 @@
             </div>
             <div id="challenge-directory" class="world-directory" hidden>
                 <p class="night-eyebrow">月光下的老街</p>
-                <h2>老街夜間挑戰</h2>
-                <p class="night-intro">夜幕落下，挑戰限時高分，或用三條命挑戰極限。</p>
-                <div class="challenge-previews">
+                <h2>月下老街</h2>
+                <div class="night-intro"><div class="directory-tabs" role="tablist" aria-label="挑戰與練習"><button id="directory-challenge-tab" type="button" role="tab" aria-selected="true" aria-controls="directory-challenge-panel">挑戰</button><button id="directory-practice-tab" type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="directory-practice-panel">練習</button></div></div>
+                <div id="directory-challenge-panel" class="challenge-previews" role="tabpanel" aria-labelledby="directory-challenge-tab">
                     <article class="challenge-preview"><span class="challenge-number">01 ／ 防守</span><svg viewBox="0 0 80 64" aria-hidden="true"><path d="M40 6 64 16v18c0 13-24 25-24 25S16 47 16 34V16Z"/><path d="m29 32 8 8 15-19"/></svg><h3>防守挑戰</h3><p>眼明手快，挑戰你的反應。</p><span class="challenge-soon">即將開放</span></article>
                     <article class="challenge-preview"><span class="challenge-number">02 ／ 配對</span><svg viewBox="0 0 80 64" aria-hidden="true"><rect x="13" y="9" width="30" height="43" rx="5" transform="rotate(-12 28 30)"/><rect x="37" y="13" width="30" height="43" rx="5" transform="rotate(9 52 34)"/><path d="m52 24 4 7 8 2-8 3-4 8-3-8-8-3 8-2Z"/></svg><h3>記憶挑戰</h3><p>翻開卡片，找回成對的記憶。</p><span class="challenge-soon">即將開放</span></article>
-                </div>
+                </div><div id="directory-practice-panel" role="tabpanel" aria-labelledby="directory-practice-tab" hidden><button class="practice-tile" data-practice-kind="heavy"><svg viewBox="0 0 72 64" aria-hidden="true"><path d="M16 9h32M16 17h32M16 25h32M16 33h32M16 41h32"/><path d="m52 18 9 9-9 9"/></svg><span><strong>重擊格擋</strong></span></button><button class="practice-tile" data-practice-kind="aoe"><svg viewBox="0 0 72 64" aria-hidden="true"><path d="M52 19a22 22 0 1 0 3 23M52 8v14H38"/><circle cx="32" cy="32" r="6"/></svg><span><strong>旋轉防守</strong></span></button><button class="practice-tile" data-practice-kind="visible"><svg viewBox="0 0 72 64" aria-hidden="true"><circle cx="18" cy="20" r="11"/><circle cx="48" cy="43" r="11"/><path d="M18 15v10M45 39q9-7 7 0l-8 9h10M30 24l7 8"/></svg><span><strong>順序滑動</strong></span></button><button class="practice-tile" data-practice-kind="memory"><svg viewBox="0 0 72 64" aria-hidden="true"><circle cx="18" cy="20" r="11"/><path d="M18 15v10M38 39h4m7 0h4m7 0h2M31 25l8 7"/></svg><span><strong>記憶順序</strong></span></button></div><span id="directory-practice-note" hidden>不計分・不扣生命</span>
             </div>
             <p id="world-switch-status" class="visually-hidden" aria-live="polite"></p>
             <button class="back-btn" onclick="showScene('start-menu')">返回</button>
