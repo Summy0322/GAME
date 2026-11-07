@@ -115,10 +115,11 @@ window.TimedChallenge = {
     confirmExit() {
         const pause = window.GamePause;
         if (!pause || !['paused','confirm-exit'].includes(pause.phase)) return;
+        if(this.isPractice){this.exit();return;}
         if (this.exitConfirmed && pause.phase === 'confirm-exit') { this.exit(); return; }
         pause.phase = 'confirm-exit';
         this.exitConfirmed = true;
-        document.getElementById('game-pause-status').textContent = this.isPractice?'要離開練習，返回練習選單嗎？':'要返回挑戰目錄嗎？本次成績不會保存。';
+        document.getElementById('game-pause-status').textContent = '要返回挑戰目錄嗎？本次成績不會保存。';
         document.getElementById('game-pause-exit').textContent = '確認返回';
         document.getElementById('game-pause-resume').textContent = '取消';
         document.getElementById('game-pause-resume').focus();

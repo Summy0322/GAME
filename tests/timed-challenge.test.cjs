@@ -361,3 +361,11 @@ test('formal practice launches without countdown, derives order mode safely and 
 test('formal heavy and AOE practice never write a best record, even if finish is requested',()=>{
  for(const kind of ['heavy','aoe']){const f=fixture();f.context.showScene=()=>{};f.window.GamePause={end(){}};Object.assign(f.c,{kind:'defense',variant:'endless',practiceKind:kind,game:{score:999,waveNumber:5,stop(){}}});f.c.finish();assert.equal(f.saved.size,0);assert.equal(f.c.active,false);}
 });
+
+test('practice returns immediately from pause while scored challenge still requires exit confirmation',()=>{
+ for(const practice of [true,false]){
+  const f=fixture();f.window.GamePause={phase:'paused'};f.c.practiceKind=practice?'heavy':null;let exits=0;f.c.exit=()=>exits++;
+  f.c.confirmExit();assert.equal(exits,practice?1:0);assert.equal(f.window.GamePause.phase,practice?'paused':'confirm-exit');
+  if(!practice){f.c.confirmExit();assert.equal(exits,1);}
+ }
+});
