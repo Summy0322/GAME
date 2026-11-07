@@ -201,7 +201,7 @@ test('challenge lobby retains selected variant, separate best and theme through 
  const f=fixture();f.context.showScene=()=>{};f.window.gameMode='child';
  f.c.showInfo('memory','endless');assert.equal(f.c.endless,true);assert.equal(f.c.mode,'child');
  for(const id of ['game-wrapper','challenge-lobby','challenge-countdown','challenge-results'])assert.equal(f.nodes.get(id).dataset.challengeKind,'memory');
- assert.match(f.nodes.get('challenge-lobby-copy').textContent,/三條命/);
+ assert.match(f.nodes.get('challenge-lobby-points').innerHTML,/三條命/);
  f.c.showInfo('defense');assert.equal(f.c.endless,false);assert.match(f.nodes.get('challenge-lobby-kicker').textContent,/90/);
 });
 test('completed memory boards award once and exclude the following memorization time',()=>{
@@ -327,10 +327,10 @@ test('memory accuracy includes every failed pair in timed and endless play and s
   c.resetFeedback();assert.equal(c.memoryBestStreak,0);
  }
 });
-test('all challenge lobby variants contain exactly three short points and reset expanded rules',()=>{
+test('all challenge lobby variants contain exactly three short points without duplicate rule text',()=>{
  const f=fixture();f.context.showScene=()=>{};
  for(const kind of ['defense','memory'])for(const variant of ['timed','endless']){
   f.c.showInfo(kind,variant);const points=f.c.lobbyPoints();assert.equal(points.length,3);assert.ok(points.every(p=>p.length<=34));
-  assert.equal((f.nodes.get('challenge-lobby-points').innerHTML.match(/<li>/g)||[]).length,3);assert.equal(f.nodes.get('challenge-lobby-rules').open,false);assert.match(f.nodes.get('challenge-lobby-copy').textContent,/三盞|旋轉|三條命/);
+  assert.equal((f.nodes.get('challenge-lobby-points').innerHTML.match(/<li>/g)||[]).length,3);
  }
 });

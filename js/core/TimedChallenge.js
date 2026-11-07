@@ -83,14 +83,6 @@ window.TimedChallenge = {
         document.getElementById('challenge-lobby-kicker').textContent = this.endless ? '三條命・無限模式' : '90 秒・限時挑戰';
         document.getElementById('challenge-lobby-title').textContent = `${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
         document.getElementById('challenge-lobby-points').innerHTML=this.lobbyPoints().map(point=>`<li>${point}</li>`).join('');
-        document.getElementById('challenge-lobby-rules').open=false;
-        document.getElementById('challenge-lobby-copy').textContent = this.endless
-            ? (memory
-                ? `三條命，不限時。累積 ${this.memoryMistakeLimit()} 格失誤扣一命；配對消一格、換盤清空。每對 +10 分、每盤 +20 分。第 2 盤起，雲影會隨機眨眼，不預告也不影響點擊。每盤隨機換位一次，後段可有兩次；中央大字通知後，翻開的單張牌先蓋回，再追蹤亮框換位。已配對的牌不動。`
-                : '三條命，不限時。漏接、打到石頭或格擋失敗扣一命，同一波最多扣一命。每 10 波加速，多方向題保留連續滑動時間；右上細線顯示作答時間，失誤先回饋再換波。第 41 波起依序接編號目標，第 61 波起記憶編號，第 81 波起混入石頭；每一步保留完整作答時間。音樂隨波次小幅加速，以分數與波次挑戰紀錄。')
-            : memory
-            ? '90 秒內連續配對。每對 +10 分，完成一盤再 +20 分。配錯亮一盞紅燈，配對成功清除；三盞紅燈扣 10 分後清空。換盤與記憶展示不扣時間。'
-            : '90 秒連續防守，滑動處理目標、避開石頭；重擊逐格點燃速度會隨時間加快，依提示滑動格擋。約第 25、60 秒後各有一次旋轉，沿畫面畫圈，成功 +400 分。失誤會扣分但不會提前結束，背景整場固定。';
         document.getElementById('challenge-lobby-best').textContent = this.bestLabel(kind,this.mode);
     },
     stop() {
