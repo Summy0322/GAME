@@ -184,7 +184,4 @@
 .defense-order-badge[hidden] { display:none; }
 
 .practice-live-hud { position:absolute;inset:3% 3% auto;z-index:180;display:flex;align-items:center;justify-content:space-between;pointer-events:none; }
-.practice-live-label { padding:1cqh 1.5cqw;border:1px solid #92c9dd66;border-radius:12px;background:#18364de8;font-size:clamp(13px,3cqh,23px); }
-.practice-live-hud > div { display:flex;gap:1cqw;pointer-events:auto; }
-.practice-live-hud button { margin:0;padding:1cqh 1.5cqw;font-size:clamp(12px,2.6cqh,19px);min-height:36px;border:1px solid #9ec5d577;border-radius:22px;background:#274a61;color:#e4f3fc; }
-.practice-live-hud button:focus-visible { outline:3px solid #ffe1a0;outline-offset:3px; }
+.practice-live-label { padding:.8cqh 1.3cqw;border:1px solid #a2c7d32e;border-radius:10px;background:#142e4299;color:#deedf4;text-shadow:0 1px 3px #08172580;font-size:clamp(13px,3cqh,23px); }
