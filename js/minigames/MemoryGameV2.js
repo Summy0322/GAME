@@ -222,6 +222,7 @@ const MemoryGameV2 = {
     },
 
     prepareCardSymbols: function() {
+        if(this.challenge?.strategy){const symbols=this.challenge.tactics.symbols;this.cardSymbols=[...symbols,...symbols];this.shuffleArray(this.cardSymbols);return;}
         // ✅ 有圖片的符號（優先使用）
         const hasImageSymbols = ['🫘', '🥛', '🍮', '🧈', '🥢', '🍜', '🌱'];
         
@@ -1049,7 +1050,7 @@ const MemoryGameV2 = {
             }
             
             this.matchedPairs++;
-            this.challenge?.paired();
+            this.challenge?.paired(card1.dataset.symbol);
             this.updateStats();
             
             this.session.timeout(() => {
@@ -1058,10 +1059,11 @@ const MemoryGameV2 = {
                 this.flippedCards = [];
                 this.canFlip = true;
                 
-                if (typeof AudioManager !== 'undefined') {
+                if (typeof AudioManager !== 'undefined' && !this.challenge?.strategy) {
                     AudioManager.playSFX('assets/audio/sfx/correct.mp3', 0.3);
                 }
                 
+                if(this.challenge?.afterMemoryAttempt?.(this))return;
                 if (this.matchedPairs === this.totalPairs) {
                     this.endGame(true);
                 } else if (this.gameMode === 'attempts' && this.attemptsLeft === 0) {
@@ -1117,7 +1119,7 @@ const MemoryGameV2 = {
                 }
             } else {
                 // 無燈光模式：只播放音效，不計連續失敗次數
-                if (typeof AudioManager !== 'undefined') {
+                if (typeof AudioManager !== 'undefined' && !this.challenge?.strategy) {
                     AudioManager.playSFX('assets/audio/sfx/wrong.mp3', 0.3);
                 }
             }
@@ -1127,6 +1129,7 @@ const MemoryGameV2 = {
                 card2.classList.remove('is-flipped');
                 this.flippedCards = [];
                 this.canFlip = true;
+                this.challenge?.afterMemoryAttempt?.(this);
             }, 800);
         }
     },
@@ -1197,6 +1200,7 @@ const MemoryGameV2 = {
      * 強制清理（切換小遊戲或引擎重新 start 前呼叫）
      */
     stop: function (options = {}) {
+        window.AudioManager?.stopDefenseSounds?.();
         this.challenge?.clearMemoryInterference?.(this);
         window.GamePause?.end(this);
         this.stopKnownHints();

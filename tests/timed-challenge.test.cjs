@@ -369,3 +369,20 @@ test('practice returns immediately from pause while scored challenge still requi
   if(!practice){f.c.confirmExit();assert.equal(exits,1);}
  }
 });
+
+test('strategy records are isolated from timed and endless records and use encounter progress',()=>{
+ const {c}=fixture();c.kind='memory';c.mode='adult';c.variant='tactics';c.best('memory','adult',550,5);assert.match(c.bestLabel('memory','adult'),/擊退 5 位暗影/);
+ c.variant='timed';assert.equal(c.best('memory','adult'),0);c.variant='endless';assert.equal(c.best('memory','adult'),0);c.variant='tactics';assert.equal(c.best('memory','adult'),550);
+});
+test('strategy lobby explains turn-based combat and a normal lobby clears the selected rules',()=>{
+ const f=fixture();f.context.showScene=()=>{};f.c.showInfo('memory','tactics');assert.equal(f.c.strategy,true);assert.match(f.nodes.get('challenge-lobby-title').textContent,/策略配對/);assert.equal(f.c.lobbyPoints().length,3);
+ f.c.showInfo('memory','timed');assert.equal(f.c.strategy,false);assert.match(f.nodes.get('challenge-lobby-kicker').textContent,/90/);
+});
+test('real memory matching commits exactly one tactics turn after the flip feedback',()=>{
+ const f=fixture();vm.runInContext(fs.readFileSync('js/core/MemoryTactics.js','utf8'),f.context);vm.runInContext(fs.readFileSync('js/minigames/MemoryGameV2.js','utf8'),f.context);
+ const c=f.c,g=f.window.MemoryGameV2;c.variant='tactics';c.tactics=new f.window.MemoryTactics(c);c.tactics.game=g;
+ const card=symbol=>({dataset:{symbol},classList:{add(){},remove(){}}});let callbacks=[];
+ Object.assign(g,{challenge:c,gameActive:true,gameMode:'time',lightMode:'none',moves:0,matchedPairs:0,totalPairs:6,timeLeft:90,statusText:{style:{}},session:{timeout(fn){callbacks.push(fn);}},updateStats(){},updateStrikes(){}});
+ g.flippedCards=[card('🫘'),card('🫘')];g.checkMatch();assert.equal(c.tactics.turns,0);assert.equal(c.tactics.enemy.health,6);callbacks.splice(0).forEach(fn=>fn());assert.equal(c.tactics.turns,1);assert.equal(c.tactics.enemy.health,4);
+ g.flippedCards=[card('🫘'),card('🍮')];g.checkMatch();assert.equal(c.tactics.errors,0);callbacks.splice(0).forEach(fn=>fn());assert.equal(c.tactics.turns,2);assert.equal(c.tactics.errors,1);assert.equal(c.tactics.enemy.health,4);
+});

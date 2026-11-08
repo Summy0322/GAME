@@ -185,3 +185,35 @@
 
 .practice-live-hud { position:absolute;inset:3% 3% auto;z-index:180;display:flex;align-items:center;justify-content:space-between;pointer-events:none; }
 .practice-live-label { padding:.8cqh 1.3cqw;border:1px solid #a2c7d32e;border-radius:10px;background:#142e4299;color:#deedf4;text-shadow:0 1px 3px #08172580;font-size:clamp(13px,3cqh,23px); }
+
+/* 策略配對：資訊沿用配對頂欄，卡片區保持可點擊。 */
+.challenge-preview { position:relative; }
+.challenge-preview .memory-tactics-entry { position:absolute;top:2.5cqh;right:1.1cqw;padding:0;margin:0;min-height:24px;border:0;border-bottom:1px solid #b4cad255;border-radius:0;background:transparent!important;color:#d8e9f1;font-size:clamp(10px,2cqh,14px); }
+.memory-tactics-game .memory-top-bar { display:none; }
+.tactics-hud { width:100%;padding:1.2cqh 1.5cqw;background:#172e49;color:#ecf2fa;border-radius:10px;box-sizing:border-box;font-variant-numeric:tabular-nums; }
+.tactics-player,.tactics-opponent { display:flex;align-items:center;justify-content:space-between;gap:1cqw;font-size:clamp(11px,2.7cqh,18px);line-height:1.5; }
+.tactics-player { color:#d4e2ed; }
+.tactics-opponent { padding-top:.5cqh; }
+.tactics-opponent strong { color:#f3d6a2; }
+.tactics-status { margin:.6cqh 0 0;min-height:1.4em;font-size:clamp(10px,2.3cqh,16px);color:#b7d2e2;line-height:1.4; }
+.tactics-effect { position:absolute;bottom:3%;right:4%;padding:1px 5px;border-radius:5px;background:#213d58;color:#f3f7fc;font:bold clamp(10px,2.3cqh,16px)/1.3 sans-serif;pointer-events:none; }
+.tactics-reward { position:absolute;inset:0;z-index:190;display:grid;place-items:center;background:#0c1d33ed;color:#eef4fa; }
+.tactics-reward > div { width:84%;text-align:center; }
+.tactics-reward p { margin:0 0 1cqh;font-size:clamp(12px,2.8cqh,19px);color:#b5cdda; }
+.tactics-reward h3 { margin:0 0 4cqh;font-size:clamp(20px,5cqh,36px);font-weight:normal; }
+.tactics-reward-options { display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw; }
+.tactics-reward-options button { margin:0;padding:3cqh 1cqw;width:100%;max-width:none;border:1px solid #9dbbd15c;border-radius:14px;background:#294861;color:#eff4fa; }
+.tactics-reward-options strong { display:block;font-size:clamp(17px,4cqh,28px);font-weight:normal;margin-bottom:1cqh; }
+.tactics-reward-options span { display:block;font-size:clamp(11px,2.5cqh,18px);line-height:1.6; }
+.tactics-reward-options button:hover { background:#3c6078;border-color:#dcc08b; }
+.tactics-reward-options button:focus-visible { outline:3px solid #ffe1a0;outline-offset:3px; }
+
+.challenge-preview[data-challenge-kind] .challenge-endless-entry { background:var(--challenge-dark); }
+.tactics-reward-options button:disabled { opacity:.45;cursor:default; }
+
+.tactics-foe { display:inline-flex;align-items:center;gap:.5cqw;position:relative;padding-bottom:3px; }
+.tactics-foe svg { width:5cqh;height:5cqh;flex-shrink:0; }
+.tactics-foe::after { content:"";position:absolute;left:0;bottom:0;width:100%;height:2px;background:#e6cc99;transform:scaleX(var(--enemy-health,1));transform-origin:left; }
+.tactics-hud[data-danger="true"] [data-tactics-health] { color:#ffc0ad; }
+
+.tactics-reward .tactics-carry-note { margin-top:2cqh;font-size:clamp(10px,2.2cqh,15px);color:#a8c2d3; }

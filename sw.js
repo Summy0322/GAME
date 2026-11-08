@@ -1,5 +1,5 @@
 // 首頁只預存程式；圖片與字型在實際使用後快取，音樂／影片按需載入。
-const CACHE_NAME = 'game-v101';
+const CACHE_NAME = 'game-v102';
 const urlsToCache = [
   "/GAME/",
   "/GAME/index.html",
@@ -9,6 +9,7 @@ const urlsToCache = [
   "/GAME/css/challenge-scenes.css",
   "/GAME/css/timed-challenge.css",
   "/GAME/js/core/TimedChallenge.js",
+  "/GAME/js/core/MemoryTactics.js",
   "/GAME/js/core/ChallengeScenes.js",
   "/GAME/js/core/WorldSwitch.js",
   "/GAME/css/defense-game.css",
