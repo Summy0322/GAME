@@ -6,7 +6,7 @@ function fixture(blocked=false){
  const window={},context=vm.createContext({window,document,console:{log(){},warn(){}},performance:{now:()=>now},
  localStorage:{getItem(k){if(blocked)throw Error();return saved.get(k)||null;},setItem(k,v){if(blocked)throw Error();saved.set(k,v);}},
  setTimeout(fn,ms=0){jobs.set(++id,{fn,at:now+ms});return id;},clearTimeout(k){jobs.delete(k);},requestAnimationFrame(){},cancelAnimationFrame(){}});
- for(const file of ['js/core/GameClock.js','js/core/TimedChallenge.js','js/data/minigameAssets.js','js/minigames/DefenseLevels.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
+ for(const file of ['js/core/DefenseRush.js','js/core/GameClock.js','js/core/TimedChallenge.js','js/data/minigameAssets.js','js/minigames/DefenseLevels.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
  const c=window.TimedChallenge;c.active=true;c.kind='memory';c.mode='child';c.remaining=90000;c.score=c.pairs=c.boards=c.penalties=0;
  const tick=ms=>{const end=now+ms;let count=0;while(true){const next=[...jobs].filter(([,j])=>j.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;if(++count>20000)throw Error('loop');now=next[1].at;jobs.delete(next[0]);next[1].fn();}now=end;};
  return {c,window,context,saved,tick,nodes,clock:()=>new window.GameClock()};
@@ -387,10 +387,13 @@ test('real memory matching commits exactly one tactics turn after the flip feedb
  g.flippedCards=[card('🫘'),card('🍮')];g.checkMatch();assert.equal(c.tactics.errors,0);callbacks.splice(0).forEach(fn=>fn());assert.equal(c.tactics.turns,2);assert.equal(c.tactics.errors,1);assert.equal(c.tactics.enemy.health,4);
 });
 
-test('assisted and strict tactics and continuous defense each keep separate best records',()=>{
+test('assisted and strict tactics and endless defense keep separate best records',()=>{
  const {c}=fixture();c.kind='memory';c.variant='tactics';c.memoryAid=true;c.best('memory','adult',550,5);c.memoryAid=false;assert.equal(c.best('memory','adult'),0);c.best('memory','adult',520,5);c.memoryAid=true;assert.equal(c.best('memory','adult'),550);assert.match(c.bestLabel('memory','adult'),/提示開啟/);
- c.kind='defense';c.variant='rush';c.best('defense','adult',1150,3);assert.match(c.bestLabel('defense','adult'),/完成 3 段/);c.variant='timed';assert.equal(c.best('defense','adult'),0);c.variant='endless';assert.equal(c.best('defense','adult'),0);
+ c.kind='defense';c.variant='endless';c.best('defense','adult',1150,65);assert.match(c.bestLabel('defense','adult'),/第 65 波/);c.variant='timed';assert.equal(c.best('defense','adult'),0);c.variant='endless';assert.equal(c.best('defense','adult'),1150);
 });
-test('continuous prototype delegates authored attacks without consuming the timed-mode clock',()=>{
- const f=fixture();f.c.kind='defense';f.c.variant='rush';f.c.rush={nextAttack:()=>({type:'RUSH'}),completed:1,hits:6,total:18};assert.equal(f.c.nextAttack({}).type,'RUSH');assert.match(f.c.pauseDetail(),/第 2／3 段/);f.c.liveClock=f.clock();f.c.lastTick=0;f.c.game={score:0};f.tick(10000);f.c.consumeTime();assert.equal(f.c.remaining,90000);
+test('overlap waves occur only at endless late anchors and keep heavy timing readable',()=>{
+ for(const mode of ['adult','child']){const {c}=fixture();c.kind='defense';c.variant='endless';c.mode=mode;
+ for(let wave=1;wave<=200;wave++){const attack=c.nextAttack({waveNumber:wave-1,levelConfig:{flow:{}}});assert.equal(attack.type==='RUSH',wave>=65&&wave%10===5);if(attack.type==='RUSH'){assert.equal(attack.rushPlan.length,2);assert.ok(attack.heavyIgnitionInterval>=(mode==='child'?260:220));}}
+ c.practiceKind='normal';assert.notEqual(c.nextAttack({waveNumber:64,levelConfig:{flow:{}}}).type,'RUSH');c.practiceKind=null;c.variant='timed';assert.notEqual(c.nextAttack({waveNumber:64,levelConfig:{flow:{}}}).type,'RUSH');
+ }
 });

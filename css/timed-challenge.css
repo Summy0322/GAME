@@ -188,7 +188,7 @@
 
 /* 策略配對：資訊沿用配對頂欄，卡片區保持可點擊。 */
 .challenge-preview { position:relative; }
-.challenge-preview .memory-tactics-entry,.challenge-preview .defense-rush-entry { position:absolute;top:2.5cqh;right:1.1cqw;padding:0;margin:0;min-height:24px;border:0;border-bottom:1px solid #b4cad255;border-radius:0;background:transparent!important;color:#d8e9f1;font-size:clamp(10px,2cqh,14px); }
+.challenge-preview .memory-tactics-entry { position:absolute;top:2.5cqh;right:1.1cqw;padding:0;margin:0;min-height:24px;border:0;border-bottom:1px solid #b4cad255;border-radius:0;background:transparent!important;color:#d8e9f1;font-size:clamp(10px,2cqh,14px); }
 .memory-tactics-game .memory-top-bar { display:none; }
 .tactics-hud { width:100%;padding:1.2cqh 1.5cqw;background:#172e49;color:#ecf2fa;border-radius:10px;box-sizing:border-box;font-variant-numeric:tabular-nums; }
 .tactics-player,.tactics-opponent { display:flex;align-items:center;justify-content:space-between;gap:1cqw;font-size:clamp(11px,2.7cqh,18px);line-height:1.5; }
@@ -225,10 +225,6 @@
 .tactics-known-hint img { opacity:.72;max-width:65%!important;max-height:65%!important; }
 .tactics-known-hint .tactics-effect { opacity:.8; }
 
-.rush-hud { position:absolute;inset:2% 2% auto;z-index:180;display:flex;justify-content:space-between;gap:2cqw;pointer-events:none;color:#e8f3fa; }
-.rush-hud > div { padding:1cqh 1.4cqw;background:#142e45e8;border:1px solid #a8c9d54d;border-radius:12px;display:flex;flex-direction:column;gap:.6cqh;font-size:clamp(11px,2.6cqh,18px); }
-.rush-hud > div:last-child { text-align:right;max-width:38%; }
-.rush-hud strong { font-size:clamp(13px,3cqh,23px);font-weight:normal; }
 [data-rush-feedback] { font-size:clamp(10px,2.1cqh,15px);color:#b9d3e2; }
 .rush-target-meter { position:absolute;bottom:-7px;left:0;width:100%;height:4px;background:#0b1c2f;border:1px solid #9dbbc94d;border-radius:4px;overflow:hidden; }
 .rush-target-meter i { display:block;height:100%;background:#afdfeb;transform-origin:left; }
