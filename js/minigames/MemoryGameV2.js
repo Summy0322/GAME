@@ -971,6 +971,7 @@ const MemoryGameV2 = {
         this.clearKnownHint();
         if (!this.seenCards) this.seenCards = new Set();
         this.seenCards.add(card);
+        this.challenge?.tactics?.noteSeen?.(card);
         
         card.classList.add('is-flipped');
         this.flippedCards.push(card);

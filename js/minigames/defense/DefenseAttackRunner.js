@@ -341,7 +341,7 @@ window.DefenseAttackRunnerMixin = {
         this.setState(this.states.PREPARING);
         this.msg.innerText = attack.text;
 
-        const special=['ORDER'].includes(attack.type);
+        const special=['ORDER','RUSH'].includes(attack.type);
         if(special){this.clearSpecialWave();this.challenge?.clearDefenseWind?.(this);}
         const prepareTime = special?0:(this.levelConfig.flow?.prepareTime ?? Math.max(300, Math.min(800, this.getCurrentGap() / 2)));
 
@@ -371,6 +371,8 @@ window.DefenseAttackRunnerMixin = {
         if(!['ORDER'].includes(attack.type))this.clearSpecialWave();
 
         switch (attack.type) {
+            case 'RUSH':
+                this.challenge.rush.begin(this,attack);break;
             case 'ORDER':
                 this.startOrderedWave(attack);break;
             case 'END':

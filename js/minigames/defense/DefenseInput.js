@@ -8,7 +8,7 @@ window.DefenseInputMixin = {
             if (!this.gameActive || window.GamePause?.paused || e.touches.length !== 1) return;
             const touch = e.touches[0];
             if (this.currentAttack && !this.currentAttack.finished && this.state !== this.states.PREPARING) {
-                this.touchGesture = {id:touch.identifier,attack:this.currentAttack,session:this.sessionId,x:touch.clientX,y:touch.clientY};
+                this.touchGesture = {id:touch.identifier,attack:this.currentAttack,session:this.sessionId,x:touch.clientX,y:touch.clientY,rushTargets:this.challenge?.rush?.inputSnapshot()};
             }
             this.touchStart.x = e.touches[0].clientX;
             this.touchStart.y = e.touches[0].clientY;
@@ -72,7 +72,7 @@ window.DefenseInputMixin = {
             } else {
                 if (Math.abs(dy) > 30) swipe = dy > 0 ? 'down' : 'up';
             }
-            if (swipe && this.gameActive) this.handleSwipe(swipe,gesture.attack,gesture.session);
+            if (swipe && this.gameActive) this.handleSwipe(swipe,gesture.attack,gesture.session,gesture.rushTargets);
         });
         this.container.addEventListener('touchcancel', () => {
             this.touchGesture = null;

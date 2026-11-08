@@ -737,11 +737,12 @@ const DefenseGameV2 = {
         });
     },
     
-    handleSwipe: function(dir, inputAttack = this.currentAttack, inputSession = this.sessionId) {
+    handleSwipe: function(dir, inputAttack = this.currentAttack, inputSession = this.sessionId, inputTargets) {
         if (window.GamePause?.paused) return;
         if (!this.gameActive) return;
         if (this.challenge?.ending) return;
         if (!inputAttack || inputAttack !== this.currentAttack || inputSession !== this.sessionId || inputAttack.finished || inputAttack.resolved) return;
+        if(inputAttack.type==='RUSH'&&this.challenge?.rush){this.challenge.rush.swipe(dir,inputTargets);return;}
         if(['ORDER'].includes(inputAttack.type)) {if(this.state===this.states.MULTI)this.handleSpecialSwipe(dir);return;}
         if (![this.states.NORMAL,this.states.MULTI,this.states.MULTI_MIXED,this.states.DECOY,this.states.HEAVY_CHARGING,this.states.HEAVY_FLYING].includes(this.state)) return;
         
@@ -1745,6 +1746,7 @@ const DefenseGameV2 = {
     },
     
     launchHeavyProjectile: function(dir) {
+        if(this.currentAttack?.type==='RUSH'&&this.challenge?.rush){this.challenge.rush.launchHeavy(dir);return;}
         console.log('launchHeavyProjectile 執行，方向:', dir);
 
         // ✅ 加入這行！定義 currentSession

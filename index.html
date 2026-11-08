@@ -133,7 +133,7 @@
             <div class="challenge-scene-footer"><p id="challenge-scene-note"></p><button id="challenge-reroll" type="button">換個背景</button></div>
         </div>
         <div id="challenge-lobby" class="scene challenge-blue-scene" style="display:none;">
-            <section class="challenge-blue-window"><p id="challenge-lobby-kicker" class="challenge-kicker">90 秒・限時挑戰</p><h2 id="challenge-lobby-title"></h2><ul id="challenge-lobby-points"></ul><p id="challenge-lobby-best"></p><div class="challenge-window-actions"><button type="button" data-challenge-exit>返回目錄</button><button id="challenge-begin" type="button">開始挑戰</button></div></section>
+            <section class="challenge-blue-window"><p id="challenge-lobby-kicker" class="challenge-kicker">90 秒・限時挑戰</p><h2 id="challenge-lobby-title"></h2><ul id="challenge-lobby-points"></ul><label id="challenge-memory-aid-option" hidden><input id="challenge-memory-aid" type="checkbox" checked>保留翻過的牌提示</label><p id="challenge-lobby-best"></p><div class="challenge-window-actions"><button type="button" data-challenge-exit>返回目錄</button><button id="challenge-begin" type="button">開始挑戰</button></div></section>
         </div>
         <div id="challenge-countdown" class="scene challenge-blue-scene" style="display:none;"><p>準備挑戰</p><strong id="challenge-countdown-number" aria-live="polite">3</strong></div>
         <div id="challenge-results" class="scene challenge-blue-scene" style="display:none;">
@@ -279,6 +279,7 @@
     <script src="js/main.js"></script>
     <script src="js/core/WorldSwitch.js"></script>
     <script src="js/core/ChallengeScenes.js"></script>
+    <script src="js/core/DefenseRush.js"></script>
     <script src="js/core/MemoryTactics.js"></script>
     <script src="js/core/TimedChallenge.js"></script>
     

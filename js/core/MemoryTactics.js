@@ -2,6 +2,7 @@
 window.MemoryTactics = class MemoryTactics {
     constructor(owner) {
         this.owner=owner;this.maxHealth=owner.mode==='child'?14:12;this.health=this.maxHealth;
+        this.assisted=owner.memoryAid!==false;
         this.shield=0;this.charge=0;this.attackBonus=0;this.guardBonus=0;
         this.cleared=0;this.turns=0;this.pairs=0;this.errors=0;this.pending=null;
         this.fights=[
@@ -19,6 +20,14 @@ window.MemoryTactics = class MemoryTactics {
         if(symbol==='🥛')return {kind:'guard',label:`護盾 ${2+this.guardBonus}`};
         if(symbol==='🧈')return {kind:'heal',label:'恢復 2'};
         return {kind:'charge',label:'蓄力 2'};
+    }
+    noteSeen(card){
+        if(!this.assisted||!this.live||this.phase!=='battle'||this.game?.isMemorizing)return;
+        const back=card.querySelector('.memory-card-back');
+        if(!back||back.querySelector('.tactics-known-hint'))return;
+        const hint=document.createElement('span');hint.className='tactics-known-hint';hint.setAttribute('aria-hidden','true');
+        hint.innerHTML=card.querySelector('.memory-card-front').innerHTML;
+        back.appendChild(hint);card.title=`已翻過 · ${this.effect(card.dataset.symbol).label}`;
     }
     newFight(){
         const fight=this.fights[this.cleared],child=this.owner.mode==='child',health=child?Math.ceil(fight.health*.85):fight.health;
@@ -89,7 +98,7 @@ window.MemoryTactics = class MemoryTactics {
             const badge=document.createElement('span');badge.className='tactics-effect';badge.textContent=this.effect(card.dataset.symbol).label;
             card.querySelector('.memory-card-front').appendChild(badge);
         });
-        this.render('先記住圖案位置與卡片效果');game.adjustCardSize();
+        this.render(this.assisted?'翻過的牌會保留提示，不必全部背下來':'先記住圖案位置與卡片效果');game.adjustCardSize();
     }
     render(message){
         if(!this.hud)return;
@@ -102,7 +111,7 @@ window.MemoryTactics = class MemoryTactics {
         this.hud.querySelector('[data-tactics-intent]').textContent=`再 ${this.untilAttack} 步 → 傷害 ${this.intent[1]}`;
         this.hud.querySelector('.tactics-status').textContent=message;
     }
-    ready(game){if(game!==this.game||!this.live)return;game.stopKnownHints();this.render(this.enemy.armor?'護甲會減少一般傷害；先蓄力可穿透護甲':'先攻、架盾或蓄力，由你決定');}
+    ready(game){if(game!==this.game||!this.live)return;game.stopKnownHints();this.render(this.enemy.armor?'護甲會減少一般傷害；先蓄力可穿透護甲':this.assisted?'翻過的牌會保留提示，先看對手倒數再選牌':'先攻、架盾或蓄力，由你決定');}
     boardComplete(game){if(!this.live||this.phase!=='battle'||game!==this.game)return;this.newBoard();}
     newBoard(){
         if(!this.live)return;

@@ -44,3 +44,14 @@ test('zero life ends the run after the revealed attack and final victory has a d
 test('leaving during final impact feedback invalidates the queued result',()=>{
  const f=fixture();f.tactics.health=1;f.tactics.untilAttack=1;f.tactics.memoryMiss();f.tactics.afterAttempt(f.game);f.owner.active=false;f.owner.tactics=null;f.flush();assert.equal(f.owner.finishes,undefined);
 });
+
+test('memory aid reveals only personally flipped cards, never the opening preview, and can be disabled',()=>{
+ const window={},document={createElement(){return{setAttribute(){},innerHTML:'',className:''};}};vm.runInNewContext(fs.readFileSync('js/core/MemoryTactics.js','utf8'),{window,document,Math});
+ for(const assisted of [true,false]){
+  const owner={mode:'adult',active:true,memoryAid:assisted},t=owner.tactics=new window.MemoryTactics(owner);t.game={isMemorizing:true};let hints=0;
+  const back={querySelector(){return hints?{}:null;},appendChild(hint){hints++;assert.match(hint.innerHTML,/食物/);}},front={innerHTML:'<img alt="食物">'};
+  const card={dataset:{symbol:'🫘'},querySelector(selector){return selector==='.memory-card-back'?back:front;}};
+  t.noteSeen(card);assert.equal(hints,0);t.game.isMemorizing=false;t.noteSeen(card);t.noteSeen(card);assert.equal(hints,assisted?1:0);
+  owner.active=false;t.noteSeen(card);assert.equal(hints,assisted?1:0);
+ }
+});

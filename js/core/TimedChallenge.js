@@ -3,16 +3,19 @@ window.TimedChallenge = {
     generation: 0,
     storageKey: 'redbrick.challenge.best.v1',
     variant: 'timed',
+    memoryAid:true,
     practiceKind: null,
     get isPractice(){return !!this.practiceKind;},
     practiceLabel(){return {heavy:'重擊格擋',aoe:'旋轉防守',visible:'順序滑動',memory:'記憶順序'}[this.practiceKind]||'操作練習';},
     startPractice(kind){if(!['heavy','aoe','visible','memory'].includes(kind))return;this.showInfo('defense','endless');this.start({practiceKind:kind,practiceOrder:['visible','memory'].includes(kind)?kind:null});},
+    get continuous(){return this.variant==='rush'&&this.kind==='defense';},
+    recordPrefix(){if(this.continuous)return 'rush:';if(this.strategy)return (this.tactics?.assisted??this.memoryAid!==false)?'tactics-assisted:':'tactics:';return this.endless?'endless:':'';},
     get strategy(){return this.variant==='tactics'&&this.kind==='memory';},
     get endless() { return this.variant === 'endless'; },
     bestRecord(kind, mode, score, progress) {
         let records = {};
         try { const saved = JSON.parse(localStorage.getItem(this.storageKey)); if (saved && typeof saved === 'object' && !Array.isArray(saved)) records = saved; } catch (_) {}
-        const key = `${this.strategy?'tactics:':this.endless ? 'endless:' : ''}${kind}:${mode}`;
+        const key = `${this.recordPrefix()}${kind}:${mode}`;
         const saved = records[key];
         const oldScore = typeof saved === 'number' ? saved : saved?.score;
         const old = {score:Number.isFinite(oldScore) && oldScore >= 0 ? oldScore : 0,
@@ -31,8 +34,9 @@ window.TimedChallenge = {
     },
     bestLabel(kind, mode, record = this.bestRecord(kind,mode)) {
         const detail = record.progress === null ? (record.score > 0 ? ' · 舊紀錄未記進度' : '')
-            : this.strategy?` · 擊退 ${record.progress} 位暗影`:kind === 'defense' ? ` · 第 ${record.progress} 波` : ` · 完成 ${record.progress} 盤`;
-        return `個人最佳：${record.score.toLocaleString('zh-TW')} 分${detail}`;
+            : this.continuous?` · 完成 ${record.progress} 段`:this.strategy?` · 擊退 ${record.progress} 位暗影`:kind === 'defense' ? ` · 第 ${record.progress} 波` : ` · 完成 ${record.progress} 盤`;
+        const label=this.strategy?`個人最佳（提示${(this.tactics?.assisted??this.memoryAid!==false)?'開啟':'關閉'}）`:'個人最佳';
+        return `${label}：${record.score.toLocaleString('zh-TW')} 分${detail}`;
     },
     resetFeedback() {
         this.defenseFeedback={streak:0,best:0,failures:{}};
@@ -58,7 +62,8 @@ window.TimedChallenge = {
         if(!attack.feedbackMistake){stats.streak++;stats.best=Math.max(stats.best,stats.streak);}
     },
     feedbackItems() {
-        if(this.strategy)return this.tactics.feedback();
+        if(this.continuous&&this.rush)return this.rush.feedback();
+        if(this.strategy&&this.tactics)return this.tactics.feedback();
         if(this.kind==='defense'){
             const stats=this.defenseFeedback||{best:0,failures:{}};
             const failures=Object.entries(stats.failures).sort((a,b)=>b[1]-a[1]);
@@ -68,6 +73,7 @@ window.TimedChallenge = {
         return [['配對準確率',attempts?`${Math.round((this.pairs||0)/attempts*100)}%`:'尚未完成配對'],['最長連續配對',`${this.memoryBestStreak||0} 對`]];
     },
     lobbyPoints() {
+        if(this.continuous)return ['三段連續防守，三條命，挑戰完整守住街口。','普通目標隨到隨接；重擊五格全亮再滑。','兩組攻擊會交錯，先看哪個快到，再安排順序。'];
         if(this.strategy)return ['五場短局，生命歸零或擊退首領時結算。','配對可攻擊、防守、恢復或蓄力。','每翻兩張推進一步；對手會公開攻擊倒數。'];
         if(this.kind==='defense')return this.endless
             ? ['三條命，不限時，挑戰最高分與波次。','滑動命中目標；石頭別滑，重擊等全亮。','每十波加速，後段加入旋轉與順序防守。']
@@ -80,19 +86,22 @@ window.TimedChallenge = {
         this.stop();
         this.replayPracticeOrder = null;
         this.kind = kind;
-        this.variant = variant==='tactics'&&kind==='memory'?'tactics':variant === 'endless' ? 'endless' : 'timed';
+        this.variant = variant==='rush'&&kind==='defense'?'rush':variant==='tactics'&&kind==='memory'?'tactics':variant === 'endless' ? 'endless' : 'timed';
         this.mode = window.gameMode === 'child' ? 'child' : 'adult';
         for (const id of ['game-wrapper','challenge-lobby','challenge-countdown','challenge-results']) {
             document.getElementById(id).dataset.challengeKind = kind;
         }
         showScene('challenge-lobby');
         const memory = kind === 'memory';
-        document.getElementById('challenge-lobby-kicker').textContent = this.strategy?'思考不限時・五場挑戰':this.endless ? '三條命・無限模式' : '90 秒・限時挑戰';
-        document.getElementById('challenge-lobby-title').textContent = this.strategy?'策略配對・守夜之旅':`${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
+        document.getElementById('challenge-lobby-kicker').textContent = this.continuous?'三條命・三段短局':this.strategy?'思考不限時・五場挑戰':this.endless ? '三條命・無限模式' : '90 秒・限時挑戰';
+        document.getElementById('challenge-lobby-title').textContent = this.continuous?'連續防守・守住街口':this.strategy?'策略配對・守夜之旅':`${memory ? '記憶' : '防守'}挑戰${this.endless ? '・無限模式' : ''}`;
+        document.getElementById('challenge-memory-aid-option').hidden=!this.strategy;
+        document.getElementById('challenge-memory-aid').checked=this.memoryAid!==false;
         document.getElementById('challenge-lobby-points').innerHTML=this.lobbyPoints().map(point=>`<li>${point}</li>`).join('');
         document.getElementById('challenge-lobby-best').textContent = this.bestLabel(kind,this.mode);
     },
     stop() {
+        this.rush?.stop();this.rush=null;
         this.clearDefenseWind();
         this.clearMemoryInterference();
         this.generation++;
@@ -146,6 +155,7 @@ window.TimedChallenge = {
         window.GameEngine.stopMinigame();
         this.active = true;
         if(this.strategy)this.tactics=new window.MemoryTactics(this);
+        if(this.continuous)this.rush=new window.DefenseRush(this);
         document.getElementById('game-wrapper').classList.add('challenge-active');
         this.remaining = 90000;
         this.elapsed = 0;
@@ -165,7 +175,7 @@ window.TimedChallenge = {
         const assets = this.kind === 'defense'
             ? [...window.MinigameAssets.getDefensePreloadUrls(), 'assets/images/characters/challenge-player.png']
             : [...window.MinigameAssets.getMemoryPreloadUrls(), this.background];
-        if (this.endless) assets.push('assets/images/ui/heart.png');
+        if (this.endless||this.continuous) assets.push('assets/images/ui/heart.png');
         window.LoadingManager.showAndLoad(assets, () => {
             if (!this.active || run !== this.generation) return;
             showScene('challenge-countdown');
@@ -188,7 +198,7 @@ window.TimedChallenge = {
         document.querySelector('#game-container .back-btn').style.display = 'none';
         const common = {challenge:this,gameMode:this.mode,onComplete:() => {}};
         if (this.kind === 'defense') {
-            const base = window.DefenseLevels[1][this.mode];
+            const base = window.DefenseLevels[this.continuous?2:1][this.mode];
             const config = {...base, bgImage:this.background, playerImage:'assets/images/characters/challenge-player.png', attackPatterns:[],flow:{...base.flow,randomizeAfter:0}};
             window.GameEngine._startMinigameImmediately('defense',{...common,level:1,challengeConfig:config});
         } else {
@@ -219,6 +229,7 @@ window.TimedChallenge = {
             game.player.style.background = 'none';
             game.player.innerHTML = '<svg viewBox="48 21 150 229" width="100%" height="100%" aria-label="挑戰角色" role="img"><image href="assets/images/characters/challenge-player.png" width="250" height="250"/></svg>';
         }
+        if(this.continuous){this.hud?.remove();this.rush.decorate(game);return;}
         this.hud?.remove();
         this.hud = document.createElement('div');
         this.hud.className = 'challenge-live-hud';
@@ -266,6 +277,7 @@ window.TimedChallenge = {
     ready(game) {
         if (!this.active || game.challenge !== this) return;
         this.game = game;
+        if(this.continuous){this.decorate(game);this.liveClock=game.clock;return;}
         if(this.strategy){this.liveClock=game.session.clock;this.tactics.ready(game);return;}
         if (this.kind === 'defense') this.decorate(game);
         const clock = this.kind === 'defense' ? game.clock : game.session.clock;
@@ -275,7 +287,7 @@ window.TimedChallenge = {
         if (this.kind==='memory' && this.endless) this.setupMemoryInterference(game);
     },
     consumeTime() {
-        if (!this.active || !this.liveClock || this.strategy) return;
+        if (!this.active || !this.liveClock || this.strategy || this.continuous) return;
         const now = this.liveClock.now();
         const delta = now-this.lastTick;
         this.elapsed = (this.elapsed || 0) + delta;
@@ -288,6 +300,8 @@ window.TimedChallenge = {
     },
     updateHUD() {
         if (!this.hud || this.isPractice) return;
+        if(this.continuous){this.rush?.render();return;}
+        if(this.strategy)return;
         if (this.kind === 'memory' && this.memoryHudParts) {
             const parts = this.memoryHudParts;
             if (parts.hearts) {
@@ -343,12 +357,14 @@ window.TimedChallenge = {
         return score>=1e8 ? `${(score/1e8).toFixed(1)}億` : score>=1e5 ? `${(score/1e4).toFixed(1)}萬` : score.toLocaleString('zh-TW');
     },
     pauseDetail() {
+        if(this.continuous&&this.rush)return `連續防守 · 第 ${Math.min(3,this.rush.completed+1)}／3 段 · 接住 ${this.rush.hits}／${this.rush.total}`;
         if(this.strategy)return `守夜之旅 · 擊退 ${this.tactics.cleared}／5 · 生命 ${this.tactics.health}／${this.tactics.maxHealth}`;
         if(this.isPractice)return this.practiceLabel()+' · 不計分、不扣生命';
         if (!this.active || !this.endless) return '';
         return `得分 ${this.score.toLocaleString('zh-TW')} 分　·　${this.kind==='defense'?`第 ${this.game?.waveNumber || 0} 波`:`完成 ${this.boards} 盤`}`;
     },
     nextAttack(game) {
+        if(this.continuous)return this.rush.nextAttack(game);
         const elapsed = 90000-this.remaining;
         const wave = (game.waveNumber || 0)+1;
         if (this.active && this.endless && !this.isPractice && this.kind==='defense') window.GameMusic?.setPlaybackRate?.(this.defenseMusicRate(wave),'defense');
@@ -425,7 +441,7 @@ window.TimedChallenge = {
         wind.node.remove();
     },
     onDefenseWaveStarted(game, attack) {
-        if (this.isPractice || !this.active || !this.endless || this.kind!=='defense' || this.game!==game || game.challenge!==this || this.ending) return;
+        if (this.continuous || this.isPractice || !this.active || !this.endless || this.kind!=='defense' || this.game!==game || game.challenge!==this || this.ending) return;
         if (attack!==game.currentAttack || attack.finished) return;
         // 重擊與旋轉需要完整視線；既有落葉也在這些題型開始前收起。
         if (!['NORMAL','MULTI','MULTI_MIXED'].includes(attack.type) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
@@ -611,10 +627,10 @@ window.TimedChallenge = {
         const practice=!!this.practiceOrder||this.isPractice;
         const old = this.bestRecord(this.kind,this.mode);
         const score = this.kind==='defense' ? Math.max(0,this.game.score) : this.score;
-        const detail = this.strategy?this.tactics.summary():this.endless
+        const detail = this.continuous?this.rush.summary():this.strategy?this.tactics.summary():this.endless
             ? `${this.kind==='defense' ? `進入第 ${this.game.waveNumber} 波` : `完成 ${this.boards} 盤・配對 ${this.pairs} 對・配錯 ${this.memoryErrors||0} 次`}・生命耗盡${this.lastLossReason?`：${this.lastLossReason}`:''}`
             : this.kind==='defense' ? `處理結果：${this.game.mistakes} 次失誤` : `完成 ${this.boards} 盤・配對 ${this.pairs} 對・紅燈懲罰 ${this.penalties} 次`;
-        const progress=this.strategy?this.tactics.cleared:this.kind==='defense'?this.game.waveNumber:this.boards;
+        const progress=this.continuous?this.rush.completed:this.strategy?this.tactics.cleared:this.kind==='defense'?this.game.waveNumber:this.boards;
         const best = practice ? old : this.bestRecord(this.kind,this.mode,score,progress);
         const feedback=this.feedbackItems();
         const improved=!practice && (score>old.score||(score===old.score&&progress>(old.progress??-1)));
@@ -640,9 +656,11 @@ window.TimedChallenge = {
             button.addEventListener('click',()=>this.showInfo(index===0?'defense':'memory'));card.appendChild(button);
             const endless=document.createElement('button');endless.type='button';endless.className='challenge-endless-entry';endless.textContent='無限模式';
             endless.addEventListener('click',()=>this.showInfo(index===0?'defense':'memory','endless'));card.appendChild(endless);
+            if(index===0){const rush=document.createElement('button');rush.type='button';rush.className='defense-rush-entry';rush.textContent='連續玩法 ↗';rush.addEventListener('click',()=>this.showInfo('defense','rush'));card.appendChild(rush);}
             if(index===1){const tactics=document.createElement('button');tactics.type='button';tactics.className='memory-tactics-entry';tactics.textContent='策略玩法 ↗';tactics.addEventListener('click',()=>this.showInfo('memory','tactics'));card.appendChild(tactics);}
             card.querySelector('.challenge-soon')?.remove();
         });
+        document.getElementById('challenge-memory-aid').addEventListener('change',event=>{this.memoryAid=event.target.checked;document.getElementById('challenge-lobby-best').textContent=this.bestLabel(this.kind,this.mode);});
         document.getElementById('challenge-begin').addEventListener('click',()=>this.start());
         document.getElementById('challenge-play-again').addEventListener('click',()=>this.start({practiceOrder:this.replayPracticeOrder}));
         document.querySelectorAll('[data-challenge-exit]').forEach(b=>b.addEventListener('click',()=>this.exit()));

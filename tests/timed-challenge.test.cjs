@@ -386,3 +386,11 @@ test('real memory matching commits exactly one tactics turn after the flip feedb
  g.flippedCards=[card('🫘'),card('🫘')];g.checkMatch();assert.equal(c.tactics.turns,0);assert.equal(c.tactics.enemy.health,6);callbacks.splice(0).forEach(fn=>fn());assert.equal(c.tactics.turns,1);assert.equal(c.tactics.enemy.health,4);
  g.flippedCards=[card('🫘'),card('🍮')];g.checkMatch();assert.equal(c.tactics.errors,0);callbacks.splice(0).forEach(fn=>fn());assert.equal(c.tactics.turns,2);assert.equal(c.tactics.errors,1);assert.equal(c.tactics.enemy.health,4);
 });
+
+test('assisted and strict tactics and continuous defense each keep separate best records',()=>{
+ const {c}=fixture();c.kind='memory';c.variant='tactics';c.memoryAid=true;c.best('memory','adult',550,5);c.memoryAid=false;assert.equal(c.best('memory','adult'),0);c.best('memory','adult',520,5);c.memoryAid=true;assert.equal(c.best('memory','adult'),550);assert.match(c.bestLabel('memory','adult'),/提示開啟/);
+ c.kind='defense';c.variant='rush';c.best('defense','adult',1150,3);assert.match(c.bestLabel('defense','adult'),/完成 3 段/);c.variant='timed';assert.equal(c.best('defense','adult'),0);c.variant='endless';assert.equal(c.best('defense','adult'),0);
+});
+test('continuous prototype delegates authored attacks without consuming the timed-mode clock',()=>{
+ const f=fixture();f.c.kind='defense';f.c.variant='rush';f.c.rush={nextAttack:()=>({type:'RUSH'}),completed:1,hits:6,total:18};assert.equal(f.c.nextAttack({}).type,'RUSH');assert.match(f.c.pauseDetail(),/第 2／3 段/);f.c.liveClock=f.clock();f.c.lastTick=0;f.c.game={score:0};f.tick(10000);f.c.consumeTime();assert.equal(f.c.remaining,90000);
+});
